@@ -21,10 +21,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -49,7 +49,7 @@ fun CameraScreen(
         }
     }
 
-    CameraPreview(onImageAnalyzed = { imageProxy -> onImageAnalyzed(imageProxy) })
+    CameraPreview(onImageAnalyzed = onImageAnalyzed)
 }
 
 @Composable

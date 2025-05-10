@@ -1,24 +1,28 @@
 package org.mydomain.myscan
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
+import java.util.Date
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val TAG = "MyScan"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,7 +32,10 @@ class MainActivity : ComponentActivity() {
                     Column {
                         Greeting(modifier = Modifier.padding(innerPadding))
                         Box(/*modifier = Modifier.width(300.dp)*/) {
-                            CameraScreen { }
+                            CameraScreen(onImageAnalyzed = { image ->
+                                Log.d(TAG, Date().toString())
+                                image.close()
+                            } )
                         }
                     }
                 }
