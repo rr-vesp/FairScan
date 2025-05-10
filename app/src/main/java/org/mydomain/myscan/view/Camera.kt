@@ -33,6 +33,7 @@ import java.util.concurrent.Executors
 fun CameraScreen(
     onImageAnalyzed: (ImageProxy) -> Unit,
 ) {
+    // TODO Check the errors in the logs before the user gives the required authorization
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
