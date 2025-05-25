@@ -1,12 +1,10 @@
 package org.mydomain.myscan
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
@@ -32,7 +29,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            Log.d("MyScan", "!!"+uiState.toString())
             MyScanTheme {
                 Scaffold { innerPadding ->
                     Column {
@@ -50,15 +46,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyMessageBox(msg: String?, inferenceTime: Long) {
-    Log.d("MyScan", "MyMessageBox recompose: $msg")
     Text(
-        text = (msg ?: "") + " inferred in " + inferenceTime + "ms",
+        text = (msg ?: "") + " / inferred in " + inferenceTime + "ms",
         modifier = Modifier
             .padding(16.dp)
-            .background(Color.Yellow)
             .fillMaxWidth(),
         color = Color.Black,
-        fontSize = 20.sp
     )
 }
 

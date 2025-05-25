@@ -43,8 +43,6 @@ class ImageSegmentationService(private val context: Context) {
 
     private var interpreter: Interpreter? = null
 
-    private val coloredLabels: List<ColoredLabel> = coloredLabels()
-
     suspend fun initialize() {
         interpreter = try {
             val litertBuffer = FileUtil.loadMappedFile(context, "deeplab_v3.tflite")
@@ -112,9 +110,7 @@ class ImageSegmentationService(private val context: Context) {
                 .build()
         val maskImage = TensorImage()
         maskImage.load(mask, imageProperties)
-        return Segmentation(
-            listOf(maskImage), coloredLabels
-        )
+        return Segmentation(listOf(maskImage))
     }
 
     private fun processImage(inferenceData: InferenceData): ByteBuffer {
@@ -139,59 +135,10 @@ class ImageSegmentationService(private val context: Context) {
 
         return mask
     }
-    private fun coloredLabels(): List<ColoredLabel> {
-        val labels = listOf(
-            "background",
-            "aeroplane",
-            "bicycle",
-            "bird",
-            "boat",
-            "bottle",
-            "bus",
-            "car",
-            "cat",
-            "chair",
-            "cow",
-            "dining table",
-            "dog",
-            "horse",
-            "motorbike",
-            "person",
-            "potted plant",
-            "sheep",
-            "sofa",
-            "train",
-            "tv",
-            "------"
-        )
-        val colors = MutableList(labels.size) {
-            ColoredLabel(
-                labels[0], "", Color.BLACK
-            )
-        }
-
-        val random = Random()
-        val goldenRatioConjugate = 0.618033988749895
-        var hue = random.nextDouble()
-
-        // Skip the first label as it's already assigned black
-        for (idx in 1 until labels.size) {
-            hue += goldenRatioConjugate
-            hue %= 1.0
-            // Adjust saturation & lightness as needed
-            val color = Color.HSVToColor(floatArrayOf(hue.toFloat() * 360, 0.7f, 0.8f))
-            colors[idx] = ColoredLabel(labels[idx], "", color)
-        }
-
-        return colors
-    }
 
     data class Segmentation(
-        val masks: List<TensorImage>,
-        val coloredLabels: List<ColoredLabel>,
+        val masks: List<TensorImage>
     )
-
-    data class ColoredLabel(val label: String, val displayName: String, val argb: Int)
 
     data class SegmentationResult(
         val segmentation: Segmentation,
