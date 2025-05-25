@@ -5,43 +5,61 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
-import java.util.Date
 
 class MainActivity : ComponentActivity() {
 
-    companion object {
-        private const val TAG = "MyScan"
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
         enableEdgeToEdge()
         setContent {
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            Log.d("MyScan", "!!"+uiState.toString())
             MyScanTheme {
-                Scaffold(/*modifier = Modifier.fillMaxSize()*/) { innerPadding ->
+                Scaffold { innerPadding ->
                     Column {
                         Greeting(modifier = Modifier.padding(innerPadding))
-                        Box(/*modifier = Modifier.width(300.dp)*/) {
-                            CameraScreen(onImageAnalyzed = { image ->
-                                Log.d(TAG, Date().toString())
-                                image.close()
-                            } )
+                        MyMessageBox(uiState.detectionMessage, uiState.inferenceTime)
+                        Box {
+                            CameraScreen(onImageAnalyzed = { image -> viewModel.segment(image) } )
                         }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun MyMessageBox(msg: String?, inferenceTime: Long) {
+    Log.d("MyScan", "MyMessageBox recompose: $msg")
+    Text(
+        text = (msg ?: "") + " inferred in " + inferenceTime + "ms",
+        modifier = Modifier
+            .padding(16.dp)
+            .background(Color.Yellow)
+            .fillMaxWidth(),
+        color = Color.Black,
+        fontSize = 20.sp
+    )
 }
 
 @Composable
@@ -54,8 +72,8 @@ fun Greeting(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun MyMessageBoxPreview() {
     MyScanTheme {
-        Greeting()
+        MyMessageBox("Found 2 objects!", 42)
     }
 }
