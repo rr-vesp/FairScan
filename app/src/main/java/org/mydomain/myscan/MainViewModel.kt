@@ -32,7 +32,12 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
             imageSegmentationService.initialize()
             imageSegmentationService.segmentation
                 .filterNotNull()
-                .map { UiState("Found ${numberOfObjectsDetected(it.segmentation)} objects!", it.inferenceTime) }
+                .map {
+                    UiState(
+                        "Found ${numberOfObjectsDetected(it.segmentation)} objects!",
+                        it.inferenceTime,
+                        it.segmentation.toBitmap())
+                }
                 .collect {
                     Log.d("MyScan", "New UIstate ${it}")
                     _uiState.value = it
@@ -41,7 +46,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
     }
 
     fun numberOfObjectsDetected(segmentation: ImageSegmentationService.Segmentation) : Int {
-        val tensor = segmentation.masks[0];
+        val tensor = segmentation.mask;
         val buffer = tensor.buffer
         val uniqueValues = HashSet<Int>()
         for (i in 0..tensor.width * tensor.height - 1) {

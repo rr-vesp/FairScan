@@ -2,11 +2,11 @@ package org.mydomain.myscan
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
+import android.graphics.Bitmap.createBitmap
+import android.graphics.Color.argb
 import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -25,7 +25,6 @@ import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.image.ops.Rot90Op
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
-import java.util.Random
 
 // TODO Review and remove unneeded code
 class ImageSegmentationService(private val context: Context) {
@@ -110,7 +109,7 @@ class ImageSegmentationService(private val context: Context) {
                 .build()
         val maskImage = TensorImage()
         maskImage.load(mask, imageProperties)
-        return Segmentation(listOf(maskImage))
+        return Segmentation(maskImage)
     }
 
     private fun processImage(inferenceData: InferenceData): ByteBuffer {
@@ -136,9 +135,23 @@ class ImageSegmentationService(private val context: Context) {
         return mask
     }
 
-    data class Segmentation(
-        val masks: List<TensorImage>
-    )
+    data class Segmentation(val mask: TensorImage) {
+        fun toBitmap(): Bitmap {
+            val width = mask.width
+            val height = mask.height
+            val pixels = IntArray(width * height)
+            val green = argb(128, 0, 255, 0)
+            for (i in 0 until height) {
+                for (j in 0 until width) {
+                    val index = i * width + j
+                    val classId = mask.buffer[index].toInt() and 0xFF // Unsigned byte
+                    pixels[index] = if (classId == 0) 0 else green
+                }
+            }
+            return createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
+        }
+    }
+
 
     data class SegmentationResult(
         val segmentation: Segmentation,

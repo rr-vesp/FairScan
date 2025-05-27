@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,7 +36,7 @@ class MainActivity : ComponentActivity() {
                         Greeting(modifier = Modifier.padding(innerPadding))
                         MyMessageBox(uiState.detectionMessage, uiState.inferenceTime)
                         Box {
-                            CameraScreen(onImageAnalyzed = { image -> viewModel.segment(image) } )
+                            CameraScreen(uiState, onImageAnalyzed = { image -> viewModel.segment(image) } )
                         }
                     }
                 }
@@ -50,6 +51,7 @@ fun MyMessageBox(msg: String?, inferenceTime: Long) {
         text = (msg ?: "") + " / inferred in " + inferenceTime + "ms",
         modifier = Modifier
             .padding(16.dp)
+            .background(Color.Gray)
             .fillMaxWidth(),
         color = Color.Black,
     )

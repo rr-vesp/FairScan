@@ -1,6 +1,7 @@
 package org.mydomain.myscan.view
 
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.graphics.Bitmap
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -13,6 +14,11 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,17 +26,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
+import org.mydomain.myscan.UiState
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @Composable
 fun CameraScreen(
+    uiState: UiState,
     onImageAnalyzed: (ImageProxy) -> Unit,
 ) {
     // TODO Check the errors in the logs before the user gives the required authorization
@@ -50,7 +61,21 @@ fun CameraScreen(
         }
     }
 
-    CameraPreview(onImageAnalyzed = onImageAnalyzed)
+    val width = LocalConfiguration.current.screenWidthDp
+    val height = width / 3 * 4
+    Box(
+        modifier = Modifier
+            .width(width.dp)
+            .height(height.dp)
+    ) {
+        CameraPreview(onImageAnalyzed = onImageAnalyzed)
+        if (uiState.overlayBitmap != null) {
+            SegmentationOverlay(
+                modifier = Modifier.fillMaxSize(),
+                overlay = uiState.overlayBitmap
+            )
+        }
+    }
 }
 
 @Composable
@@ -112,3 +137,15 @@ fun bindCameraUseCases(
     cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, imageAnalysis, preview)
 }
 
+@Composable
+fun SegmentationOverlay(modifier: Modifier = Modifier, overlay: Bitmap) {
+    Canvas(
+        modifier = modifier
+    ) {
+        val imageWidth: Float = size.width
+        val imageHeight: Float = size.height
+        val scaleBitmap =
+            Bitmap.createScaledBitmap(overlay, imageWidth.toInt(), imageHeight.toInt(), true)
+        drawImage(scaleBitmap.asImageBitmap())
+    }
+}
