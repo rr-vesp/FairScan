@@ -1,6 +1,7 @@
 package org.mydomain.myscan
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
@@ -34,7 +35,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
                 .filterNotNull()
                 .map {
                     UiState(
-                        "Found ${numberOfObjectsDetected(it.segmentation)} objects!",
+                        "Inference done",
                         it.inferenceTime,
                         it.segmentation.toBitmap())
                 }
@@ -45,18 +46,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         }
     }
 
-    fun numberOfObjectsDetected(segmentation: ImageSegmentationService.Segmentation) : Int {
-        val tensor = segmentation.mask;
-        val buffer = tensor.buffer
-        val uniqueValues = HashSet<Int>()
-        for (i in 0..tensor.width * tensor.height - 1) {
-            uniqueValues.add(buffer[i].toInt())
-        }
-        return uniqueValues.size - 1;
-    }
-
     fun segment(imageProxy: ImageProxy) {
-        Log.d("MyScan", "MainViewModel.Calling segment")
         viewModelScope.launch {
             imageSegmentationService.runSegmentation(
                 imageProxy.toBitmap(),
