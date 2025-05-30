@@ -3,7 +3,7 @@ package org.mydomain.myscan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
-import android.graphics.Color.argb
+import android.graphics.Color
 import android.graphics.Matrix
 import android.os.SystemClock
 import android.util.Log
@@ -168,22 +168,20 @@ class ImageSegmentationService(private val context: Context) {
     }
 
     data class Segmentation(val mask: TensorImage) {
-        fun toBitmap(): Bitmap {
+        fun toBinaryMask(): Bitmap {
             val width = mask.width
             val height = mask.height
             val pixels = IntArray(width * height)
-            val green = argb(128, 0, 255, 0)
             for (i in 0 until height) {
                 for (j in 0 until width) {
                     val index = i * width + j
                     val classId = mask.buffer[index].toInt() and 0xFF // Unsigned byte
-                    pixels[index] = if (classId == 0) 0 else green
+                    pixels[index] = if (classId == 0) Color.BLACK else Color.WHITE
                 }
             }
             return createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
         }
     }
-
 
     data class SegmentationResult(
         val segmentation: Segmentation,

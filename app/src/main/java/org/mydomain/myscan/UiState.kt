@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 data class UiState(
     val detectionMessage: String? = null,
     val inferenceTime: Long = 0L,
-    val overlayBitmap: Bitmap? = null,
+    val binaryMask: Bitmap? = null,
     val errorMessage: String? = null,
+    val documentQuad: Quad? = null,
 )

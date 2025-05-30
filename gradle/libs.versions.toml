@@ -10,6 +10,7 @@ activityCompose = "1.10.1"
 composeBom = "2025.05.00"
 camerax = "1.4.2"
 litert = "1.2.0"
+opencv = "4.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ androidx-camera-view = { group = "androidx.camera", name = "camera-view", versio
 litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "litert" }
 litert-support = { group = "com.google.ai.edge.litert", name = "litert-support", version.ref = "litert" }
 litert-metadata = { group = "com.google.ai.edge.litert", name = "litert-metadata", version.ref = "litert" }
+opencv = { group="org.opencv", name="opencv", version.ref = "opencv" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

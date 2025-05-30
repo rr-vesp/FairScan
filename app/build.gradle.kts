@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.litert)
     implementation(libs.litert.support)
     implementation(libs.litert.metadata)
+    implementation(libs.opencv)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

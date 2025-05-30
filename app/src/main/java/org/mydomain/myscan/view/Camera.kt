@@ -26,7 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -38,6 +43,9 @@ import com.google.common.util.concurrent.ListenableFuture
 import org.mydomain.myscan.UiState
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import androidx.core.graphics.scale
+import org.mydomain.myscan.Point
+import org.mydomain.myscan.scaledTo
 
 @Composable
 fun CameraScreen(
@@ -69,12 +77,7 @@ fun CameraScreen(
             .height(height.dp)
     ) {
         CameraPreview(onImageAnalyzed = onImageAnalyzed)
-        if (uiState.overlayBitmap != null) {
-            SegmentationOverlay(
-                modifier = Modifier.fillMaxSize(),
-                overlay = uiState.overlayBitmap
-            )
-        }
+        AnalysisOverlay(uiState)
     }
 }
 
@@ -138,14 +141,49 @@ fun bindCameraUseCases(
 }
 
 @Composable
-fun SegmentationOverlay(modifier: Modifier = Modifier, overlay: Bitmap) {
-    Canvas(
-        modifier = modifier
-    ) {
-        val imageWidth: Float = size.width
-        val imageHeight: Float = size.height
-        val scaleBitmap =
-            Bitmap.createScaledBitmap(overlay, imageWidth.toInt(), imageHeight.toInt(), true)
-        drawImage(scaleBitmap.asImageBitmap())
+private fun AnalysisOverlay(uiState: UiState) {
+    if (uiState.binaryMask == null) {
+        return
+    }
+    val maskOverlay = replaceColor(uiState.binaryMask, Color.Black, Color.Transparent)
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawImage(
+            maskOverlay.scale(size.width.toInt(), size.height.toInt()).asImageBitmap(),
+            colorFilter = ColorFilter.tint(Color(0x8000FF00), BlendMode.SrcIn)
+        )
+        if (uiState.documentQuad != null) {
+            val scaledQuad = uiState.documentQuad.scaledTo(
+                fromWidth = uiState.binaryMask.width,
+                fromHeight = uiState.binaryMask.height,
+                toWidth = size.width.toInt(),
+                toHeight = size.height.toInt()
+            )
+            scaledQuad.edges().forEach {
+                drawLine(Color.Green, it.from.toOffset(), it.to.toOffset(), 5.0f)
+            }
+        }
     }
 }
+
+fun replaceColor(bitmap: Bitmap, toReplace: Color, replacement: Color): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+    val result = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+
+    val pixels = IntArray(width * height)
+    result.getPixels(pixels, 0, width, 0, 0, width, height)
+
+    val target = toReplace.toArgb()
+    val newColor = replacement.toArgb()
+
+    for (i in pixels.indices) {
+        if (pixels[i] == target) {
+            pixels[i] = newColor
+        }
+    }
+
+    result.setPixels(pixels, 0, width, 0, 0, width, height)
+    return result
+}
+
+fun Point.toOffset() = Offset(x.toFloat(), y.toFloat())

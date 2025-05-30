@@ -1,8 +1,6 @@
 package org.mydomain.myscan
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -34,13 +32,15 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
             imageSegmentationService.segmentation
                 .filterNotNull()
                 .map {
+                    val binaryMask = it.segmentation.toBinaryMask()
                     UiState(
-                        "Inference done",
-                        it.inferenceTime,
-                        it.segmentation.toBitmap())
+                        detectionMessage = "Inference done",
+                        inferenceTime = it.inferenceTime,
+                        binaryMask = binaryMask,
+                        documentQuad = detectDocumentQuad(binaryMask)
+                    )
                 }
                 .collect {
-                    Log.d("MyScan", "New UIstate ${it}")
                     _uiState.value = it
                 }
         }
