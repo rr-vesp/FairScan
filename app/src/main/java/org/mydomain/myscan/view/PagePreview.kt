@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +23,8 @@ import androidx.compose.ui.unit.dp
 fun PagePreviewScreen(
     image: Bitmap?,
     isProcessing: Boolean,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onSavePressed: (Bitmap) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -39,6 +41,14 @@ fun PagePreviewScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
                 )
+                Button (
+                    onClick = { onSavePressed(image) },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                ) {
+                    Text("Save as PDF")
+                }
             }
             else -> {
                 Text(
