@@ -1,17 +1,22 @@
 package org.mydomain.myscan
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainViewModel(private val imageSegmentationService: ImageSegmentationService): ViewModel() {
 
@@ -25,6 +30,9 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
 
     private var _uiState = MutableStateFlow(UiState("just started"))
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
+    val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -48,7 +56,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
 
     fun segment(imageProxy: ImageProxy) {
         viewModelScope.launch {
-            imageSegmentationService.runSegmentation(
+            imageSegmentationService.runSegmentationAndEmit(
                 imageProxy.toBitmap(),
                 imageProxy.imageInfo.rotationDegrees,
             )
@@ -56,4 +64,38 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         }
     }
 
+    fun navigateTo(screen: Screen) {
+        _currentScreen.value = screen
+    }
+
+    fun processCapturedImageAndNavigate(imageProxy: ImageProxy) {
+        viewModelScope.launch {
+            Log.d("MyScan", "Navigating to spinner")
+            navigateTo(Screen.PagePreview(image = null, isProcessing = true))
+            val processedImage = processCapturedImage(imageProxy)
+            Log.d("MyScan", "Navigating to result image")
+            navigateTo(Screen.PagePreview(image = processedImage, isProcessing = false))
+        }
+    }
+
+    private suspend fun processCapturedImage(imageProxy: ImageProxy): Bitmap? = withContext(Dispatchers.IO) {
+        var corrected: Bitmap? = null
+        val bitmap = imageProxy.toBitmap().rotate(imageProxy.imageInfo.rotationDegrees)
+        val segmentation = imageSegmentationService.runSegmentationAndReturn(bitmap, 0)
+        if (segmentation != null) {
+            val mask = segmentation.segmentation.toBinaryMask()
+            val quad = detectDocumentQuad(mask)
+            if (quad != null) {
+                val resizedQuad = quad.scaledTo(mask.width, mask.height, bitmap.width, bitmap.height)
+                corrected = extractDocument(bitmap, resizedQuad)
+            }
+        }
+        return@withContext corrected
+    }
+
+    fun Bitmap.rotate(degrees: Int): Bitmap {
+        if (degrees == 0) return this
+        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
 }

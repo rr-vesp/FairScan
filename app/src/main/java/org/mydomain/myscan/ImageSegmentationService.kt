@@ -55,30 +55,39 @@ class ImageSegmentationService(private val context: Context) {
         }
     }
 
-    suspend fun runSegmentation(bitmap: Bitmap, rotationDegrees: Int) {
+    private fun runSegmentation(interpreter: Interpreter, bitmap: Bitmap, rotationDegrees: Int): SegmentationResult {
+        val startTime = SystemClock.uptimeMillis()
+
+        val (_, _, h, w) = interpreter.getInputTensor(0).shape()
+        // Preprocess manually into CHW float buffer
+        val inputBuffer = bitmapToCHWFloatBuffer(bitmap, width = w, height = h, rotationDegrees)
+
+        val (_, cOut, hOut, wOut) = interpreter.getOutputTensor(0).shape()
+        val outputBuffer = FloatBuffer.allocate(cOut * hOut * wOut)
+
+        // Run inference
+        outputBuffer.rewind()
+        interpreter.run(inputBuffer, outputBuffer)
+
+        val inferenceTime = SystemClock.uptimeMillis() - startTime
+        val segmentResult = processOutputBuffer(outputBuffer, wOut, hOut, cOut)
+        return SegmentationResult(segmentResult, inferenceTime)
+    }
+
+    fun runSegmentationAndReturn(bitmap: Bitmap, rotationDegrees: Int): SegmentationResult? {
+        if (interpreter != null) {
+            return runSegmentation(interpreter!!, bitmap, rotationDegrees)
+        }
+        return null
+    }
+
+    suspend fun runSegmentationAndEmit(bitmap: Bitmap, rotationDegrees: Int) {
+        if (interpreter == null) return
         try {
             withContext(Dispatchers.IO) {
-                if (interpreter == null) return@withContext
-                val startTime = SystemClock.uptimeMillis()
-
-                val (_, _, h, w) = interpreter?.getInputTensor(0)?.shape() ?: return@withContext
-                val dataType = interpreter?.getInputTensor(0)?.dataType()
-                Log.i(TAG, "segment, input shape: ${interpreter!!.getInputTensor(0).shape().asList()} data type=${dataType}")
-
-                // Preprocess manually into CHW float buffer
-                val inputBuffer = bitmapToCHWFloatBuffer(bitmap, width = w, height = h, rotationDegrees)
-
-                val (_, cOut, hOut, wOut) = interpreter!!.getOutputTensor(0).shape()
-                val outputBuffer = FloatBuffer.allocate(cOut * hOut * wOut)
-
-                // Run inference
-                outputBuffer.rewind()
-                interpreter?.run(inputBuffer, outputBuffer)
-
-                val inferenceTime = SystemClock.uptimeMillis() - startTime
+                val segmentationResult = runSegmentation(interpreter!!, bitmap, rotationDegrees)
                 if (isActive) {
-                    val segmentResult = processOutputBuffer(outputBuffer,  wOut, hOut, cOut)
-                    _segmentation.value = SegmentationResult(segmentResult, inferenceTime)
+                    _segmentation.value = segmentationResult
                 }
             }
         } catch (e: Exception) {

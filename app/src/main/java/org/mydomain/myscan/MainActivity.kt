@@ -7,13 +7,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
+import org.mydomain.myscan.view.PagePreviewScreen
 import org.opencv.android.OpenCVLoader
 
 class MainActivity : ComponentActivity() {
@@ -32,14 +33,27 @@ class MainActivity : ComponentActivity() {
         val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
         enableEdgeToEdge()
         setContent {
+            // TODO or collectAsStateWithLifecycle()?
+            val currentScreen by viewModel.currentScreen.collectAsState()
+            // TODO should uiState own currentScreen?
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             MyScanTheme {
                 Scaffold { innerPadding ->
                     Column {
                         Greeting(modifier = Modifier.padding(innerPadding))
                         MyMessageBox(uiState.detectionMessage, uiState.inferenceTime)
-                        Box {
-                            CameraScreen(uiState, onImageAnalyzed = { image -> viewModel.segment(image) } )
+                        when (val screen = currentScreen) {
+                            is Screen.Camera -> {
+                                CameraScreen(viewModel, uiState,
+                                    onImageAnalyzed = { image -> viewModel.segment(image) } )
+                            }
+                            is Screen.PagePreview -> {
+                                PagePreviewScreen (
+                                    image = screen.image,
+                                    isProcessing = screen.isProcessing,
+                                    onBackPressed = { viewModel.navigateTo(Screen.Camera) }
+                                )
+                            }
                         }
                     }
                 }

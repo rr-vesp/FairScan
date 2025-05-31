@@ -8,6 +8,9 @@ import org.opencv.core.MatOfPoint2f
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.sqrt
+import androidx.core.graphics.createBitmap
 
 fun detectDocumentQuad(mask: Bitmap): Quad? {
     val mat = Mat()
@@ -46,4 +49,47 @@ fun detectDocumentQuad(mask: Bitmap): Quad? {
 
     val vertices = biggest?.toList()?.map { Point(it.x.toInt(), it.y.toInt()) }
     return createQuad(vertices)
+}
+
+fun extractDocument(originalBitmap: Bitmap, quad: Quad): Bitmap {
+    val widthTop = norm(quad.topLeft, quad.topRight)
+    val widthBottom = norm(quad.bottomLeft, quad.bottomRight)
+    val maxWidth = max(widthTop, widthBottom).toInt()
+
+    val heightLeft = norm(quad.topLeft, quad.bottomLeft)
+    val heightRight = norm(quad.topRight, quad.bottomRight)
+    val maxHeight = max(heightLeft, heightRight).toInt()
+
+    val srcPoints = MatOfPoint2f(
+        quad.topLeft.toCv(),
+        quad.topRight.toCv(),
+        quad.bottomRight.toCv(),
+        quad.bottomLeft.toCv(),
+    )
+    val dstPoints = MatOfPoint2f(
+        org.opencv.core.Point(0.0, 0.0),
+        org.opencv.core.Point(maxWidth.toDouble(), 0.0),
+        org.opencv.core.Point(maxWidth.toDouble(), maxHeight.toDouble()),
+        org.opencv.core.Point(0.0, maxHeight.toDouble())
+    )
+    val transform = Imgproc.getPerspectiveTransform(srcPoints, dstPoints)
+
+    val inputMat = Mat()
+    Utils.bitmapToMat(originalBitmap, inputMat)
+    val outputMat = Mat()
+    Imgproc.warpPerspective(inputMat, outputMat, transform, Size(maxWidth.toDouble(), maxHeight.toDouble()))
+
+    val outputBitmap = createBitmap(maxWidth, maxHeight)
+    Utils.matToBitmap(outputMat, outputBitmap)
+    return outputBitmap
+}
+
+fun Point.toCv(): org.opencv.core.Point {
+    return org.opencv.core.Point(x.toDouble(), y.toDouble())
+}
+
+private fun norm(p1: Point, p2: Point): Double {
+    val dx = (p2.x - p1.x)
+    val dy = (p2.y - p1.y)
+    return sqrt(dx.toDouble() * dx + dy * dy)
 }
