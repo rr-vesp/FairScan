@@ -3,37 +3,24 @@ package org.mydomain.myscan
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.pdf.PdfDocument
-import android.util.Log
 import androidx.core.graphics.scale
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import kotlin.math.max
 
-fun createPdfFromBitmaps(bitmaps: List<Bitmap>, outputFile: File): Boolean {
+fun createPdfFromBitmaps (bitmaps: List<Bitmap>): PdfDocument {
     val document = PdfDocument()
-    try {
-        for ((index, bitmap) in bitmaps.map { resizeImage(it) }.withIndex()) {
-            val jpegStream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 72, jpegStream)
-            val compressedBytes = jpegStream.toByteArray()
-            val compressedBitmap = BitmapFactory.decodeByteArray(compressedBytes, 0, compressedBytes.size)
-            val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, index + 1).create()
-            val page = document.startPage(pageInfo)
-            page.canvas.drawBitmap(compressedBitmap, 0f, 0f, null)
-            document.finishPage(page)
-        }
-        FileOutputStream(outputFile).use { outputStream ->
-            document.writeTo(outputStream)
-        }
-        return true
-    } catch (e: IOException) {
-        Log.e("MyScan", "Error writing PDF: ${e.message}")
-        return false
-    } finally {
-        document.close()
+    for ((index, bitmap) in bitmaps.map { resizeImage(it) }.withIndex()) {
+        val jpegStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 72, jpegStream)
+        val compressedBytes = jpegStream.toByteArray()
+        val compressedBitmap =
+            BitmapFactory.decodeByteArray(compressedBytes, 0, compressedBytes.size)
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, index + 1).create()
+        val page = document.startPage(pageInfo)
+        page.canvas.drawBitmap(compressedBitmap, 0f, 0f, null)
+        document.finishPage(page)
     }
+    return document
 }
 
 fun resizeImage(original: Bitmap): Bitmap {

@@ -3,8 +3,11 @@ package org.mydomain.myscan.view
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -25,6 +28,7 @@ fun PagePreviewScreen(
     isProcessing: Boolean,
     onBackPressed: () -> Unit,
     onSavePressed: (Bitmap) -> Unit,
+    onSharePressed: (Bitmap) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         when {
@@ -41,13 +45,18 @@ fun PagePreviewScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
                 )
-                Button (
-                    onClick = { onSavePressed(image) },
+                Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
                 ) {
-                    Text("Save as PDF")
+                    Button (onClick = { onSavePressed(image) }) {
+                        Text("Save PDF")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button (onClick = { onSharePressed(image) }) {
+                        Text("Share PDF")
+                    }
                 }
             }
             else -> {

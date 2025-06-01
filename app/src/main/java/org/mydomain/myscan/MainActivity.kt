@@ -3,7 +3,9 @@ package org.mydomain.myscan
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.MediaScannerConnection
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,6 +25,8 @@ import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.PagePreviewScreen
 import org.opencv.android.OpenCVLoader
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
@@ -48,7 +52,8 @@ class MainActivity : ComponentActivity() {
                                     image = screen.image,
                                     isProcessing = screen.isProcessing,
                                     onBackPressed = { viewModel.navigateTo(Screen.Camera) },
-                                    onSavePressed = createPdfAndShare(context)
+                                    onSavePressed = createPdfAndSave(context),
+                                    onSharePressed = createPdfAndShare(context),
                                 )
                             }
                         }
@@ -61,7 +66,18 @@ class MainActivity : ComponentActivity() {
     private fun createPdfAndShare(context: Context): (Bitmap) -> Unit = { bitmap ->
         val outputDir = File(cacheDir, "pdfs").apply { mkdirs() }
         val outputFile = File(outputDir, "scan_${System.currentTimeMillis()}.pdf")
-        val success = createPdfFromBitmaps(listOf(bitmap), outputFile)
+        val document = createPdfFromBitmaps(listOf(bitmap))
+        var success = true
+        try {
+            FileOutputStream(outputFile).use { outputStream ->
+                document.writeTo(outputStream)
+            }
+        } catch (_: IOException) {
+            Toast.makeText(context, "Failed to share PDF", Toast.LENGTH_SHORT).show()
+            success = false
+        } finally {
+            document.close()
+        }
         if (success) {
             val uri = FileProvider.getUriForFile(
                 context,
@@ -74,8 +90,30 @@ class MainActivity : ComponentActivity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             startActivity(Intent.createChooser(shareIntent, "Share PDF"))
-        } else {
+        }
+    }
+
+    fun createPdfAndSave(context: Context): (Bitmap) -> Unit = { bitmap ->
+        val document = createPdfFromBitmaps(listOf(bitmap))
+        try {
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+            val file = File(downloadsDir, "scan_${System.currentTimeMillis()}.pdf")
+            val outputStream = FileOutputStream(file)
+            document.writeTo(outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            MediaScannerConnection.scanFile(
+                context, arrayOf(file.absolutePath), arrayOf("application/pdf"), null
+            )
+
+            Toast.makeText(context, "Saved PDF in Downloads", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("MyScan", "Failed to save PDF", e)
             Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+        } finally {
+            document.close()
         }
     }
 
