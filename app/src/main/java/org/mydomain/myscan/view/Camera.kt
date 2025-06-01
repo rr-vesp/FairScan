@@ -22,7 +22,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -49,9 +51,9 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
+import org.mydomain.myscan.CameraScreenState
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.Point
-import org.mydomain.myscan.CameraScreenState
 import org.mydomain.myscan.scaledTo
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -94,6 +96,7 @@ fun CameraScreen(
                 captureController = captureController)
             AnalysisOverlay(uiState)
         }
+        MessageBox(uiState.inferenceTime)
         Button(
             onClick = {
                 captureController.takePicture(
@@ -248,4 +251,15 @@ class CameraCaptureController {
             }
         )
     }
+}
+
+@Composable
+fun MessageBox(inferenceTime: Long) {
+    Text(
+        text = if(inferenceTime == 0L) "" else "Segmentation time: $inferenceTime ms",
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        color = Color.Gray,
+    )
 }
