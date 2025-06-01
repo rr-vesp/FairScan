@@ -28,8 +28,8 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         }
     }
 
-    private var _uiState = MutableStateFlow(UiState("just started"))
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private var _cameraScreenState = MutableStateFlow(CameraScreenState("just started"))
+    val cameraScreenState: StateFlow<CameraScreenState> = _cameraScreenState.asStateFlow()
 
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
@@ -41,7 +41,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
                 .filterNotNull()
                 .map {
                     val binaryMask = it.segmentation.toBinaryMask()
-                    UiState(
+                    CameraScreenState(
                         detectionMessage = "Inference done",
                         inferenceTime = it.inferenceTime,
                         binaryMask = binaryMask,
@@ -49,7 +49,7 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
                     )
                 }
                 .collect {
-                    _uiState.value = it
+                    _cameraScreenState.value = it
                 }
         }
     }

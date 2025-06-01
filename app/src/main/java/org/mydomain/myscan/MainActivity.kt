@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,19 +39,17 @@ class MainActivity : ComponentActivity() {
         val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
         enableEdgeToEdge()
         setContent {
-            // TODO or collectAsStateWithLifecycle()?
-            val currentScreen by viewModel.currentScreen.collectAsState()
-            // TODO should uiState own currentScreen?
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
+            val cameraScreenState by viewModel.cameraScreenState.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
                 Scaffold { innerPadding ->
                     Column {
                         Greeting(modifier = Modifier.padding(innerPadding))
-                        MyMessageBox(uiState.detectionMessage, uiState.inferenceTime)
+                        MyMessageBox(cameraScreenState.detectionMessage, cameraScreenState.inferenceTime)
                         when (val screen = currentScreen) {
                             is Screen.Camera -> {
-                                CameraScreen(viewModel, uiState,
+                                CameraScreen(viewModel, cameraScreenState,
                                     onImageAnalyzed = { image -> viewModel.segment(image) } )
                             }
                             is Screen.PagePreview -> {

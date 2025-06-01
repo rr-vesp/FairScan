@@ -51,7 +51,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.Point
-import org.mydomain.myscan.UiState
+import org.mydomain.myscan.CameraScreenState
 import org.mydomain.myscan.scaledTo
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -59,7 +59,7 @@ import java.util.concurrent.Executors
 @Composable
 fun CameraScreen(
     viewModel: MainViewModel,
-    uiState: UiState,
+    uiState: CameraScreenState,
     onImageAnalyzed: (ImageProxy) -> Unit,
 ) {
     // TODO Check the errors in the logs before the user gives the required authorization
@@ -182,20 +182,21 @@ fun bindCameraUseCases(
 }
 
 @Composable
-private fun AnalysisOverlay(uiState: UiState) {
-    if (uiState.binaryMask == null) {
+private fun AnalysisOverlay(cameraScreenState: CameraScreenState) {
+    val binaryMask = cameraScreenState.binaryMask
+    if (binaryMask == null) {
         return
     }
-    val maskOverlay = replaceColor(uiState.binaryMask, Color.Black, Color.Transparent)
+    val maskOverlay = replaceColor(binaryMask, Color.Black, Color.Transparent)
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawImage(
             maskOverlay.scale(size.width.toInt(), size.height.toInt()).asImageBitmap(),
             colorFilter = ColorFilter.tint(Color(0x8000FF00), BlendMode.SrcIn)
         )
-        if (uiState.documentQuad != null) {
-            val scaledQuad = uiState.documentQuad.scaledTo(
-                fromWidth = uiState.binaryMask.width,
-                fromHeight = uiState.binaryMask.height,
+        if (cameraScreenState.documentQuad != null) {
+            val scaledQuad = cameraScreenState.documentQuad.scaledTo(
+                fromWidth = binaryMask.width,
+                fromHeight = binaryMask.height,
                 toWidth = size.width.toInt(),
                 toHeight = size.height.toInt()
             )
