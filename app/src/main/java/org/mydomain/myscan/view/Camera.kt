@@ -75,6 +75,9 @@ fun CameraScreen(
     }
 
     val captureController = remember { CameraCaptureController() }
+    DisposableEffect(Unit) {
+        onDispose { captureController.shutdown() }
+    }
 
     LaunchedEffect(Unit) {
         val camera = android.Manifest.permission.CAMERA
@@ -100,7 +103,6 @@ fun CameraScreen(
         Button(
             onClick = {
                 captureController.takePicture(
-                    context = context,
                     onImageCaptured = { imageProxy ->
                         if (imageProxy != null) {
                             viewModel.processCapturedImageAndNavigate(imageProxy)
@@ -235,11 +237,15 @@ fun Point.toOffset() = Offset(x.toFloat(), y.toFloat())
 
 class CameraCaptureController {
     var imageCapture: ImageCapture? = null
+    private val executor = Executors.newSingleThreadExecutor()
 
-    fun takePicture(context: Context, onImageCaptured: (ImageProxy?) -> Unit) {
+    fun shutdown() {
+        executor.shutdown()
+    }
+
+    fun takePicture(onImageCaptured: (ImageProxy?) -> Unit) {
         imageCapture?.takePicture(
-            // TODO is it a good idea to use this executor?
-            ContextCompat.getMainExecutor(context),
+            executor,
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(imageProxy: ImageProxy) {
                     onImageCaptured(imageProxy)
