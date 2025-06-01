@@ -1,6 +1,5 @@
 package org.mydomain.myscan.view
 
-import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import android.util.Log
@@ -9,13 +8,14 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.AspectRatio.RATIO_4_3
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -64,7 +64,6 @@ fun CameraScreen(
     uiState: CameraScreenState,
     onImageAnalyzed: (ImageProxy) -> Unit,
 ) {
-    // TODO Check the errors in the logs before the user gives the required authorization
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -165,19 +164,22 @@ fun bindCameraUseCases(
     onImageAnalyzed: (ImageProxy) -> Unit,
     captureController: CameraCaptureController,
 ) {
-    val preview: Preview = Preview.Builder().setTargetAspectRatio(RATIO_4_3).build()
-
+    val ratio_4_3 = ResolutionSelector.Builder()
+        .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+        .build()
+    val preview: Preview = Preview.Builder().setResolutionSelector(ratio_4_3).build()
     preview.surfaceProvider = previewView.surfaceProvider
 
     val cameraSelector: CameraSelector =
         CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-    val imageAnalysis = ImageAnalysis.Builder().setTargetAspectRatio(RATIO_4_3)
+    val imageAnalysis = ImageAnalysis.Builder()
+        .setResolutionSelector(ratio_4_3)
         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888).build()
     imageAnalysis.setAnalyzer(executor, onImageAnalyzed)
 
     val imageCapture = ImageCapture.Builder()
-        .setTargetAspectRatio(RATIO_4_3)
+        .setResolutionSelector(ratio_4_3)
         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
         .build()
     captureController.imageCapture = imageCapture
