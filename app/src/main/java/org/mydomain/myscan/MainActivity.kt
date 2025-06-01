@@ -13,8 +13,6 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,8 +37,7 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             MyScanTheme {
                 Scaffold { innerPadding ->
-                    Column {
-                        Greeting(modifier = Modifier.padding(innerPadding))
+                    Column (modifier = Modifier.padding(innerPadding)) {
                         when (val screen = currentScreen) {
                             is Screen.Camera -> {
                                 CameraScreen(viewModel, cameraScreenState,
@@ -89,12 +86,4 @@ class MainActivity : ComponentActivity() {
             Log.d("OpenCV", "Initialization successful")
         }
     }
-}
-
-@Composable
-fun Greeting(modifier: Modifier = Modifier) {
-    Text(
-        text = "Scan your document",
-        modifier = modifier
-    )
 }
