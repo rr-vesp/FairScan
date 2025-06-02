@@ -64,6 +64,12 @@ fun CameraScreen(
     uiState: CameraScreenState,
     onImageAnalyzed: (ImageProxy) -> Unit,
 ) {
+    // TODO Should we move those variables to ViewModel?
+    // TODO pause the live analysis when displaying the PageValidationDialogs
+    val showPageDialog = remember { mutableStateOf(false) }
+    val isProcessing = remember { mutableStateOf(false) }
+    val processedPage = remember { mutableStateOf<Bitmap?>(null) }
+
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -101,10 +107,15 @@ fun CameraScreen(
         MessageBox(uiState.inferenceTime)
         Button(
             onClick = {
+                showPageDialog.value = true
+                isProcessing.value = true
                 captureController.takePicture(
                     onImageCaptured = { imageProxy ->
                         if (imageProxy != null) {
-                            viewModel.processCapturedImageAndNavigate(imageProxy)
+                            viewModel.processCapturedImageThen(imageProxy) { result ->
+                                processedPage.value = result
+                                isProcessing.value = false
+                            }
                         } else {
                             Log.e("MyScan", "Error during image capture")
                         }
@@ -114,6 +125,23 @@ fun CameraScreen(
         ) {
             Text("Capture")
         }
+    }
+
+    if (showPageDialog.value) {
+        PageValidationDialog(
+            isProcessing = isProcessing.value,
+            pageBitmap = processedPage.value,
+            onConfirm = {
+                viewModel.addPage(processedPage.value!!)
+                showPageDialog.value = false
+            },
+            onReject = {
+                showPageDialog.value = false
+            },
+            onDismiss = {
+                showPageDialog.value = false
+            }
+        )
     }
 }
 

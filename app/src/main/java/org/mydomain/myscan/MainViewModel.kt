@@ -3,7 +3,6 @@ package org.mydomain.myscan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -68,13 +67,10 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         _currentScreen.value = screen
     }
 
-    fun processCapturedImageAndNavigate(imageProxy: ImageProxy) {
+    fun processCapturedImageThen(imageProxy: ImageProxy, onResult: (Bitmap?) -> Unit) {
         viewModelScope.launch {
-            Log.d("MyScan", "Navigating to spinner")
-            navigateTo(Screen.PagePreview(image = null, isProcessing = true))
             val processedImage = processCapturedImage(imageProxy)
-            Log.d("MyScan", "Navigating to result image")
-            navigateTo(Screen.PagePreview(image = processedImage, isProcessing = false))
+            onResult(processedImage)
         }
     }
 
@@ -97,5 +93,9 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         if (degrees == 0) return this
         val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
+
+    fun addPage(bitmap: Bitmap) {
+        // TODO
     }
 }
