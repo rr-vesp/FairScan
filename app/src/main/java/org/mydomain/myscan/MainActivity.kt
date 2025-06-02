@@ -22,7 +22,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
-import org.mydomain.myscan.view.PagePreviewScreen
+import org.mydomain.myscan.view.FinalizeDocumentScreen
 import org.opencv.android.OpenCVLoader
 import java.io.File
 import java.io.FileOutputStream
@@ -38,22 +38,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
             val cameraScreenState by viewModel.cameraScreenState.collectAsStateWithLifecycle()
+            val pages by viewModel.pages.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
                 Scaffold { innerPadding ->
                     Column (modifier = Modifier.padding(innerPadding)) {
-                        when (val screen = currentScreen) {
+                        when (currentScreen) {
                             is Screen.Camera -> {
                                 CameraScreen(viewModel, cameraScreenState,
-                                    onImageAnalyzed = { image -> viewModel.segment(image) } )
+                                    onImageAnalyzed = { image -> viewModel.segment(image) },
+                                    onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument) }
+                                )
                             }
-                            is Screen.PagePreview -> {
-                                PagePreviewScreen (
-                                    image = screen.image,
-                                    isProcessing = screen.isProcessing,
+                            is Screen.FinalizeDocument -> {
+                                FinalizeDocumentScreen (
+                                    viewModel,
                                     onBackPressed = { viewModel.navigateTo(Screen.Camera) },
-                                    onSavePressed = createPdfAndSave(context),
-                                    onSharePressed = createPdfAndShare(context),
+                                    onSavePressed = savePdf(pages, context),
+                                    // TODO "on share"
                                 )
                             }
                         }
@@ -93,8 +95,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun createPdfAndSave(context: Context): (Bitmap) -> Unit = { bitmap ->
-        val document = createPdfFromBitmaps(listOf(bitmap))
+    private fun savePdf(
+        pages: List<Bitmap>,
+        context: Context
+    ): () -> Unit = {
+        val document = createPdfFromBitmaps(pages)
         try {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             if (!downloadsDir.exists()) downloadsDir.mkdirs()

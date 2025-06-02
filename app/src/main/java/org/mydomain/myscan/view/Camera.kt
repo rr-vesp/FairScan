@@ -19,14 +19,17 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -58,11 +61,14 @@ import org.mydomain.myscan.scaledTo
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+// TODO Split this big file
+
 @Composable
 fun CameraScreen(
     viewModel: MainViewModel,
     uiState: CameraScreenState,
     onImageAnalyzed: (ImageProxy) -> Unit,
+    onFinalizePressed: () -> Unit
 ) {
     // TODO Should we move those variables to ViewModel?
     // TODO pause the live analysis when displaying the PageValidationDialogs
@@ -91,19 +97,8 @@ fun CameraScreen(
         }
     }
 
-    Column {
-        val width = LocalConfiguration.current.screenWidthDp
-        val height = width / 3 * 4
-        Box(
-            modifier = Modifier
-                .width(width.dp)
-                .height(height.dp)
-        ) {
-            CameraPreview(
-                onImageAnalyzed = onImageAnalyzed,
-                captureController = captureController)
-            AnalysisOverlay(uiState)
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        CameraPreviewWithOverlay(onImageAnalyzed, captureController, uiState)
         MessageBox(uiState.inferenceTime)
         Button(
             onClick = {
@@ -121,10 +116,14 @@ fun CameraScreen(
                         }
                     }
                 )},
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
         ) {
             Text("Capture")
         }
+        CameraScreenFooter(
+            pageCount = viewModel.pageCount(),
+            onFinalizePressed = onFinalizePressed,
+            modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     if (showPageDialog.value) {
@@ -142,6 +141,27 @@ fun CameraScreen(
                 showPageDialog.value = false
             }
         )
+    }
+}
+
+@Composable
+private fun CameraPreviewWithOverlay(
+    onImageAnalyzed: (ImageProxy) -> Unit,
+    captureController: CameraCaptureController,
+    uiState: CameraScreenState
+) {
+    val width = LocalConfiguration.current.screenWidthDp
+    val height = width / 3 * 4
+    Box(
+        modifier = Modifier
+            .width(width.dp)
+            .height(height.dp)
+    ) {
+        CameraPreview(
+            onImageAnalyzed = onImageAnalyzed,
+            captureController = captureController
+        )
+        AnalysisOverlay(uiState)
     }
 }
 
@@ -298,4 +318,37 @@ fun MessageBox(inferenceTime: Long) {
             .fillMaxWidth(),
         color = Color.Gray,
     )
+}
+
+@Composable
+fun CameraScreenFooter(
+    pageCount: Int,
+    onFinalizePressed: () -> Unit,
+    modifier: Modifier,
+) {
+    Surface (
+        color = MaterialTheme.colorScheme.inverseOnSurface,
+        tonalElevation = 4.dp,
+        modifier = modifier.fillMaxWidth().height(56.dp)
+    ) {
+        Row (
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Pages : $pageCount",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Button (
+                onClick = onFinalizePressed,
+                enabled = pageCount > 0
+            ) {
+                Text("Finish")
+            }
+        }
+    }
 }

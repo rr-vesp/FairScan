@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.runtime.Immutable
 
 @Immutable
+// TODO Rename to LiveAnalysisState
 data class CameraScreenState(
     val detectionMessage: String? = null,
     val inferenceTime: Long = 0L,

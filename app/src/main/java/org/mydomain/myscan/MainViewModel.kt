@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.camera.core.ImageProxy
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -32,6 +34,10 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
 
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
+
+    // TODO store images on disk
+    private val _pages = MutableStateFlow<List<Bitmap>>(listOf())
+    val pages: StateFlow<List<Bitmap>> = _pages
 
     init {
         viewModelScope.launch {
@@ -96,6 +102,8 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
     }
 
     fun addPage(bitmap: Bitmap) {
-        // TODO
+        _pages.update { list -> list.plus(bitmap) }
     }
+
+    fun pageCount(): Int = _pages.value.size
 }
