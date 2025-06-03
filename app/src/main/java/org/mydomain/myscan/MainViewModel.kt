@@ -38,6 +38,9 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
     private val _pages = MutableStateFlow<List<Bitmap>>(listOf())
     val pages: StateFlow<List<Bitmap>> = _pages
 
+    private var _pageToValidate = MutableStateFlow<Bitmap?>(null)
+    val pageToValidate: StateFlow<Bitmap?> = _pageToValidate.asStateFlow()
+
     init {
         viewModelScope.launch {
             imageSegmentationService.initialize()
@@ -73,8 +76,8 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
 
     fun processCapturedImageThen(imageProxy: ImageProxy, onResult: (Bitmap?) -> Unit) {
         viewModelScope.launch {
-            val processedImage = processCapturedImage(imageProxy)
-            onResult(processedImage)
+            _pageToValidate.value = processCapturedImage(imageProxy)
+            onResult(_pageToValidate.value)
         }
     }
 

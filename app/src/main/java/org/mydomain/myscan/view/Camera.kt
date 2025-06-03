@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -53,6 +54,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.common.util.concurrent.ListenableFuture
 import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
@@ -70,11 +72,10 @@ fun CameraScreen(
     onImageAnalyzed: (ImageProxy) -> Unit,
     onFinalizePressed: () -> Unit
 ) {
-    // TODO Should we move those variables to ViewModel?
     // TODO pause the live analysis when displaying the PageValidationDialogs
-    val showPageDialog = remember { mutableStateOf(false) }
-    val isProcessing = remember { mutableStateOf(false) }
-    val processedPage = remember { mutableStateOf<Bitmap?>(null) }
+    val showPageDialog = rememberSaveable { mutableStateOf(false) }
+    val isProcessing = rememberSaveable { mutableStateOf(false) }
+    val pageToValidate by viewModel.pageToValidate.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -107,8 +108,7 @@ fun CameraScreen(
                 captureController.takePicture(
                     onImageCaptured = { imageProxy ->
                         if (imageProxy != null) {
-                            viewModel.processCapturedImageThen(imageProxy) { result ->
-                                processedPage.value = result
+                            viewModel.processCapturedImageThen(imageProxy) {
                                 isProcessing.value = false
                             }
                         } else {
@@ -129,9 +129,9 @@ fun CameraScreen(
     if (showPageDialog.value) {
         PageValidationDialog(
             isProcessing = isProcessing.value,
-            pageBitmap = processedPage.value,
+            pageBitmap = pageToValidate,
             onConfirm = {
-                viewModel.addPage(processedPage.value!!)
+                viewModel.addPage(pageToValidate!!)
                 showPageDialog.value = false
             },
             onReject = {
