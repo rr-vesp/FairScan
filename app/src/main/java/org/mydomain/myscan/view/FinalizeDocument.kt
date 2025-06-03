@@ -2,32 +2,33 @@ package org.mydomain.myscan.view
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,28 +59,35 @@ fun FinalizeDocumentScreen(
             )
         }
     ) { padding ->
-        LazyColumn (
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFF0F0F0)),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(pages) { bitmap ->
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Page",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(bitmap.width.toFloat() / bitmap.height)
-                            .background(Color.White)
-                    )
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)) {
+
+            Text(
+                "Pages",
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
+            FlowRow (
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                pages.forEachIndexed { index, bitmap ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Page ${index + 1}",
+                            modifier = Modifier
+                                .size(160.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                        Text("Page ${index + 1}")
+                    }
                 }
             }
         }
