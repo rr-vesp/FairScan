@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
-            val cameraScreenState by viewModel.cameraScreenState.collectAsStateWithLifecycle()
+            val liveAnalysisState by viewModel.liveAnalysisState.collectAsStateWithLifecycle()
             val pages by viewModel.pages.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
                     Column (modifier = Modifier.padding(innerPadding)) {
                         when (currentScreen) {
                             is Screen.Camera -> {
-                                CameraScreen(viewModel, cameraScreenState,
+                                CameraScreen(viewModel, liveAnalysisState,
                                     onImageAnalyzed = { image -> viewModel.segment(image) },
                                     onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument) }
                                 )

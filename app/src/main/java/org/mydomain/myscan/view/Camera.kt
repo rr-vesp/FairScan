@@ -54,7 +54,7 @@ import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
-import org.mydomain.myscan.CameraScreenState
+import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.Point
 import org.mydomain.myscan.scaledTo
@@ -66,7 +66,7 @@ import java.util.concurrent.Executors
 @Composable
 fun CameraScreen(
     viewModel: MainViewModel,
-    uiState: CameraScreenState,
+    liveAnalysisState: LiveAnalysisState,
     onImageAnalyzed: (ImageProxy) -> Unit,
     onFinalizePressed: () -> Unit
 ) {
@@ -98,8 +98,8 @@ fun CameraScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        CameraPreviewWithOverlay(onImageAnalyzed, captureController, uiState)
-        MessageBox(uiState.inferenceTime)
+        CameraPreviewWithOverlay(onImageAnalyzed, captureController, liveAnalysisState)
+        MessageBox(liveAnalysisState.inferenceTime)
         Button(
             onClick = {
                 showPageDialog.value = true
@@ -148,7 +148,7 @@ fun CameraScreen(
 private fun CameraPreviewWithOverlay(
     onImageAnalyzed: (ImageProxy) -> Unit,
     captureController: CameraCaptureController,
-    uiState: CameraScreenState
+    liveAnalysisState: LiveAnalysisState
 ) {
     val width = LocalConfiguration.current.screenWidthDp
     val height = width / 3 * 4
@@ -161,7 +161,7 @@ private fun CameraPreviewWithOverlay(
             onImageAnalyzed = onImageAnalyzed,
             captureController = captureController
         )
-        AnalysisOverlay(uiState)
+        AnalysisOverlay(liveAnalysisState)
     }
 }
 
@@ -237,8 +237,8 @@ fun bindCameraUseCases(
 }
 
 @Composable
-private fun AnalysisOverlay(cameraScreenState: CameraScreenState) {
-    val binaryMask = cameraScreenState.binaryMask
+private fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState) {
+    val binaryMask = liveAnalysisState.binaryMask
     if (binaryMask == null) {
         return
     }
@@ -248,8 +248,8 @@ private fun AnalysisOverlay(cameraScreenState: CameraScreenState) {
             maskOverlay.scale(size.width.toInt(), size.height.toInt()).asImageBitmap(),
             colorFilter = ColorFilter.tint(Color(0x8000FF00), BlendMode.SrcIn)
         )
-        if (cameraScreenState.documentQuad != null) {
-            val scaledQuad = cameraScreenState.documentQuad.scaledTo(
+        if (liveAnalysisState.documentQuad != null) {
+            val scaledQuad = liveAnalysisState.documentQuad.scaledTo(
                 fromWidth = binaryMask.width,
                 fromHeight = binaryMask.height,
                 toWidth = size.width.toInt(),

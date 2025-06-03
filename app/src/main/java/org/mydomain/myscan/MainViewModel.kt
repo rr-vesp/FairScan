@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.camera.core.ImageProxy
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -29,8 +28,8 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         }
     }
 
-    private var _cameraScreenState = MutableStateFlow(CameraScreenState("just started"))
-    val cameraScreenState: StateFlow<CameraScreenState> = _cameraScreenState.asStateFlow()
+    private var _liveAnalysisState = MutableStateFlow(LiveAnalysisState())
+    val liveAnalysisState: StateFlow<LiveAnalysisState> = _liveAnalysisState.asStateFlow()
 
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
@@ -46,15 +45,14 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
                 .filterNotNull()
                 .map {
                     val binaryMask = it.segmentation.toBinaryMask()
-                    CameraScreenState(
-                        detectionMessage = "Inference done",
+                    LiveAnalysisState(
                         inferenceTime = it.inferenceTime,
                         binaryMask = binaryMask,
                         documentQuad = detectDocumentQuad(binaryMask)
                     )
                 }
                 .collect {
-                    _cameraScreenState.value = it
+                    _liveAnalysisState.value = it
                 }
         }
     }
