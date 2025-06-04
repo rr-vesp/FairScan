@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.litert.support)
     implementation(libs.litert.metadata)
     implementation(libs.opencv)
+    implementation(libs.pdfbox)
 
     testImplementation(libs.junit)
     testImplementation(libs.assertj)

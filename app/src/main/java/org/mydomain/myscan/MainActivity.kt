@@ -2,7 +2,6 @@ package org.mydomain.myscan
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Environment
@@ -32,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initOpenCV()
+        initLibraries()
         val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
         enableEdgeToEdge()
         setContent {
@@ -68,19 +67,15 @@ class MainActivity : ComponentActivity() {
         viewModel: MainViewModel,
         context: Context
     ): () -> Unit = {
-        val document = viewModel.createPdf()
         val outputDir = File(cacheDir, "pdfs").apply { mkdirs() }
         val outputFile = File(outputDir, "scan_${System.currentTimeMillis()}.pdf")
         var success = true
         try {
-            FileOutputStream(outputFile).use { outputStream ->
-                document.writeTo(outputStream)
-            }
+            val fileOutputStream = FileOutputStream(outputFile)
+            viewModel.createPdf(fileOutputStream)
         } catch (_: IOException) {
             Toast.makeText(context, "Failed to share PDF", Toast.LENGTH_SHORT).show()
             success = false
-        } finally {
-            document.close()
         }
         if (success) {
             val uri = FileProvider.getUriForFile(
@@ -101,13 +96,12 @@ class MainActivity : ComponentActivity() {
         viewModel: MainViewModel,
         context: Context
     ): () -> Unit = {
-        val document = viewModel.createPdf()
         try {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             if (!downloadsDir.exists()) downloadsDir.mkdirs()
             val file = File(downloadsDir, "scan_${System.currentTimeMillis()}.pdf")
             val outputStream = FileOutputStream(file)
-            document.writeTo(outputStream)
+            viewModel.createPdf(outputStream)
             outputStream.flush()
             outputStream.close()
 
@@ -119,12 +113,12 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             Log.e("MyScan", "Failed to save PDF", e)
             Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
-        } finally {
-            document.close()
         }
     }
 
-    private fun initOpenCV() {
+    private fun initLibraries() {
+        com.tom_roush.pdfbox.android.PDFBoxResourceLoader.init(applicationContext)
+
         if (!OpenCVLoader.initLocal()) {
             Log.e("OpenCV", "Initialization failed")
         } else {

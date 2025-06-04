@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 class MainViewModel(
     private val imageSegmentationService: ImageSegmentationService,
@@ -128,9 +129,9 @@ class MainViewModel(
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
-    fun createPdf(): PdfDocument {
+    fun createPdf(outputStream: OutputStream) {
         val jpegs = imageRepository.imageIds().asSequence()
             .map { id -> imageRepository.getContent(id) }
-        return createPdfFromJpegs(jpegs)
+        writePdfFromJpegs(jpegs, outputStream)
     }
 }
