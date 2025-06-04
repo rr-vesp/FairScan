@@ -116,6 +116,11 @@ class MainViewModel(
         _pageIds.value = imageRepository.imageIds()
     }
 
+    fun deletePage(id: String) {
+        imageRepository.delete(id)
+        _pageIds.value = imageRepository.imageIds()
+    }
+
     fun pageCount(): Int = pageIds.value.size
 
     fun getBitmap(id: String): Bitmap {

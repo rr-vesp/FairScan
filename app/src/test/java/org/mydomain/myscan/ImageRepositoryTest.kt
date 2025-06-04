@@ -36,6 +36,18 @@ class ImageRepositoryTest {
     }
 
     @Test
+    fun delete_image() {
+        val repo = repo()
+        val bytes = byteArrayOf(101, 102, 103)
+        repo.add(bytes)
+        assertThat(repo.imageIds()).hasSize(1)
+        repo.delete(repo.imageIds()[0])
+        assertThat(repo.imageIds()).isEmpty()
+        val repo2 = repo()
+        assertThat(repo2.imageIds()).isEmpty()
+    }
+
+    @Test
     fun `should find existing files at initialization`() {
         val bytes = byteArrayOf(101, 102, 103)
         val repo1 = repo()

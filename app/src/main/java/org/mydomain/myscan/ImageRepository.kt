@@ -33,4 +33,9 @@ class ImageRepository(appFilesDir: File) {
         throw IllegalArgumentException("No image for id: $id")
     }
 
+    fun delete(id: String) {
+        val file = File(scanDir, id)
+        file.delete()
+        fileNames.remove(id)
+    }
 }

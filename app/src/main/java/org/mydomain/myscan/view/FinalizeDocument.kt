@@ -1,8 +1,10 @@
 package org.mydomain.myscan.view
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,10 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -35,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -49,7 +52,6 @@ fun FinalizeDocumentScreen(
     onSavePressed: () -> Unit,
     onSharePressed: () -> Unit,
 ) {
-    val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
     Scaffold (
         topBar = {
             TopAppBar(
@@ -80,36 +82,57 @@ fun FinalizeDocumentScreen(
                 }
             }
         }
-    ) { padding ->
-        Column(modifier = Modifier
+    ) { padding -> DocumentPreview(padding, viewModel) }
+}
+
+@Composable
+private fun DocumentPreview(
+    padding: PaddingValues,
+    viewModel: MainViewModel
+) {
+    val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
+    Column(
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(padding)) {
-
-            Text(
-                "Pages",
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                style = MaterialTheme.typography.titleMedium
-            )
-            FlowRow (
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                pageIds.forEachIndexed { index, id ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            .padding(padding)
+    ) {
+        Text(
+            "Pages",
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+            style = MaterialTheme.typography.titleMedium
+        )
+        FlowRow(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            pageIds.forEachIndexed { index, id ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // TODO Display small images rather than big ones
+                    // TODO Make it possible to zoom on an image
+                    Box {
                         Image(
                             bitmap = viewModel.getBitmap(id).asImageBitmap(),
                             contentDescription = "Page ${index + 1}",
                             modifier = Modifier
                                 .size(160.dp)
+                                .padding(4.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, Color.DarkGray, RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Fit
+                                .border(1.dp, Color.DarkGray)
                         )
-                        Text("Page ${index + 1}")
+
+                        IconButton(
+                            onClick = { viewModel.deletePage(id) },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(24.dp)
+                                .background(Color.Black.copy(alpha = 0.5f), shape = CircleShape)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                        }
                     }
                 }
             }
