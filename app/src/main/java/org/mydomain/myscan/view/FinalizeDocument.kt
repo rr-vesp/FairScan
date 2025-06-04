@@ -1,6 +1,5 @@
 package org.mydomain.myscan.view
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +40,7 @@ fun FinalizeDocumentScreen(
     onBackPressed: () -> Unit,
     onSavePressed: () -> Unit
 ) {
-    val pages: List<Bitmap> by viewModel.pages.collectAsStateWithLifecycle()
+    val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
     Scaffold (
         topBar = {
             TopAppBar(
@@ -75,10 +74,10 @@ fun FinalizeDocumentScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                pages.forEachIndexed { index, bitmap ->
+                pageIds.forEachIndexed { index, id ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Image(
-                            bitmap = bitmap.asImageBitmap(),
+                            bitmap = viewModel.getBitmap(id).asImageBitmap(),
                             contentDescription = "Page ${index + 1}",
                             modifier = Modifier
                                 .size(160.dp)

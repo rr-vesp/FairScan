@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.opencv)
 
     testImplementation(libs.junit)
+    testImplementation(libs.assertj)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

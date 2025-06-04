@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
             val liveAnalysisState by viewModel.liveAnalysisState.collectAsStateWithLifecycle()
-            val pages by viewModel.pages.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
                 Scaffold { innerPadding ->
@@ -54,7 +53,7 @@ class MainActivity : ComponentActivity() {
                                 FinalizeDocumentScreen (
                                     viewModel,
                                     onBackPressed = { viewModel.navigateTo(Screen.Camera) },
-                                    onSavePressed = savePdf(pages, context),
+                                    onSavePressed = savePdf(viewModel, context),
                                     // TODO "on share"
                                 )
                             }
@@ -65,6 +64,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /*
     private fun createPdfAndShare(context: Context): (Bitmap) -> Unit = { bitmap ->
         val outputDir = File(cacheDir, "pdfs").apply { mkdirs() }
         val outputFile = File(outputDir, "scan_${System.currentTimeMillis()}.pdf")
@@ -94,12 +94,13 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent.createChooser(shareIntent, "Share PDF"))
         }
     }
+     */
 
     private fun savePdf(
-        pages: List<Bitmap>,
+        viewModel: MainViewModel,
         context: Context
     ): () -> Unit = {
-        val document = createPdfFromBitmaps(pages)
+        val document = viewModel.createPdf()
         try {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             if (!downloadsDir.exists()) downloadsDir.mkdirs()

@@ -4,20 +4,15 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.pdf.PdfDocument
 import androidx.core.graphics.scale
-import java.io.ByteArrayOutputStream
 import kotlin.math.max
 
-fun createPdfFromBitmaps (bitmaps: List<Bitmap>): PdfDocument {
+fun createPdfFromJpegs (jpegs: Sequence<ByteArray>): PdfDocument {
     val document = PdfDocument()
-    for ((index, bitmap) in bitmaps.map { resizeImage(it) }.withIndex()) {
-        val jpegStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 72, jpegStream)
-        val compressedBytes = jpegStream.toByteArray()
-        val compressedBitmap =
-            BitmapFactory.decodeByteArray(compressedBytes, 0, compressedBytes.size)
+    for ((index, jpegBytes) in jpegs.withIndex()) {
+        val bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
         val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, index + 1).create()
         val page = document.startPage(pageInfo)
-        page.canvas.drawBitmap(compressedBitmap, 0f, 0f, null)
+        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
         document.finishPage(page)
     }
     return document

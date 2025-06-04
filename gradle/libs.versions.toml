@@ -12,6 +12,7 @@ camerax = "1.4.2"
 litert = "1.2.0"
 opencv = "4.11.0"
 flowlayout =  "0.36.0"
+assertj = "3.27.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +41,8 @@ litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "
 litert-support = { group = "com.google.ai.edge.litert", name = "litert-support", version.ref = "litert" }
 litert-metadata = { group = "com.google.ai.edge.litert", name = "litert-metadata", version.ref = "litert" }
 opencv = { group="org.opencv", name="opencv", version.ref = "opencv" }
+
+assertj =  { group="org.assertj", name="assertj-core", version.ref = "assertj" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

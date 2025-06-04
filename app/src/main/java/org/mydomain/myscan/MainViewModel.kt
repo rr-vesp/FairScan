@@ -2,7 +2,9 @@ package org.mydomain.myscan
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.pdf.PdfDocument
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -14,16 +16,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
-class MainViewModel(private val imageSegmentationService: ImageSegmentationService): ViewModel() {
+class MainViewModel(
+    private val imageSegmentationService: ImageSegmentationService,
+    private val imageRepository: ImageRepository,
+): ViewModel() {
 
     companion object {
         fun getFactory(context: Context) = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                return MainViewModel(ImageSegmentationService(context)) as T
+                return MainViewModel(ImageSegmentationService(context), ImageRepository(context.filesDir)) as T
             }
         }
     }
@@ -34,9 +40,8 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
     val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
 
-    // TODO store images on disk
-    private val _pages = MutableStateFlow<List<Bitmap>>(listOf())
-    val pages: StateFlow<List<Bitmap>> = _pages
+    private val _pageIds = MutableStateFlow<List<String>>(imageRepository.imageIds())
+    val pageIds: StateFlow<List<String>> = _pageIds
 
     private var _pageToValidate = MutableStateFlow<Bitmap?>(null)
     val pageToValidate: StateFlow<Bitmap?> = _pageToValidate.asStateFlow()
@@ -102,9 +107,25 @@ class MainViewModel(private val imageSegmentationService: ImageSegmentationServi
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
-    fun addPage(bitmap: Bitmap) {
-        _pages.update { list -> list.plus(bitmap) }
+    fun addPage(bitmap: Bitmap, quality: Int = 75) {
+        val resized = resizeImage(bitmap)
+        val outputStream = ByteArrayOutputStream()
+        resized.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        val jpegBytes = outputStream.toByteArray()
+        imageRepository.add(jpegBytes)
+        _pageIds.value = imageRepository.imageIds()
     }
 
-    fun pageCount(): Int = _pages.value.size
+    fun pageCount(): Int = pageIds.value.size
+
+    fun getBitmap(id: String): Bitmap {
+        val bytes = imageRepository.getContent(id)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
+
+    fun createPdf(): PdfDocument {
+        val jpegs = imageRepository.imageIds().asSequence()
+            .map { id -> imageRepository.getContent(id) }
+        return createPdfFromJpegs(jpegs)
+    }
 }
