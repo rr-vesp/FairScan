@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel,
                                     onBackPressed = { viewModel.navigateTo(Screen.Camera) },
                                     onSavePressed = savePdf(viewModel, context),
-                                    // TODO "on share"
+                                    onSharePressed = sharePdf(viewModel, context),
                                 )
                             }
                         }
@@ -64,11 +64,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /*
-    private fun createPdfAndShare(context: Context): (Bitmap) -> Unit = { bitmap ->
+    private fun sharePdf(
+        viewModel: MainViewModel,
+        context: Context
+    ): () -> Unit = {
+        val document = viewModel.createPdf()
         val outputDir = File(cacheDir, "pdfs").apply { mkdirs() }
         val outputFile = File(outputDir, "scan_${System.currentTimeMillis()}.pdf")
-        val document = createPdfFromBitmaps(listOf(bitmap))
         var success = true
         try {
             FileOutputStream(outputFile).use { outputStream ->
@@ -94,7 +96,6 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent.createChooser(shareIntent, "Share PDF"))
         }
     }
-     */
 
     private fun savePdf(
         viewModel: MainViewModel,
