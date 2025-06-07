@@ -145,7 +145,7 @@ fun CameraScreen(
             isProcessing = isProcessing.value,
             pageBitmap = pageToValidate,
             onConfirm = {
-                viewModel.addPage(pageToValidate!!)
+                pageToValidate?.let { viewModel.addPage(it) }
                 showPageDialog.value = false
             },
             onReject = {
