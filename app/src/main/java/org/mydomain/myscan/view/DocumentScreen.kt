@@ -185,18 +185,23 @@ private fun PageList(
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
                 .background(MaterialTheme.colorScheme.secondaryContainer),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             itemsIndexed (pageIds) { index, id ->
                 // TODO Use small images rather than big ones
                 val bitmap = imageLoader(id).asImageBitmap()
                 val isSelected = index == currentPageIndex.value
                 val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                val modifier =
+                    if (bitmap.height > bitmap.width)
+                        Modifier.height(120.dp)
+                    else
+                        Modifier.width(120.dp)
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
-                    modifier = Modifier
-                        .height(120.dp)
+                    modifier = modifier
                         .padding(4.dp)
                         .border(2.dp, borderColor)
                         .clickable { currentPageIndex.value = index }
