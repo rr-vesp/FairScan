@@ -151,9 +151,9 @@ private fun DocumentPreview(
                     .padding(4.dp)
                     .align(Alignment.Center)
             )
-            IconButton(
+            SmallFloatingActionButton(
                 onClick = { onDeleteImage(imageId) },
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
             ) {
                 Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete page")
             }
