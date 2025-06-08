@@ -33,6 +33,11 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -40,7 +45,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -62,6 +69,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -91,6 +99,7 @@ fun CameraScreen(
     val showPageDialog = rememberSaveable { mutableStateOf(false) }
     val isProcessing = rememberSaveable { mutableStateOf(false) }
     val pageToValidate by viewModel.pageToValidate.collectAsStateWithLifecycle()
+    val pageCount = viewModel.pageCount()
 
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -116,7 +125,7 @@ fun CameraScreen(
     Box(modifier = modifier.fillMaxSize()) {
         CameraPreviewWithOverlay(onImageAnalyzed, captureController, liveAnalysisState)
         MessageBox(liveAnalysisState.inferenceTime)
-        Button(
+        CaptureButton(
             onClick = {
                 showPageDialog.value = true
                 isProcessing.value = true
@@ -130,13 +139,12 @@ fun CameraScreen(
                             Log.e("MyScan", "Error during image capture")
                         }
                     }
-                )},
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
-        ) {
-            Text("Capture")
-        }
+                )
+            },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
+        )
         CameraScreenFooter(
-            pageCount = viewModel.pageCount(),
+            pageCount = pageCount,
             onFinalizePressed = onFinalizePressed,
             modifier = Modifier.align(Alignment.BottomCenter))
     }
@@ -155,6 +163,36 @@ fun CameraScreen(
             onDismiss = {
                 showPageDialog.value = false
             }
+        )
+    }
+}
+
+@Composable
+fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
+    val color = MaterialTheme.colorScheme.primary
+    Box(
+        modifier = modifier
+            .size(80.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = LocalIndication.current,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .border(
+                    width = 4.dp,
+                    color = color.copy(alpha = 0.5f),
+                    shape = CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(color = color, shape = CircleShape)
         )
     }
 }
