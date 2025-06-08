@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.BottomAppBar
@@ -111,6 +112,8 @@ fun DocumentScreen(
                         }
                         Spacer(modifier = Modifier.size(8.dp))
                         Button(onClick = onSavePressed) {
+                            Icon(Icons.Default.Download, contentDescription = "Save")
+                            Spacer(Modifier.width(8.dp))
                             Text("Save")
                         }
                     },
