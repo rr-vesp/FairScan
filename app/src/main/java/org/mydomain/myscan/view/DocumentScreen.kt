@@ -18,6 +18,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -57,6 +59,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,6 +75,7 @@ fun DocumentScreen(
     onSharePressed: () -> Unit,
     onDeleteImage: (String) -> Unit,
 ) {
+    // TODO Check how often images are loaded
     val currentPageIndex = rememberSaveable { mutableIntStateOf(0) }
     if (currentPageIndex.intValue >= pageIds.size) {
         currentPageIndex.intValue = pageIds.size - 1
@@ -183,12 +187,15 @@ private fun PageList(
             itemsIndexed (pageIds) { index, id ->
                 // TODO Use small images rather than big ones
                 val bitmap = imageLoader(id).asImageBitmap()
+                val isSelected = index == currentPageIndex.value
+                val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
                     modifier = Modifier
                         .height(120.dp)
                         .padding(4.dp)
+                        .border(2.dp, borderColor)
                         .clickable { currentPageIndex.value = index }
                 )
             }
