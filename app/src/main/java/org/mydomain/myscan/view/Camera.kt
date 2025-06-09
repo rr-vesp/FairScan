@@ -69,7 +69,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -82,6 +81,7 @@ import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.Point
 import org.mydomain.myscan.scaledTo
+import org.mydomain.myscan.ui.theme.MyScanTheme
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -99,7 +99,6 @@ fun CameraScreen(
     val showPageDialog = rememberSaveable { mutableStateOf(false) }
     val isProcessing = rememberSaveable { mutableStateOf(false) }
     val pageToValidate by viewModel.pageToValidate.collectAsStateWithLifecycle()
-    val pageCount = viewModel.pageCount()
 
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -122,32 +121,32 @@ fun CameraScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        CameraPreviewWithOverlay(onImageAnalyzed, captureController, liveAnalysisState)
-        MessageBox(liveAnalysisState.inferenceTime)
-        CaptureButton(
-            onClick = {
-                showPageDialog.value = true
-                isProcessing.value = true
-                captureController.takePicture(
-                    onImageCaptured = { imageProxy ->
-                        if (imageProxy != null) {
-                            viewModel.processCapturedImageThen(imageProxy) {
-                                isProcessing.value = false
-                            }
-                        } else {
-                            Log.e("MyScan", "Error during image capture")
+    CameraScreenContent(
+        modifier,
+        cameraPreview = {
+            CameraPreview(
+                onImageAnalyzed = onImageAnalyzed,
+                captureController = captureController
+            ) },
+        pageCount = viewModel.pageCount(),
+        liveAnalysisState,
+        onCapture = {
+            showPageDialog.value = true
+            isProcessing.value = true
+            captureController.takePicture(
+                onImageCaptured = { imageProxy ->
+                    if (imageProxy != null) {
+                        viewModel.processCapturedImageThen(imageProxy) {
+                            isProcessing.value = false
                         }
+                    } else {
+                        Log.e("MyScan", "Error during image capture")
                     }
-                )
-            },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
-        )
-        CameraScreenFooter(
-            pageCount = pageCount,
-            onFinalizePressed = onFinalizePressed,
-            modifier = Modifier.align(Alignment.BottomCenter))
-    }
+                }
+            )
+        },
+        onFinalizePressed = onFinalizePressed
+    )
 
     if (showPageDialog.value) {
         PageValidationDialog(
@@ -163,6 +162,33 @@ fun CameraScreen(
             onDismiss = {
                 showPageDialog.value = false
             }
+        )
+    }
+}
+
+@Composable
+private fun CameraScreenContent(
+    modifier: Modifier,
+    cameraPreview: @Composable () -> Unit,
+    pageCount: Int,
+    liveAnalysisState: LiveAnalysisState,
+    onCapture: () -> Unit,
+    onFinalizePressed: () -> Unit
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        CameraPreviewWithOverlay(cameraPreview, liveAnalysisState)
+        MessageBox(liveAnalysisState.inferenceTime)
+
+        CaptureButton(
+            onClick = onCapture,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 96.dp)
+        )
+        CameraScreenFooter(
+            pageCount = pageCount,
+            onFinalizePressed = onFinalizePressed,
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
@@ -199,8 +225,7 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 
 @Composable
 private fun CameraPreviewWithOverlay(
-    onImageAnalyzed: (ImageProxy) -> Unit,
-    captureController: CameraCaptureController,
+    cameraPreview: @Composable () -> Unit,
     liveAnalysisState: LiveAnalysisState
 ) {
     val width = LocalConfiguration.current.screenWidthDp
@@ -210,10 +235,7 @@ private fun CameraPreviewWithOverlay(
             .width(width.dp)
             .height(height.dp)
     ) {
-        CameraPreview(
-            onImageAnalyzed = onImageAnalyzed,
-            captureController = captureController
-        )
+        cameraPreview()
         AnalysisOverlay(liveAnalysisState)
     }
 }
@@ -403,5 +425,28 @@ fun CameraScreenFooter(
                 Text("Finish")
             }
         }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun CameraScreenPreview() {
+    MyScanTheme {
+        CameraScreenContent(
+            modifier = Modifier,
+            cameraPreview = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Camera Preview", color = Color.White)
+                }
+            },
+            pageCount = 3,
+            liveAnalysisState = LiveAnalysisState(),
+            onCapture = {},
+            onFinalizePressed = {})
     }
 }
