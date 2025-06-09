@@ -65,6 +65,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -223,16 +224,18 @@ private fun PageList(
 @Preview
 fun DocumentScreenPreview() {
     val context = LocalContext.current
-    DocumentScreen(
-        pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
-        imageLoader = { id ->
-            context.assets.open(id).use { input ->
-                BitmapFactory.decodeStream(input)
-            }
-        },
-        toCameraScreen = {},
-        onSavePressed = {},
-        onSharePressed = {},
-        onDeleteImage = { _ -> {} }
-    )
+    MyScanTheme {
+        DocumentScreen(
+            pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
+            imageLoader = { id ->
+                context.assets.open(id).use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+            },
+            toCameraScreen = {},
+            onSavePressed = {},
+            onSharePressed = {},
+            onDeleteImage = { _ -> {} }
+        )
+    }
 }
