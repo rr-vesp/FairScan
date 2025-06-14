@@ -91,10 +91,17 @@ fun extractDocument(originalBitmap: Bitmap, quad: Quad): Bitmap {
     val inputMat = Mat()
     Utils.bitmapToMat(originalBitmap, inputMat)
     val outputMat = Mat()
-    Imgproc.warpPerspective(inputMat, outputMat, transform, Size(maxWidth.toDouble(), maxHeight.toDouble()))
+    val outputSize = Size(maxWidth.toDouble(), maxHeight.toDouble())
+    Imgproc.warpPerspective(inputMat, outputMat, transform, outputSize)
 
-    val outputBitmap = createBitmap(maxWidth, maxHeight)
-    Utils.matToBitmap(outputMat, outputBitmap)
+    val enhanced = enhanceCapturedImage(outputMat)
+
+    return toBitmap(enhanced, maxWidth, maxHeight)
+}
+
+private fun toBitmap(mat: Mat, width: Int, height: Int): Bitmap {
+    val outputBitmap = createBitmap(width, height)
+    Utils.matToBitmap(mat, outputBitmap)
     return outputBitmap
 }
 
