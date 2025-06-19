@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
@@ -47,6 +49,7 @@ class ImageSegmentationService(private val context: Context) {
     val segmentation: StateFlow<SegmentationResult?> = _segmentation.asStateFlow()
 
     private var interpreter: Interpreter? = null
+    private val inferenceLock = Mutex()
 
     fun initialize() {
         interpreter = try {
@@ -83,18 +86,19 @@ class ImageSegmentationService(private val context: Context) {
         return SegmentationResult(segmentResult, inferenceTime)
     }
 
-    fun runSegmentationAndReturn(bitmap: Bitmap, rotationDegrees: Int): SegmentationResult? {
-        if (interpreter != null) {
-            return runSegmentation(interpreter!!, bitmap, rotationDegrees)
+    suspend fun runSegmentationAndReturn(bitmap: Bitmap, rotationDegrees: Int): SegmentationResult? {
+        if (interpreter == null) {
+            return null
         }
-        return null
+        return inferenceLock.withLock {
+            runSegmentation(interpreter!!, bitmap, rotationDegrees)
+        }
     }
 
     suspend fun runSegmentationAndEmit(bitmap: Bitmap, rotationDegrees: Int) {
-        if (interpreter == null) return
         try {
             withContext(Dispatchers.IO) {
-                val segmentationResult = runSegmentation(interpreter!!, bitmap, rotationDegrees)
+                val segmentationResult = runSegmentationAndReturn(bitmap, rotationDegrees)
                 if (isActive) {
                     _segmentation.value = segmentationResult
                 }
