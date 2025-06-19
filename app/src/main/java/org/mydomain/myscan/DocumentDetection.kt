@@ -15,7 +15,9 @@
 package org.mydomain.myscan
 
 import android.graphics.Bitmap
+import androidx.core.graphics.createBitmap
 import org.opencv.android.Utils
+import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
@@ -24,7 +26,6 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
-import androidx.core.graphics.createBitmap
 
 fun detectDocumentQuad(mask: Bitmap): Quad? {
     val mat = Mat()
@@ -65,7 +66,7 @@ fun detectDocumentQuad(mask: Bitmap): Quad? {
     return createQuad(vertices)
 }
 
-fun extractDocument(originalBitmap: Bitmap, quad: Quad): Bitmap {
+fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): Bitmap {
     val widthTop = norm(quad.topLeft, quad.topRight)
     val widthBottom = norm(quad.bottomLeft, quad.bottomRight)
     val maxWidth = max(widthTop, widthBottom).toInt()
@@ -96,11 +97,23 @@ fun extractDocument(originalBitmap: Bitmap, quad: Quad): Bitmap {
 
     val enhanced = enhanceCapturedImage(outputMat)
 
-    return toBitmap(enhanced, maxWidth, maxHeight)
+    return toBitmap(rotate(enhanced, rotationDegrees))
 }
 
-private fun toBitmap(mat: Mat, width: Int, height: Int): Bitmap {
-    val outputBitmap = createBitmap(width, height)
+fun rotate(input: Mat, degrees: Int): Mat {
+    val output = Mat()
+    when ((degrees % 360 + 360) % 360) {
+        0 -> input.copyTo(output)
+        90 -> Core.rotate(input, output, Core.ROTATE_90_CLOCKWISE)
+        180 -> Core.rotate(input, output, Core.ROTATE_180)
+        270 -> Core.rotate(input, output, Core.ROTATE_90_COUNTERCLOCKWISE)
+        else -> throw IllegalArgumentException("Only 0, 90, 180, 270 degrees are supported")
+    }
+    return output
+}
+
+private fun toBitmap(mat: Mat): Bitmap {
+    val outputBitmap = createBitmap(mat.cols(), mat.rows())
     Utils.matToBitmap(mat, outputBitmap)
     return outputBitmap
 }

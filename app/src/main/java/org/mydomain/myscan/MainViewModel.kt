@@ -17,7 +17,6 @@ package org.mydomain.myscan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Matrix
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -109,23 +108,17 @@ class MainViewModel(
 
     private suspend fun processCapturedImage(imageProxy: ImageProxy): Bitmap? = withContext(Dispatchers.IO) {
         var corrected: Bitmap? = null
-        val bitmap = imageProxy.toBitmap().rotate(imageProxy.imageInfo.rotationDegrees)
+        var bitmap = imageProxy.toBitmap()
         val segmentation = imageSegmentationService.runSegmentationAndReturn(bitmap, 0)
         if (segmentation != null) {
             val mask = segmentation.segmentation.toBinaryMask()
             val quad = detectDocumentQuad(mask)
             if (quad != null) {
                 val resizedQuad = quad.scaledTo(mask.width, mask.height, bitmap.width, bitmap.height)
-                corrected = extractDocument(bitmap, resizedQuad)
+                corrected = extractDocument(bitmap, resizedQuad, imageProxy.imageInfo.rotationDegrees)
             }
         }
         return@withContext corrected
-    }
-
-    fun Bitmap.rotate(degrees: Int): Bitmap {
-        if (degrees == 0) return this
-        val matrix = Matrix().apply { postRotate(degrees.toFloat()) }
-        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
     fun addPage(bitmap: Bitmap, quality: Int = 75) {

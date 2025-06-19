@@ -57,7 +57,7 @@ class DocumentDetectionTest {
                 if (quad != null) {
                     val resizedQuad =
                         quad.scaledTo(mask.width, mask.height, bitmap.width, bitmap.height)
-                    outputBitmap = extractDocument(bitmap, resizedQuad)
+                    outputBitmap = extractDocument(bitmap, resizedQuad, 0)
                     val file = File(context.getExternalFilesDir(null), imageFileName)
                     FileOutputStream(file).use {
                         outputBitmap.compress(Bitmap.CompressFormat.JPEG, 95, it)
