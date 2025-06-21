@@ -77,4 +77,16 @@ class ImageRepositoryTest {
         assertThat(repo.imageIds()).isEmpty()
         assertThat(repo.getContent("x")).isNull()
     }
+
+    @Test
+    fun `clear should delete pages`() {
+        val bytes = byteArrayOf(101, 102, 103)
+        val repo1 = repo()
+        repo1.add(bytes)
+        assertThat(repo1.imageIds()).isNotEmpty()
+        repo1.clear()
+        assertThat(repo1.imageIds()).isEmpty()
+        val repo2 = repo()
+        assertThat(repo2.imageIds()).isEmpty()
+    }
 }

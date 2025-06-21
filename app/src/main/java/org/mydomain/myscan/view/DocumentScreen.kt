@@ -36,10 +36,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +51,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -57,6 +59,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,9 +81,11 @@ fun DocumentScreen(
     toCameraScreen: () -> Unit,
     onSavePressed: () -> Unit,
     onSharePressed: () -> Unit,
+    onStartNew: () -> Unit,
     onDeleteImage: (String) -> Unit,
 ) {
     // TODO Check how often images are loaded
+    var showDialog = rememberSaveable { mutableStateOf(false) }
     val currentPageIndex = rememberSaveable { mutableIntStateOf(0) }
     if (currentPageIndex.intValue >= pageIds.size) {
         currentPageIndex.intValue = pageIds.size - 1
@@ -122,14 +127,19 @@ fun DocumentScreen(
                         }
                     },
                     floatingActionButton = {
-                        FloatingActionButton(onClick = toCameraScreen) {
-                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        FloatingActionButton(onClick = { showDialog.value = true }) {
+                            Icon(Icons.Default.RestartAlt, contentDescription = "Close")
                         }
                     }
                 )
             }
         }
-    ) { padding -> DocumentPreview(pageIds, imageLoader, currentPageIndex, onDeleteImage, padding) }
+    ) { padding ->
+        DocumentPreview(pageIds, imageLoader, currentPageIndex, onDeleteImage, padding)
+        if (showDialog.value) {
+            NewDocumentDialog(onConfirm = onStartNew, showDialog)
+        }
+    }
 }
 
 @Composable
@@ -171,13 +181,16 @@ private fun DocumentPreview(
             }
             SmallFloatingActionButton(
                 onClick = { onDeleteImage(imageId) },
-                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
             ) {
                 Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete page")
             }
             Text("${currentPageIndex.value + 1} / ${pageIds.size}",
                 color = MaterialTheme.colorScheme.inverseOnSurface,
-                modifier = Modifier.align(Alignment.BottomEnd)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
                     .padding(all = 8.dp)
                     .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f))
                     .padding(all = 4.dp)
@@ -239,6 +252,28 @@ private fun PageList(
 }
 
 @Composable
+fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) {
+    AlertDialog(
+        title = { Text("New document") },
+        text = { Text("The current document will be lost if you haven't saved it. Do you want to continue?") },
+        confirmButton = {
+            TextButton (onClick = {
+                showDialog.value = false
+                onConfirm()
+            }) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { showDialog.value = false }) {
+                Text("Cancel")
+            }
+        },
+        onDismissRequest = { showDialog.value = false },
+    )
+}
+
+@Composable
 @Preview
 fun DocumentScreenPreview() {
     val context = LocalContext.current
@@ -253,6 +288,7 @@ fun DocumentScreenPreview() {
             toCameraScreen = {},
             onSavePressed = {},
             onSharePressed = {},
+            onStartNew = {},
             onDeleteImage = { _ -> {} }
         )
     }

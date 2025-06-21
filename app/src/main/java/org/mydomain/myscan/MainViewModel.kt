@@ -135,6 +135,13 @@ class MainViewModel(
         _pageIds.value = imageRepository.imageIds()
     }
 
+    fun startNewDocument() {
+        _pageIds.value = listOf()
+        viewModelScope.launch {
+            imageRepository.clear()
+        }
+    }
+
     fun pageCount(): Int = pageIds.value.size
 
     fun getBitmap(id: String): Bitmap? {

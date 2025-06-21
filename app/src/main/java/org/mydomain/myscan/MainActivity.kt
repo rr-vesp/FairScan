@@ -74,6 +74,9 @@ class MainActivity : ComponentActivity() {
                                     toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
                                     onSavePressed = savePdf(viewModel, context),
                                     onSharePressed = sharePdf(viewModel, context),
+                                    onStartNew = {
+                                        viewModel.startNewDocument()
+                                        viewModel.navigateTo(Screen.Camera) },
                                     onDeleteImage =  { id -> viewModel.deletePage(id) }
                                 )
                             }

@@ -52,4 +52,11 @@ class ImageRepository(appFilesDir: File) {
         file.delete()
         fileNames.remove(id)
     }
+
+    fun clear() {
+        fileNames.clear()
+        scanDir.listFiles()?.forEach {
+            file -> file.delete()
+        }
+    }
 }
