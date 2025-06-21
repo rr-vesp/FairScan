@@ -95,7 +95,6 @@ fun CameraScreen(
     onFinalizePressed: () -> Unit,
     modifier: Modifier,
 ) {
-    // TODO pause the live analysis when displaying the PageValidationDialogs
     val showPageDialog = rememberSaveable { mutableStateOf(false) }
     val isProcessing = rememberSaveable { mutableStateOf(false) }
     val pageToValidate by viewModel.pageToValidate.collectAsStateWithLifecycle()
@@ -129,7 +128,7 @@ fun CameraScreen(
                 captureController = captureController
             ) },
         pageCount = viewModel.pageCount(),
-        liveAnalysisState,
+        liveAnalysisState = if (showPageDialog.value) LiveAnalysisState() else liveAnalysisState,
         onCapture = {
             Log.i("MyScan", "Pressed <Capture>")
             viewModel.liveAnalysisEnabled = false
