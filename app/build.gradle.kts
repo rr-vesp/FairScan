@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.opencv)
     implementation(libs.pdfbox)
     implementation(libs.icons.extended)
+    implementation(libs.zoomable)
 
     testImplementation(libs.junit)
     testImplementation(libs.assertj)

@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -54,17 +53,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.zoomable
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,13 +150,21 @@ private fun DocumentPreview(
         Box (
             modifier = Modifier.fillMaxSize()
         ) {
-            // TODO Make it possible to zoom on the image
+            val bitmap = imageLoader(imageId)
+            val imageBitmap = bitmap.asImageBitmap()
+            val zoomState = rememberZoomState(
+                contentSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat()))
+
+            LaunchedEffect(imageId) {
+                zoomState.reset()
+            }
             Image(
-                bitmap = imageLoader(imageId).asImageBitmap(),
+                bitmap = imageBitmap,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(4.dp)
                     .align(Alignment.Center)
+                    .zoomable(zoomState)
             )
             SmallFloatingActionButton(
                 onClick = { onDeleteImage(imageId) },

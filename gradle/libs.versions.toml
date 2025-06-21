@@ -14,6 +14,7 @@ litert = "1.2.0"
 opencv = "4.11.0"
 assertj = "3.27.3"
 pdfbox = "2.0.27.0"
+zoomable = "2.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,6 +44,7 @@ litert-support = { group = "com.google.ai.edge.litert", name = "litert-support",
 litert-metadata = { group = "com.google.ai.edge.litert", name = "litert-metadata", version.ref = "litert" }
 opencv = { group="org.opencv", name="opencv", version.ref = "opencv" }
 pdfbox = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
+zoomable = { group = "net.engawapg.lib", name = "zoomable", version.ref = "zoomable" }
 
 assertj =  { group="org.assertj", name="assertj-core", version.ref = "assertj" }
 
