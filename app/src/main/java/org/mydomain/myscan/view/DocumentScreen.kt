@@ -74,7 +74,7 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 @Composable
 fun DocumentScreen(
     pageIds: List<String>,
-    imageLoader: (String) -> Bitmap,
+    imageLoader: (String) -> Bitmap?,
     toCameraScreen: () -> Unit,
     onSavePressed: () -> Unit,
     onSharePressed: () -> Unit,
@@ -135,7 +135,7 @@ fun DocumentScreen(
 @Composable
 private fun DocumentPreview(
     pageIds: List<String>,
-    imageLoader: (String) -> Bitmap,
+    imageLoader: (String) -> Bitmap?,
     currentPageIndex: MutableIntState,
     onDeleteImage: (String) -> Unit,
     padding: PaddingValues,
@@ -151,21 +151,24 @@ private fun DocumentPreview(
             modifier = Modifier.fillMaxSize()
         ) {
             val bitmap = imageLoader(imageId)
-            val imageBitmap = bitmap.asImageBitmap()
-            val zoomState = rememberZoomState(
-                contentSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat()))
+            if (bitmap != null) {
+                val imageBitmap = bitmap.asImageBitmap()
+                val zoomState = rememberZoomState(
+                    contentSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
+                )
 
-            LaunchedEffect(imageId) {
-                zoomState.reset()
+                LaunchedEffect(imageId) {
+                    zoomState.reset()
+                }
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .align(Alignment.Center)
+                        .zoomable(zoomState)
+                )
             }
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(4.dp)
-                    .align(Alignment.Center)
-                    .zoomable(zoomState)
-            )
             SmallFloatingActionButton(
                 onClick = { onDeleteImage(imageId) },
                 modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
@@ -186,7 +189,7 @@ private fun DocumentPreview(
 @Composable
 private fun PageList(
     pageIds: List<String>,
-    imageLoader: (String) -> Bitmap,
+    imageLoader: (String) -> Bitmap?,
     currentPageIndex: MutableState<Int>,
     toCameraScreen: () -> Unit
 ) {
@@ -202,22 +205,26 @@ private fun PageList(
         ) {
             itemsIndexed (pageIds) { index, id ->
                 // TODO Use small images rather than big ones
-                val bitmap = imageLoader(id).asImageBitmap()
-                val isSelected = index == currentPageIndex.value
-                val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                val modifier =
-                    if (bitmap.height > bitmap.width)
-                        Modifier.height(120.dp)
-                    else
-                        Modifier.width(120.dp)
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = null,
-                    modifier = modifier
-                        .padding(4.dp)
-                        .border(2.dp, borderColor)
-                        .clickable { currentPageIndex.value = index }
-                )
+                val image = imageLoader(id)
+                if (image != null) {
+                    val bitmap = image.asImageBitmap()
+                    val isSelected = index == currentPageIndex.value
+                    val borderColor =
+                        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                    val modifier =
+                        if (bitmap.height > bitmap.width)
+                            Modifier.height(120.dp)
+                        else
+                            Modifier.width(120.dp)
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = null,
+                        modifier = modifier
+                            .padding(4.dp)
+                            .border(2.dp, borderColor)
+                            .clickable { currentPageIndex.value = index }
+                    )
+                }
             }
         }
         SmallFloatingActionButton(

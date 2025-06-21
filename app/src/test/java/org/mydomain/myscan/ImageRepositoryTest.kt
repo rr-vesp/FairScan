@@ -14,7 +14,6 @@
  */
 package org.mydomain.myscan
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -73,10 +72,9 @@ class ImageRepositoryTest {
     }
 
     @Test
-    fun `should throw on invalid id`() {
+    fun `should return null on invalid id`() {
         val repo = repo()
         assertThat(repo.imageIds()).isEmpty()
-        Assertions.assertThatThrownBy { repo.getContent("x") }
-            .isInstanceOf(IllegalArgumentException::class.java)
+        assertThat(repo.getContent("x")).isNull()
     }
 }

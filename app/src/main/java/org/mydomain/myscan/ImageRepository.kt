@@ -39,12 +39,12 @@ class ImageRepository(appFilesDir: File) {
         fileNames.add(fileName)
     }
 
-    fun getContent(id: String): ByteArray {
+    fun getContent(id: String): ByteArray? {
         if (fileNames.contains(id)) {
             val file = File(scanDir, id)
             return file.readBytes()
         }
-        throw IllegalArgumentException("No image for id: $id")
+        return null
     }
 
     fun delete(id: String) {

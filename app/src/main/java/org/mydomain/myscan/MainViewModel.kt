@@ -137,14 +137,15 @@ class MainViewModel(
 
     fun pageCount(): Int = pageIds.value.size
 
-    fun getBitmap(id: String): Bitmap {
+    fun getBitmap(id: String): Bitmap? {
         val bytes = imageRepository.getContent(id)
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        return bytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
     }
 
     fun createPdf(outputStream: OutputStream) {
         val jpegs = imageRepository.imageIds().asSequence()
             .map { id -> imageRepository.getContent(id) }
+            .filterNotNull()
         writePdfFromJpegs(jpegs, outputStream)
     }
 }
