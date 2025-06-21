@@ -69,11 +69,11 @@ fun detectDocumentQuad(mask: Bitmap): Quad? {
 fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): Bitmap {
     val widthTop = norm(quad.topLeft, quad.topRight)
     val widthBottom = norm(quad.bottomLeft, quad.bottomRight)
-    val maxWidth = max(widthTop, widthBottom).toInt()
+    val targetWidth = (widthTop + widthBottom) / 2
 
     val heightLeft = norm(quad.topLeft, quad.bottomLeft)
     val heightRight = norm(quad.topRight, quad.bottomRight)
-    val maxHeight = max(heightLeft, heightRight).toInt()
+    val targetHeight = (heightLeft + heightRight) / 2
 
     val srcPoints = MatOfPoint2f(
         quad.topLeft.toCv(),
@@ -83,16 +83,16 @@ fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): B
     )
     val dstPoints = MatOfPoint2f(
         org.opencv.core.Point(0.0, 0.0),
-        org.opencv.core.Point(maxWidth.toDouble(), 0.0),
-        org.opencv.core.Point(maxWidth.toDouble(), maxHeight.toDouble()),
-        org.opencv.core.Point(0.0, maxHeight.toDouble())
+        org.opencv.core.Point(targetWidth.toDouble(), 0.0),
+        org.opencv.core.Point(targetWidth.toDouble(), targetHeight.toDouble()),
+        org.opencv.core.Point(0.0, targetHeight.toDouble())
     )
     val transform = Imgproc.getPerspectiveTransform(srcPoints, dstPoints)
 
     val inputMat = Mat()
     Utils.bitmapToMat(originalBitmap, inputMat)
     val outputMat = Mat()
-    val outputSize = Size(maxWidth.toDouble(), maxHeight.toDouble())
+    val outputSize = Size(targetWidth.toDouble(), targetHeight.toDouble())
     Imgproc.warpPerspective(inputMat, outputMat, transform, outputSize)
 
     val enhanced = enhanceCapturedImage(outputMat)
