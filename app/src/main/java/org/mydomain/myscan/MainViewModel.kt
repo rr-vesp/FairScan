@@ -102,6 +102,7 @@ class MainViewModel(
     fun processCapturedImageThen(imageProxy: ImageProxy, onResult: (Bitmap?) -> Unit) {
         viewModelScope.launch {
             _pageToValidate.value = processCapturedImage(imageProxy)
+            imageProxy.close()
             onResult(_pageToValidate.value)
         }
     }
