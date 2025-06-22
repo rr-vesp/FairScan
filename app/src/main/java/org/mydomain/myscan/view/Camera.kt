@@ -144,6 +144,8 @@ fun CameraScreen(
                         }
                     } else {
                         Log.e("MyScan", "Error during image capture")
+                        isProcessing.value = false
+                        viewModel.liveAnalysisEnabled = true
                     }
                 }
             )
