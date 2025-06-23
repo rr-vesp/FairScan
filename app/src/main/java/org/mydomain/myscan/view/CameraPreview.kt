@@ -65,6 +65,7 @@ fun CameraPreview(
     modifier: Modifier = Modifier,
     onImageAnalyzed: (ImageProxy) -> Unit,
     captureController: CameraCaptureController,
+    onPreviewViewReady: (PreviewView) -> Unit,
 ) {
     val context = LocalContext.current
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -97,6 +98,7 @@ fun CameraPreview(
         val previewView = PreviewView(it).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             scaleType = PreviewView.ScaleType.FIT_CENTER
+            onPreviewViewReady(this)
         }
         val executor = Executors.newSingleThreadExecutor()
         cameraProviderFuture.addListener({

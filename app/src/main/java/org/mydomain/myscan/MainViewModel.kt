@@ -56,10 +56,8 @@ class MainViewModel(
     private val _pageIds = MutableStateFlow<List<String>>(imageRepository.imageIds())
     val pageIds: StateFlow<List<String>> = _pageIds
 
-    private var _pageToValidate = MutableStateFlow<Bitmap?>(null)
-    val pageToValidate: StateFlow<Bitmap?> = _pageToValidate.asStateFlow()
-
-    var liveAnalysisEnabled = true
+    private val _captureState = MutableStateFlow<CaptureState>(CaptureState())
+    val captureState: StateFlow<CaptureState> = _captureState
 
     init {
         viewModelScope.launch {
@@ -80,8 +78,28 @@ class MainViewModel(
         }
     }
 
-    fun segment(imageProxy: ImageProxy) {
-        if (!liveAnalysisEnabled) {
+    data class CaptureState(val frozenImage: Bitmap? = null, val processedImage: Bitmap? = null) {
+        fun isIdle(): Boolean { return frozenImage == null }
+        fun isProcessed(): Boolean { return processedImage != null }
+        fun withProcessed(processedImage: Bitmap? = null): CaptureState {
+            return if (processedImage == null) {
+                CaptureState()
+            } else {
+                CaptureState(frozenImage, processedImage)
+            }
+        }
+    }
+
+    fun onCapturePressed(frozenImage: Bitmap?) {
+        _captureState.value = CaptureState(frozenImage)
+    }
+
+    fun onCaptureProcessed(captured: Bitmap?) {
+        _captureState.value = _captureState.value.withProcessed(captured)
+    }
+
+    fun liveAnalysis(imageProxy: ImageProxy) {
+        if (!_captureState.value.isIdle()) {
             imageProxy.close()
             return
         }
@@ -99,11 +117,15 @@ class MainViewModel(
         _currentScreen.value = screen
     }
 
-    fun processCapturedImageThen(imageProxy: ImageProxy, onResult: (Bitmap?) -> Unit) {
-        viewModelScope.launch {
-            _pageToValidate.value = processCapturedImage(imageProxy)
-            imageProxy.close()
-            onResult(_pageToValidate.value)
+    fun onImageCaptured(imageProxy: ImageProxy?) {
+        if (imageProxy != null) {
+            viewModelScope.launch {
+                val image = processCapturedImage(imageProxy)
+                imageProxy.close()
+                onCaptureProcessed(image)
+            }
+        } else {
+            onCaptureProcessed(null)
         }
     }
 
@@ -122,7 +144,12 @@ class MainViewModel(
         return@withContext corrected
     }
 
-    fun addPage(bitmap: Bitmap, quality: Int = 75) {
+    fun addProcessedImage(quality: Int = 75) {
+        val bitmap = _captureState.value.processedImage
+        _captureState.value = CaptureState()
+        if (bitmap == null) {
+            return
+        }
         val resized = resizeImage(bitmap)
         val outputStream = ByteArrayOutputStream()
         resized.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)

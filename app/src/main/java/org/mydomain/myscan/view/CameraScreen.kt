@@ -14,8 +14,12 @@
  */
 package org.mydomain.myscan.view
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,19 +41,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
+import org.mydomain.myscan.MainViewModel.CaptureState
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @Composable
@@ -60,13 +69,19 @@ fun CameraScreen(
     onFinalizePressed: () -> Unit,
     modifier: Modifier,
 ) {
-    val showPageDialog = rememberSaveable { mutableStateOf(false) }
-    val isProcessing = rememberSaveable { mutableStateOf(false) }
-    val pageToValidate by viewModel.pageToValidate.collectAsStateWithLifecycle()
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
 
     val captureController = remember { CameraCaptureController() }
     DisposableEffect(Unit) {
         onDispose { captureController.shutdown() }
+    }
+
+    val captureState by viewModel.captureState.collectAsStateWithLifecycle()
+    if (captureState.isProcessed()) {
+        LaunchedEffect(captureState) {
+            delay(1500)
+            viewModel.addProcessedImage()
+        }
     }
 
     CameraScreenContent(
@@ -74,50 +89,21 @@ fun CameraScreen(
         cameraPreview = {
             CameraPreview(
                 onImageAnalyzed = onImageAnalyzed,
-                captureController = captureController
+                captureController = captureController,
+                onPreviewViewReady = { view -> previewView = view }
             ) },
         pageCount = viewModel.pageCount(),
-        liveAnalysisState = if (showPageDialog.value) LiveAnalysisState() else liveAnalysisState,
+        liveAnalysisState = liveAnalysisState,
         onCapture = {
             Log.i("MyScan", "Pressed <Capture>")
-            viewModel.liveAnalysisEnabled = false
-            showPageDialog.value = true
-            isProcessing.value = true
+            viewModel.onCapturePressed(previewView?.bitmap)
             captureController.takePicture(
-                onImageCaptured = { imageProxy ->
-                    if (imageProxy != null) {
-                        viewModel.processCapturedImageThen(imageProxy) {
-                            isProcessing.value = false
-                            viewModel.liveAnalysisEnabled = true
-                            Log.i("MyScan", "Capture process finished")
-                        }
-                    } else {
-                        Log.e("MyScan", "Error during image capture")
-                        isProcessing.value = false
-                        viewModel.liveAnalysisEnabled = true
-                    }
-                }
+                onImageCaptured = { imageProxy -> viewModel.onImageCaptured(imageProxy) }
             )
         },
-        onFinalizePressed = onFinalizePressed
+        onFinalizePressed = onFinalizePressed,
+        captureState = captureState
     )
-
-    if (showPageDialog.value) {
-        PageValidationDialog(
-            isProcessing = isProcessing.value,
-            pageBitmap = pageToValidate,
-            onConfirm = {
-                pageToValidate?.let { viewModel.addPage(it) }
-                showPageDialog.value = false
-            },
-            onReject = {
-                showPageDialog.value = false
-            },
-            onDismiss = {
-                showPageDialog.value = false
-            }
-        )
-    }
 }
 
 @Composable
@@ -127,10 +113,11 @@ private fun CameraScreenContent(
     pageCount: Int,
     liveAnalysisState: LiveAnalysisState,
     onCapture: () -> Unit,
-    onFinalizePressed: () -> Unit
+    onFinalizePressed: () -> Unit,
+    captureState: CaptureState
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        CameraPreviewWithOverlay(cameraPreview, liveAnalysisState)
+        CameraPreviewWithOverlay(cameraPreview, liveAnalysisState, captureState)
         MessageBox(liveAnalysisState.inferenceTime)
 
         CaptureButton(
@@ -144,6 +131,17 @@ private fun CameraScreenContent(
             onFinalizePressed = onFinalizePressed,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+        captureState.processedImage?.let {
+            Surface (
+                color = Color.Black.copy(alpha = 0.3f),
+                modifier = Modifier.fillMaxSize())
+            {}
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize().padding(24.dp)
+            )
+        }
     }
 }
 
@@ -180,7 +178,8 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 @Composable
 private fun CameraPreviewWithOverlay(
     cameraPreview: @Composable () -> Unit,
-    liveAnalysisState: LiveAnalysisState
+    liveAnalysisState: LiveAnalysisState,
+    captureState: CaptureState
 ) {
     val width = LocalConfiguration.current.screenWidthDp
     val height = width / 3 * 4
@@ -191,6 +190,13 @@ private fun CameraPreviewWithOverlay(
     ) {
         cameraPreview()
         AnalysisOverlay(liveAnalysisState)
+        captureState.frozenImage?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = null,
+            )
+
+        }
     }
 }
 
@@ -241,6 +247,17 @@ fun CameraScreenFooter(
 @Preview(showBackground = true)
 @Composable
 fun CameraScreenPreview() {
+    ScreenPreview(CaptureState())
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CameraScreenPreviewWithProcessedImage() {
+    ScreenPreview(CaptureState(processedImage = debugImage("gallica.bnf.fr-bpt6k5530456s-1.jpg")))
+}
+
+@Composable
+private fun ScreenPreview(captureState: CaptureState) {
     MyScanTheme {
         CameraScreenContent(
             modifier = Modifier,
@@ -249,14 +266,27 @@ fun CameraScreenPreview() {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.DarkGray),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    Text("Camera Preview", color = Color.White)
+                    Image(
+                        debugImage("uncropped/img01.jpg").asImageBitmap(),
+                        contentDescription = null
+                    )
                 }
             },
             pageCount = 3,
             liveAnalysisState = LiveAnalysisState(),
             onCapture = {},
-            onFinalizePressed = {})
+            onFinalizePressed = {},
+            captureState = captureState
+        )
+    }
+}
+
+@Composable
+private fun debugImage(imgName: String): Bitmap {
+    val context = LocalContext.current
+    return context.assets.open(imgName).use { input ->
+        BitmapFactory.decodeStream(input)
     }
 }

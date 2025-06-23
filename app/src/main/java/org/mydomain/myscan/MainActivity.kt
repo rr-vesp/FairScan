@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
                                 Scaffold { innerPadding->
                                     CameraScreen(
                                         viewModel, liveAnalysisState,
-                                        onImageAnalyzed = { image -> viewModel.segment(image) },
+                                        onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
                                         onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument) },
                                         modifier = Modifier.padding(innerPadding)
                                     )
