@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -137,25 +138,24 @@ private fun CameraScreenScaffold(
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
 ) {
-    Scaffold { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+    Scaffold(
+        bottomBar = {
+            CameraScreenFooter(
+                pageList = pageList,
+                pageCount = cameraUiState.pageCount,
+                onFinalizePressed = onFinalizePressed,
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()).fillMaxSize()) {
             CameraPreviewWithOverlay(cameraPreview, cameraUiState)
             MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
-
-            Column(Modifier.align(Alignment.BottomCenter)) {
-                CaptureButton(
-                    onClick = onCapture,
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(16.dp)
-                )
-                CameraScreenFooter(
-                    pageList = pageList,
-                    pageCount = cameraUiState.pageCount,
-                    onFinalizePressed = onFinalizePressed,
-                    modifier = Modifier,
-                )
-            }
+            CaptureButton(
+                onClick = onCapture,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            )
             cameraUiState.captureState.processedImage?.let {
                 Surface(
                     color = Color.Black.copy(alpha = 0.3f),
@@ -242,20 +242,15 @@ fun CameraScreenFooter(
     pageList:  @Composable () -> Unit,
     pageCount: Int,
     onFinalizePressed: () -> Unit,
-    modifier: Modifier,
 ) {
-    Surface (
-        color = MaterialTheme.colorScheme.inverseOnSurface,
-        tonalElevation = 4.dp,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(180.dp)
-    ) {
-        Column {
-            pageList()
+    Column (modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
+        pageList()
+        BottomAppBar(
+            tonalElevation = 4.dp,
+        ) {
             Row (
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 1.dp)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween

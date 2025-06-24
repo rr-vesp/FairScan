@@ -20,6 +20,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,13 +46,12 @@ fun CommonPageList(
     listState: LazyListState = rememberLazyListState(),
     currentPageIndex: Int? = null,
 ) {
-    if (pageIds.isEmpty()) return
     LazyRow (
         state = listState,
         contentPadding = PaddingValues(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer),
+            .background(MaterialTheme.colorScheme.surfaceContainerLow),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -63,11 +63,12 @@ fun CommonPageList(
                 val isSelected = index == currentPageIndex
                 val borderColor =
                     if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                val maxImageSize = 120.dp
                 val modifier =
                     if (bitmap.height > bitmap.width)
-                        Modifier.height(120.dp)
+                        Modifier.height(maxImageSize)
                     else
-                        Modifier.width(120.dp)
+                        Modifier.width(maxImageSize)
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,
@@ -78,5 +79,8 @@ fun CommonPageList(
                 )
             }
         }
+    }
+    if (pageIds.isEmpty()) {
+        Box(modifier = Modifier.height(120.dp)) {}
     }
 }
