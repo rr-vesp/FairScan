@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,7 +78,6 @@ fun CameraScreen(
     liveAnalysisState: LiveAnalysisState,
     onImageAnalyzed: (ImageProxy) -> Unit,
     onFinalizePressed: () -> Unit,
-    modifier: Modifier,
 ) {
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
@@ -101,9 +101,7 @@ fun CameraScreen(
             listState.animateScrollToItem(pageIds.lastIndex)
         }
     }
-
-    CameraScreenContent(
-        modifier,
+    CameraScreenScaffold(
         cameraPreview = {
             CameraPreview(
                 onImageAnalyzed = onImageAnalyzed,
@@ -132,42 +130,44 @@ fun CameraScreen(
 }
 
 @Composable
-private fun CameraScreenContent(
-    modifier: Modifier,
+private fun CameraScreenScaffold(
     cameraPreview: @Composable () -> Unit,
     pageList: @Composable () -> Unit,
     cameraUiState: CameraUiState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        CameraPreviewWithOverlay(cameraPreview, cameraUiState)
-        MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
+    Scaffold { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            CameraPreviewWithOverlay(cameraPreview, cameraUiState)
+            MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
 
-        Column (Modifier.align(Alignment.BottomCenter)) {
-            CaptureButton(
-                onClick = onCapture,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp)
-            )
-            CameraScreenFooter(
-                pageList = pageList,
-                pageCount = cameraUiState.pageCount,
-                onFinalizePressed = onFinalizePressed,
-                modifier = Modifier,
-            )
-        }
-        cameraUiState.captureState.processedImage?.let {
-            Surface (
-                color = Color.Black.copy(alpha = 0.3f),
-                modifier = Modifier.fillMaxSize())
-            {}
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize().padding(24.dp)
-            )
+            Column(Modifier.align(Alignment.BottomCenter)) {
+                CaptureButton(
+                    onClick = onCapture,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp)
+                )
+                CameraScreenFooter(
+                    pageList = pageList,
+                    pageCount = cameraUiState.pageCount,
+                    onFinalizePressed = onFinalizePressed,
+                    modifier = Modifier,
+                )
+            }
+            cameraUiState.captureState.processedImage?.let {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.3f),
+                    modifier = Modifier.fillMaxSize()
+                )
+                {}
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().padding(24.dp)
+                )
+            }
         }
     }
 }
@@ -292,8 +292,7 @@ fun CameraScreenPreviewWithProcessedImage() {
 private fun ScreenPreview(captureState: CaptureState) {
     val context = LocalContext.current
     MyScanTheme {
-        CameraScreenContent(
-            modifier = Modifier,
+        CameraScreenScaffold(
             cameraPreview = {
                 Box(
                     modifier = Modifier

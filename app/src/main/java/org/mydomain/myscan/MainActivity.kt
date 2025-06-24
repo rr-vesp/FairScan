@@ -26,10 +26,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,35 +51,32 @@ class MainActivity : ComponentActivity() {
             val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
-
-                    Column {
-                        when (val screen = currentScreen) {
-                            is Screen.Camera -> {
-                                Scaffold { innerPadding->
-                                    CameraScreen(
-                                        viewModel, liveAnalysisState,
-                                        onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
-                                        onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
-                                        modifier = Modifier.padding(innerPadding)
-                                    )
-                                }
-                            }
-                            is Screen.FinalizeDocument -> {
-                                DocumentScreen (
-                                    pageIds,
-                                    initialPage = screen.initialPage,
-                                    imageLoader = { id -> viewModel.getBitmap(id) },
-                                    toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
-                                    onSavePressed = savePdf(viewModel, context),
-                                    onSharePressed = sharePdf(viewModel, context),
-                                    onStartNew = {
-                                        viewModel.startNewDocument()
-                                        viewModel.navigateTo(Screen.Camera) },
-                                    onDeleteImage =  { id -> viewModel.deletePage(id) }
-                                )
-                            }
+                Column {
+                    when (val screen = currentScreen) {
+                        is Screen.Camera -> {
+                            CameraScreen(
+                                viewModel,
+                                liveAnalysisState,
+                                onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
+                                onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
+                            )
+                        }
+                        is Screen.FinalizeDocument -> {
+                            DocumentScreen (
+                                pageIds,
+                                initialPage = screen.initialPage,
+                                imageLoader = { id -> viewModel.getBitmap(id) },
+                                toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
+                                onSavePressed = savePdf(viewModel, context),
+                                onSharePressed = sharePdf(viewModel, context),
+                                onStartNew = {
+                                    viewModel.startNewDocument()
+                                    viewModel.navigateTo(Screen.Camera) },
+                                onDeleteImage =  { id -> viewModel.deletePage(id) }
+                            )
                         }
                     }
+                }
             }
         }
     }
