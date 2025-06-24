@@ -56,13 +56,13 @@ class MainActivity : ComponentActivity() {
             MyScanTheme {
 
                     Column {
-                        when (currentScreen) {
+                        when (val screen = currentScreen) {
                             is Screen.Camera -> {
                                 Scaffold { innerPadding->
                                     CameraScreen(
                                         viewModel, liveAnalysisState,
                                         onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
-                                        onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument) },
+                                        onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
                                         modifier = Modifier.padding(innerPadding)
                                     )
                                 }
@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
                             is Screen.FinalizeDocument -> {
                                 DocumentScreen (
                                     pageIds,
+                                    initialPage = screen.initialPage,
                                     imageLoader = { id -> viewModel.getBitmap(id) },
                                     toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
                                     onSavePressed = savePdf(viewModel, context),

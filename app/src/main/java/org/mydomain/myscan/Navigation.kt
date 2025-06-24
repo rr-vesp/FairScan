@@ -16,5 +16,5 @@ package org.mydomain.myscan
 
 sealed class Screen {
     object Camera : Screen()
-    object FinalizeDocument : Screen()
+    data class FinalizeDocument(val initialPage: Int = 0) : Screen()
 }

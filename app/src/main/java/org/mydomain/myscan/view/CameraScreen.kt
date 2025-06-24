@@ -64,6 +64,7 @@ import kotlinx.coroutines.delay
 import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.MainViewModel.CaptureState
+import org.mydomain.myscan.Screen
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @Composable
@@ -98,8 +99,12 @@ fun CameraScreen(
                 captureController = captureController,
                 onPreviewViewReady = { view -> previewView = view }
             ) },
-        pageIds = pageIds,
-        imageLoader = { id -> viewModel.getBitmap(id) },
+        pageList = { CameraCapturedPagesRow(
+            pageIds = pageIds,
+            imageLoader = { id -> viewModel.getBitmap(id) },
+            onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) }
+        ) },
+        pageCount = pageIds.size,
         liveAnalysisState = liveAnalysisState,
         onCapture = {
             Log.i("MyScan", "Pressed <Capture>")
@@ -117,8 +122,8 @@ fun CameraScreen(
 private fun CameraScreenContent(
     modifier: Modifier,
     cameraPreview: @Composable () -> Unit,
-    pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?,
+    pageList: @Composable () -> Unit,
+    pageCount: Int,
     liveAnalysisState: LiveAnalysisState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
@@ -136,8 +141,8 @@ private fun CameraScreenContent(
                     .padding(16.dp)
             )
             CameraScreenFooter(
-                pageIds = pageIds,
-                imageLoader = imageLoader,
+                pageList = pageList,
+                pageCount = pageCount,
                 onFinalizePressed = onFinalizePressed,
                 modifier = Modifier,
             )
@@ -224,12 +229,11 @@ fun MessageBox(inferenceTime: Long) {
 
 @Composable
 fun CameraScreenFooter(
-    pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?,
+    pageList:  @Composable () -> Unit,
+    pageCount: Int,
     onFinalizePressed: () -> Unit,
     modifier: Modifier,
 ) {
-    val pageCount = pageIds.size
     Surface (
         color = MaterialTheme.colorScheme.inverseOnSurface,
         tonalElevation = 4.dp,
@@ -238,10 +242,7 @@ fun CameraScreenFooter(
             .height(180.dp)
     ) {
         Column {
-            CameraCapturedPagesRow(
-                pageIds = pageIds,
-                imageLoader = imageLoader
-            )
+            pageList()
             Row (
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -268,7 +269,8 @@ fun CameraScreenFooter(
 @Composable
 fun CameraCapturedPagesRow(
     pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?
+    imageLoader: (String) -> Bitmap?,
+    onPageClick: (Int) -> Unit,
 ) {
     if (pageIds.isEmpty()) return
 
@@ -292,6 +294,7 @@ fun CameraCapturedPagesRow(
                         bitmap = bitmap,
                         contentDescription = "Page ${index + 1}",
                         modifier = modifier
+                            .clickable { onPageClick(index) }
                             .clip(RoundedCornerShape(4.dp))
                     )
                 }
@@ -332,16 +335,22 @@ private fun ScreenPreview(captureState: CaptureState) {
                     )
                 }
             },
-            pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
-            imageLoader = { id ->
-                context.assets.open(id).use { input ->
-                    BitmapFactory.decodeStream(input)
-                }
+            pageList = {
+                CameraCapturedPagesRow(
+                    pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
+                    imageLoader = { id ->
+                        context.assets.open(id).use { input ->
+                            BitmapFactory.decodeStream(input)
+                        }
+                    },
+                    onPageClick = {}
+                )
             },
+            pageCount = 4,
             liveAnalysisState = LiveAnalysisState(),
             onCapture = {},
             onFinalizePressed = {},
-            captureState = captureState
+            captureState = captureState,
         )
     }
 }

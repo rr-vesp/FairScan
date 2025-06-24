@@ -77,6 +77,7 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 @Composable
 fun DocumentScreen(
     pageIds: List<String>,
+    initialPage: Int,
     imageLoader: (String) -> Bitmap?,
     toCameraScreen: () -> Unit,
     onSavePressed: () -> Unit,
@@ -86,7 +87,7 @@ fun DocumentScreen(
 ) {
     // TODO Check how often images are loaded
     var showDialog = rememberSaveable { mutableStateOf(false) }
-    val currentPageIndex = rememberSaveable { mutableIntStateOf(0) }
+    val currentPageIndex = rememberSaveable { mutableIntStateOf(initialPage) }
     if (currentPageIndex.intValue >= pageIds.size) {
         currentPageIndex.intValue = pageIds.size - 1
     }
@@ -280,6 +281,7 @@ fun DocumentScreenPreview() {
     MyScanTheme {
         DocumentScreen(
             pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
+            initialPage = 1,
             imageLoader = { id ->
                 context.assets.open(id).use { input ->
                     BitmapFactory.decodeStream(input)
