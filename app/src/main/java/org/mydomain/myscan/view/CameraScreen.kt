@@ -67,6 +67,12 @@ import org.mydomain.myscan.MainViewModel.CaptureState
 import org.mydomain.myscan.Screen
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
+data class CameraUiState(
+    val pageCount: Int,
+    val liveAnalysisState: LiveAnalysisState,
+    val captureState: CaptureState
+)
+
 @Composable
 fun CameraScreen(
     viewModel: MainViewModel,
@@ -98,14 +104,16 @@ fun CameraScreen(
                 onImageAnalyzed = onImageAnalyzed,
                 captureController = captureController,
                 onPreviewViewReady = { view -> previewView = view }
-            ) },
-        pageList = { CameraCapturedPagesRow(
-            pageIds = pageIds,
-            imageLoader = { id -> viewModel.getBitmap(id) },
-            onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) }
-        ) },
-        pageCount = pageIds.size,
-        liveAnalysisState = liveAnalysisState,
+            )
+        },
+        pageList = {
+            CameraCapturedPagesRow(
+                pageIds = pageIds,
+                imageLoader = { id -> viewModel.getBitmap(id) },
+                onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) }
+            )
+        },
+        cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
         onCapture = {
             Log.i("MyScan", "Pressed <Capture>")
             viewModel.onCapturePressed(previewView?.bitmap)
@@ -114,7 +122,6 @@ fun CameraScreen(
             )
         },
         onFinalizePressed = onFinalizePressed,
-        captureState = captureState
     )
 }
 
@@ -123,15 +130,13 @@ private fun CameraScreenContent(
     modifier: Modifier,
     cameraPreview: @Composable () -> Unit,
     pageList: @Composable () -> Unit,
-    pageCount: Int,
-    liveAnalysisState: LiveAnalysisState,
+    cameraUiState: CameraUiState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
-    captureState: CaptureState
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        CameraPreviewWithOverlay(cameraPreview, liveAnalysisState, captureState)
-        MessageBox(liveAnalysisState.inferenceTime)
+        CameraPreviewWithOverlay(cameraPreview, cameraUiState)
+        MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
 
         Column (Modifier.align(Alignment.BottomCenter)) {
             CaptureButton(
@@ -142,12 +147,12 @@ private fun CameraScreenContent(
             )
             CameraScreenFooter(
                 pageList = pageList,
-                pageCount = pageCount,
+                pageCount = cameraUiState.pageCount,
                 onFinalizePressed = onFinalizePressed,
                 modifier = Modifier,
             )
         }
-        captureState.processedImage?.let {
+        cameraUiState.captureState.processedImage?.let {
             Surface (
                 color = Color.Black.copy(alpha = 0.3f),
                 modifier = Modifier.fillMaxSize())
@@ -194,8 +199,7 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 @Composable
 private fun CameraPreviewWithOverlay(
     cameraPreview: @Composable () -> Unit,
-    liveAnalysisState: LiveAnalysisState,
-    captureState: CaptureState
+    cameraUiState: CameraUiState
 ) {
     val width = LocalConfiguration.current.screenWidthDp
     val height = width / 3 * 4
@@ -205,8 +209,8 @@ private fun CameraPreviewWithOverlay(
             .height(height.dp)
     ) {
         cameraPreview()
-        AnalysisOverlay(liveAnalysisState)
-        captureState.frozenImage?.let {
+        AnalysisOverlay(cameraUiState.liveAnalysisState)
+        cameraUiState.captureState.frozenImage?.let {
             Image(
                 bitmap = it.asImageBitmap(),
                 contentDescription = null,
@@ -346,11 +350,9 @@ private fun ScreenPreview(captureState: CaptureState) {
                     onPageClick = {}
                 )
             },
-            pageCount = 4,
-            liveAnalysisState = LiveAnalysisState(),
+            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState),
             onCapture = {},
             onFinalizePressed = {},
-            captureState = captureState,
         )
     }
 }
