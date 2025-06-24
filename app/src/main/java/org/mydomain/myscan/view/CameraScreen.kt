@@ -27,6 +27,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +35,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -48,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -70,6 +75,7 @@ fun CameraScreen(
     modifier: Modifier,
 ) {
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
 
     val captureController = remember { CameraCaptureController() }
     DisposableEffect(Unit) {
@@ -92,7 +98,8 @@ fun CameraScreen(
                 captureController = captureController,
                 onPreviewViewReady = { view -> previewView = view }
             ) },
-        pageCount = viewModel.pageCount(),
+        pageIds = pageIds,
+        imageLoader = { id -> viewModel.getBitmap(id) },
         liveAnalysisState = liveAnalysisState,
         onCapture = {
             Log.i("MyScan", "Pressed <Capture>")
@@ -110,7 +117,8 @@ fun CameraScreen(
 private fun CameraScreenContent(
     modifier: Modifier,
     cameraPreview: @Composable () -> Unit,
-    pageCount: Int,
+    pageIds: List<String>,
+    imageLoader: (String) -> Bitmap?,
     liveAnalysisState: LiveAnalysisState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
@@ -120,17 +128,20 @@ private fun CameraScreenContent(
         CameraPreviewWithOverlay(cameraPreview, liveAnalysisState, captureState)
         MessageBox(liveAnalysisState.inferenceTime)
 
-        CaptureButton(
-            onClick = onCapture,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 96.dp)
-        )
-        CameraScreenFooter(
-            pageCount = pageCount,
-            onFinalizePressed = onFinalizePressed,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        Column (Modifier.align(Alignment.BottomCenter)) {
+            CaptureButton(
+                onClick = onCapture,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp)
+            )
+            CameraScreenFooter(
+                pageIds = pageIds,
+                imageLoader = imageLoader,
+                onFinalizePressed = onFinalizePressed,
+                modifier = Modifier,
+            )
+        }
         captureState.processedImage?.let {
             Surface (
                 color = Color.Black.copy(alpha = 0.3f),
@@ -213,36 +224,82 @@ fun MessageBox(inferenceTime: Long) {
 
 @Composable
 fun CameraScreenFooter(
-    pageCount: Int,
+    pageIds: List<String>,
+    imageLoader: (String) -> Bitmap?,
     onFinalizePressed: () -> Unit,
     modifier: Modifier,
 ) {
+    val pageCount = pageIds.size
     Surface (
         color = MaterialTheme.colorScheme.inverseOnSurface,
         tonalElevation = 4.dp,
-        modifier = modifier.fillMaxWidth().height(56.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
     ) {
-        Row (
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Pages : $pageCount",
-                style = MaterialTheme.typography.bodyMedium
+        Column {
+            CameraCapturedPagesRow(
+                pageIds = pageIds,
+                imageLoader = imageLoader
             )
-
-            Button (
-                onClick = onFinalizePressed,
-                enabled = pageCount > 0
+            Row (
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Finish")
+                Text(
+                    text = "$pageCount pages",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button (
+                    onClick = onFinalizePressed,
+                    enabled = pageCount > 0
+                ) {
+                    Text("Finish")
+                }
             }
         }
     }
 }
+
+@Composable
+fun CameraCapturedPagesRow(
+    pageIds: List<String>,
+    imageLoader: (String) -> Bitmap?
+) {
+    if (pageIds.isEmpty()) return
+
+    LazyRow (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        itemsIndexed(pageIds) { index, id ->
+            val image = imageLoader(id)
+            if (image != null) {
+                Box {
+                    val bitmap = image.asImageBitmap()
+                    val modifier =
+                        if (bitmap.height > bitmap.width)
+                            Modifier.height(120.dp)
+                        else
+                            Modifier.width(120.dp)
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = "Page ${index + 1}",
+                        modifier = modifier
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
@@ -258,6 +315,7 @@ fun CameraScreenPreviewWithProcessedImage() {
 
 @Composable
 private fun ScreenPreview(captureState: CaptureState) {
+    val context = LocalContext.current
     MyScanTheme {
         CameraScreenContent(
             modifier = Modifier,
@@ -274,7 +332,12 @@ private fun ScreenPreview(captureState: CaptureState) {
                     )
                 }
             },
-            pageCount = 3,
+            pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
+            imageLoader = { id ->
+                context.assets.open(id).use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+            },
             liveAnalysisState = LiveAnalysisState(),
             onCapture = {},
             onFinalizePressed = {},
