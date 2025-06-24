@@ -35,8 +35,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -97,6 +99,13 @@ fun CameraScreen(
         }
     }
 
+    val listState = rememberLazyListState()
+    LaunchedEffect(pageIds.size) {
+        if (pageIds.isNotEmpty()) {
+            listState.animateScrollToItem(pageIds.lastIndex)
+        }
+    }
+
     CameraScreenContent(
         modifier,
         cameraPreview = {
@@ -110,7 +119,8 @@ fun CameraScreen(
             CameraCapturedPagesRow(
                 pageIds = pageIds,
                 imageLoader = { id -> viewModel.getBitmap(id) },
-                onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) }
+                onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) },
+                listState = listState
             )
         },
         cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
@@ -275,10 +285,12 @@ fun CameraCapturedPagesRow(
     pageIds: List<String>,
     imageLoader: (String) -> Bitmap?,
     onPageClick: (Int) -> Unit,
+    listState: LazyListState,
 ) {
     if (pageIds.isEmpty()) return
 
     LazyRow (
+        state = listState,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -347,7 +359,8 @@ private fun ScreenPreview(captureState: CaptureState) {
                             BitmapFactory.decodeStream(input)
                         }
                     },
-                    onPageClick = {}
+                    onPageClick = {},
+                    listState = LazyListState()
                 )
             },
             cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState),
