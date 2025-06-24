@@ -18,21 +18,14 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -64,7 +57,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -188,7 +180,7 @@ private fun DocumentPreview(
             ) {
                 Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete page")
             }
-            Text("${currentPageIndex.value + 1} / ${pageIds.size}",
+            Text("${currentPageIndex.intValue + 1} / ${pageIds.size}",
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -208,39 +200,12 @@ private fun PageList(
     toCameraScreen: () -> Unit
 ) {
     Box {
-        LazyRow(
-            contentPadding = PaddingValues(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            itemsIndexed (pageIds) { index, id ->
-                // TODO Use small images rather than big ones
-                val image = imageLoader(id)
-                if (image != null) {
-                    val bitmap = image.asImageBitmap()
-                    val isSelected = index == currentPageIndex.value
-                    val borderColor =
-                        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                    val modifier =
-                        if (bitmap.height > bitmap.width)
-                            Modifier.height(120.dp)
-                        else
-                            Modifier.width(120.dp)
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = null,
-                        modifier = modifier
-                            .padding(4.dp)
-                            .border(2.dp, borderColor)
-                            .clickable { currentPageIndex.value = index }
-                    )
-                }
-            }
-        }
+        CommonPageList(
+            pageIds,
+            imageLoader,
+            onPageClick = { index -> currentPageIndex.value = index },
+            currentPageIndex = currentPageIndex.value,
+        )
         SmallFloatingActionButton(
             onClick = toCameraScreen,
             modifier = Modifier

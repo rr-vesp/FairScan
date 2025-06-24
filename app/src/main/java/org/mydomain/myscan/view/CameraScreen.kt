@@ -36,11 +36,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -54,7 +51,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -116,7 +112,7 @@ fun CameraScreen(
             )
         },
         pageList = {
-            CameraCapturedPagesRow(
+            CommonPageList(
                 pageIds = pageIds,
                 imageLoader = { id -> viewModel.getBitmap(id) },
                 onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) },
@@ -280,46 +276,6 @@ fun CameraScreenFooter(
     }
 }
 
-@Composable
-fun CameraCapturedPagesRow(
-    pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?,
-    onPageClick: (Int) -> Unit,
-    listState: LazyListState,
-) {
-    if (pageIds.isEmpty()) return
-
-    LazyRow (
-        state = listState,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        itemsIndexed(pageIds) { index, id ->
-            val image = imageLoader(id)
-            if (image != null) {
-                Box {
-                    val bitmap = image.asImageBitmap()
-                    val modifier =
-                        if (bitmap.height > bitmap.width)
-                            Modifier.height(120.dp)
-                        else
-                            Modifier.width(120.dp)
-                    Image(
-                        bitmap = bitmap,
-                        contentDescription = "Page ${index + 1}",
-                        modifier = modifier
-                            .clickable { onPageClick(index) }
-                            .clip(RoundedCornerShape(4.dp))
-                    )
-                }
-            }
-        }
-    }
-}
-
-
 @Preview(showBackground = true)
 @Composable
 fun CameraScreenPreview() {
@@ -352,7 +308,7 @@ private fun ScreenPreview(captureState: CaptureState) {
                 }
             },
             pageList = {
-                CameraCapturedPagesRow(
+                CommonPageList(
                     pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
                     imageLoader = { id ->
                         context.assets.open(id).use { input ->
