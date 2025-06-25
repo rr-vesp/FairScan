@@ -19,6 +19,10 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -32,6 +36,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -53,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -73,6 +79,9 @@ data class CameraUiState(
     val captureState: CaptureState
 )
 
+const val CAPTURED_IMAGE_DISPLAY_DURATION = 1500L
+const val ANIMATION_DURATION = 200
+
 @Composable
 fun CameraScreen(
     viewModel: MainViewModel,
@@ -91,7 +100,7 @@ fun CameraScreen(
     val captureState by viewModel.captureState.collectAsStateWithLifecycle()
     if (captureState.isProcessed()) {
         LaunchedEffect(captureState) {
-            delay(1500)
+            delay(CAPTURED_IMAGE_DISPLAY_DURATION)
             viewModel.addProcessedImage()
         }
     }
@@ -138,37 +147,74 @@ private fun CameraScreenScaffold(
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
 ) {
-    Scaffold(
-        bottomBar = {
-            CameraScreenFooter(
-                pageList = pageList,
-                pageCount = cameraUiState.pageCount,
-                onFinalizePressed = onFinalizePressed,
-            )
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()).fillMaxSize()) {
-            CameraPreviewWithOverlay(cameraPreview, cameraUiState)
-            MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
-            CaptureButton(
-                onClick = onCapture,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            )
-            cameraUiState.captureState.processedImage?.let {
-                Surface(
-                    color = Color.Black.copy(alpha = 0.3f),
-                    modifier = Modifier.fillMaxSize()
+    Box {
+        Scaffold(
+            bottomBar = {
+                CameraScreenFooter(
+                    pageList = pageList,
+                    pageCount = cameraUiState.pageCount,
+                    onFinalizePressed = onFinalizePressed,
                 )
-                {}
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().padding(24.dp)
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+                    .fillMaxSize()
+            ) {
+                CameraPreviewWithOverlay(cameraPreview, cameraUiState)
+                MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
+                CaptureButton(
+                    onClick = onCapture,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
                 )
             }
         }
+        CapturedImage(cameraUiState)
+    }
+}
+
+@Composable
+private fun CapturedImage(cameraUiState: CameraUiState) {
+    cameraUiState.captureState.processedImage?.let { image ->
+        Surface(
+            color = Color.Black.copy(alpha = 0.3f),
+            modifier = Modifier.fillMaxSize(),
+        ) {}
+
+        var isAnimating by remember { mutableStateOf(false) }
+        LaunchedEffect(image) {
+            delay(CAPTURED_IMAGE_DISPLAY_DURATION - ANIMATION_DURATION)
+            isAnimating = true
+        }
+        val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
+        val targetOffsetX = 0.dp // TODO real value
+        val targetOffsetY = 200.dp // TODO real value
+
+        val offsetX by transition.animateDp(
+            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+            label = "offsetX"
+        ) { if (it) targetOffsetX else 0.dp }
+        val offsetY by transition.animateDp(
+            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+            label = "offsetY"
+        ) { if (it) targetOffsetY else 0.dp }
+        val scale by transition.animateFloat(
+            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+            label = "scale"
+        ) { if (it) 0.3f else 1f }
+
+        Image(
+            bitmap = image.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .offset(x = offsetX, y = offsetY - 100.dp)
+                .scale(scale)
+        )
     }
 }
 
