@@ -51,30 +51,28 @@ class MainActivity : ComponentActivity() {
             val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
             val context = LocalContext.current
             MyScanTheme {
-                Column {
-                    when (val screen = currentScreen) {
-                        is Screen.Camera -> {
-                            CameraScreen(
-                                viewModel,
-                                liveAnalysisState,
-                                onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
-                                onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
-                            )
-                        }
-                        is Screen.FinalizeDocument -> {
-                            DocumentScreen (
-                                pageIds,
-                                initialPage = screen.initialPage,
-                                imageLoader = { id -> viewModel.getBitmap(id) },
-                                toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
-                                onSavePressed = savePdf(viewModel, context),
-                                onSharePressed = sharePdf(viewModel, context),
-                                onStartNew = {
-                                    viewModel.startNewDocument()
-                                    viewModel.navigateTo(Screen.Camera) },
-                                onDeleteImage =  { id -> viewModel.deletePage(id) }
-                            )
-                        }
+                when (val screen = currentScreen) {
+                    is Screen.Camera -> {
+                        CameraScreen(
+                            viewModel,
+                            liveAnalysisState,
+                            onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
+                            onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
+                        )
+                    }
+                    is Screen.FinalizeDocument -> {
+                        DocumentScreen (
+                            pageIds,
+                            initialPage = screen.initialPage,
+                            imageLoader = { id -> viewModel.getBitmap(id) },
+                            toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
+                            onSavePressed = savePdf(viewModel, context),
+                            onSharePressed = sharePdf(viewModel, context),
+                            onStartNew = {
+                                viewModel.startNewDocument()
+                                viewModel.navigateTo(Screen.Camera) },
+                            onDeleteImage =  { id -> viewModel.deletePage(id) }
+                        )
                     }
                 }
             }

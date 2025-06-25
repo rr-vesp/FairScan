@@ -170,8 +170,6 @@ class MainViewModel(
         }
     }
 
-    fun pageCount(): Int = pageIds.value.size
-
     fun getBitmap(id: String): Bitmap? {
         val bytes = imageRepository.getContent(id)
         return bytes?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
