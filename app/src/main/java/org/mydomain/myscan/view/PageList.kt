@@ -34,10 +34,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
 const val PAGE_LIST_ELEMENT_SIZE_DP = 120
@@ -49,7 +50,7 @@ fun CommonPageList(
     onPageClick: (Int) -> Unit,
     listState: LazyListState = rememberLazyListState(),
     currentPageIndex: Int? = null,
-    onLastItemPosition: ((LayoutCoordinates) -> Unit)? = null,
+    onLastItemPosition: ((Offset) -> Unit)? = null,
 ) {
     LazyRow (
         state = listState,
@@ -77,7 +78,14 @@ fun CommonPageList(
                         Modifier.width(maxImageSize)
                 val isLastItem = index == pageIds.lastIndex
                 if (isLastItem && onLastItemPosition != null) {
-                    modifier = modifier.onGloballyPositioned(onLastItemPosition)
+                    val density = LocalDensity.current
+                    modifier = modifier.onGloballyPositioned()
+                        { coordinates ->
+                            with(density) {
+                                onLastItemPosition(coordinates.localToWindow(
+                                    Offset(x = PAGE_LIST_ELEMENT_SIZE_DP.dp.toPx(), y = 0f)))
+                            }
+                        }
                 }
                 Image(
                     bitmap = bitmap,
@@ -91,6 +99,11 @@ fun CommonPageList(
         }
     }
     if (pageIds.isEmpty()) {
-        Box(modifier = Modifier.height(120.dp)) {}
+        var modifier = Modifier.height(120.dp)
+        if (onLastItemPosition != null) {
+            modifier = modifier.onGloballyPositioned()
+                { coordinates -> onLastItemPosition(coordinates.localToWindow(Offset.Zero)) }
+        }
+        Box(modifier = modifier) {}
     }
 }

@@ -131,7 +131,7 @@ fun CameraScreen(
                 onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) },
                 listState = listState,
                 onLastItemPosition =
-                    { coords -> thumbnailCoords.value = coords.localToWindow(Offset.Zero) }
+                    { offset -> thumbnailCoords.value = offset }
             )
         },
         cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
@@ -223,7 +223,7 @@ private fun CapturedImage(cameraUiState: CameraUiState, thumbnailCoords: Mutable
                 val centerX = bounds.left + bounds.width / 2
                 val centerY = bounds.top + bounds.height / 2
                 with(density) {
-                    targetOffsetX = thumbnailCoords.value.x - centerX + PAGE_LIST_ELEMENT_SIZE_DP.dp.toPx()
+                    targetOffsetX = thumbnailCoords.value.x - centerX
                     targetOffsetY = thumbnailCoords.value.y - centerY + justABitToTheTop.toPx()
                 }
             }
