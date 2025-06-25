@@ -150,9 +150,8 @@ class MainViewModel(
         if (bitmap == null) {
             return
         }
-        val resized = resizeImage(bitmap)
         val outputStream = ByteArrayOutputStream()
-        resized.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
         val jpegBytes = outputStream.toByteArray()
         imageRepository.add(jpegBytes)
         _pageIds.value = imageRepository.imageIds()

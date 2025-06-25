@@ -38,16 +38,3 @@ fun writePdfFromJpegs(jpegs: Sequence<ByteArray>, outputStream: OutputStream) {
         document.save(outputStream)
     }
 }
-
-fun resizeImage(original: Bitmap): Bitmap {
-    val targetMax = 1500
-    if (max(original.width, original.height) < targetMax)
-        return original;
-    var targetWidth = targetMax
-    var targetHeight = original.height * targetWidth / original.width
-    if (original.width < original.height) {
-        targetHeight = targetMax
-        targetWidth = original.width * targetHeight / original.height
-    }
-    return original.scale(targetWidth, targetHeight)
-}

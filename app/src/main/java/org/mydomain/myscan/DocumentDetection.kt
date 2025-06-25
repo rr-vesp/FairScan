@@ -96,8 +96,25 @@ fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): B
     Imgproc.warpPerspective(inputMat, outputMat, transform, outputSize)
 
     val enhanced = enhanceCapturedImage(outputMat)
+    val rotated = rotate(enhanced, rotationDegrees)
+    val resized = resize(rotated, 1500.0)
 
-    return toBitmap(rotate(enhanced, rotationDegrees))
+    return toBitmap(resized)
+}
+
+fun resize(original: Mat, targetMax: Double): Mat {
+    val origSize = original.size()
+    if (max(origSize.width, origSize.height) < targetMax)
+        return original;
+    var targetWidth = targetMax
+    var targetHeight = origSize.height * targetWidth / origSize.width
+    if (origSize.width < origSize.height) {
+        targetHeight = targetMax
+        targetWidth = origSize.width * targetHeight / origSize.height
+    }
+    val result = Mat()
+    Imgproc.resize(original, result, Size(targetWidth, targetHeight), 0.0, 0.0, Imgproc.INTER_AREA)
+    return result
 }
 
 fun rotate(input: Mat, degrees: Int): Mat {
