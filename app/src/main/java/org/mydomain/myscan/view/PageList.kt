@@ -36,7 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
+
+const val PAGE_LIST_ELEMENT_SIZE_DP = 120
 
 @Composable
 fun CommonPageList(
@@ -45,6 +49,7 @@ fun CommonPageList(
     onPageClick: (Int) -> Unit,
     listState: LazyListState = rememberLazyListState(),
     currentPageIndex: Int? = null,
+    onLastItemPosition: ((LayoutCoordinates) -> Unit)? = null,
 ) {
     LazyRow (
         state = listState,
@@ -60,15 +65,20 @@ fun CommonPageList(
             val image = imageLoader(id)
             if (image != null) {
                 val bitmap = image.asImageBitmap()
+
                 val isSelected = index == currentPageIndex
                 val borderColor =
                     if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                val maxImageSize = 120.dp
-                val modifier =
+                val maxImageSize = PAGE_LIST_ELEMENT_SIZE_DP.dp
+                var modifier =
                     if (bitmap.height > bitmap.width)
                         Modifier.height(maxImageSize)
                     else
                         Modifier.width(maxImageSize)
+                val isLastItem = index == pageIds.lastIndex
+                if (isLastItem && onLastItemPosition != null) {
+                    modifier = modifier.onGloballyPositioned(onLastItemPosition)
+                }
                 Image(
                     bitmap = bitmap,
                     contentDescription = null,

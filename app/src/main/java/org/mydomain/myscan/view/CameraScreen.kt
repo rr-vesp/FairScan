@@ -52,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,10 +60,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,6 +96,7 @@ fun CameraScreen(
 ) {
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
+    val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
 
     val captureController = remember { CameraCaptureController() }
     DisposableEffect(Unit) {
@@ -124,7 +130,9 @@ fun CameraScreen(
                 pageIds = pageIds,
                 imageLoader = { id -> viewModel.getBitmap(id) },
                 onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) },
-                listState = listState
+                listState = listState,
+                onLastItemPosition =
+                    { coords -> thumbnailCoords.value = coords.localToWindow(Offset.Zero) }
             )
         },
         cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
@@ -136,6 +144,7 @@ fun CameraScreen(
             )
         },
         onFinalizePressed = onFinalizePressed,
+        thumbnailCoords = thumbnailCoords,
     )
 }
 
@@ -146,6 +155,7 @@ private fun CameraScreenScaffold(
     cameraUiState: CameraUiState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
+    thumbnailCoords: MutableState<Offset>,
 ) {
     Box {
         Scaffold(
@@ -172,12 +182,12 @@ private fun CameraScreenScaffold(
                 )
             }
         }
-        CapturedImage(cameraUiState)
+        CapturedImage(cameraUiState, thumbnailCoords)
     }
 }
 
 @Composable
-private fun CapturedImage(cameraUiState: CameraUiState) {
+private fun CapturedImage(cameraUiState: CameraUiState, thumbnailCoords: MutableState<Offset>) {
     cameraUiState.captureState.processedImage?.let { image ->
         Surface(
             color = Color.Black.copy(alpha = 0.3f),
@@ -190,8 +200,9 @@ private fun CapturedImage(cameraUiState: CameraUiState) {
             isAnimating = true
         }
         val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
-        val targetOffsetX = 0.dp // TODO real value
-        val targetOffsetY = 200.dp // TODO real value
+        val density = LocalDensity.current
+        var targetOffsetX by remember { mutableStateOf(0.dp) }
+        var targetOffsetY by remember { mutableStateOf(0.dp) }
 
         val offsetX by transition.animateDp(
             transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
@@ -206,15 +217,29 @@ private fun CapturedImage(cameraUiState: CameraUiState) {
             label = "scale"
         ) { if (it) 0.3f else 1f }
 
-        Image(
-            bitmap = image.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-                .offset(x = offsetX, y = offsetY - 100.dp)
-                .scale(scale)
-        )
+
+        val justABitToTheTop = 100.dp
+        Box (modifier = Modifier
+            .onGloballyPositioned { coordinates ->
+                val bounds = coordinates.boundsInWindow()
+                val centerX = bounds.left + bounds.width / 2
+                val centerY = bounds.top + bounds.height / 2
+                with(density) {
+                    targetOffsetX = thumbnailCoords.value.x.toDp() - centerX.toDp() + PAGE_LIST_ELEMENT_SIZE_DP.dp
+                    targetOffsetY = thumbnailCoords.value.y.toDp() - centerY.toDp() + justABitToTheTop
+                }
+            }
+        ) {
+            Image(
+                bitmap = image.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+                    .offset(x = offsetX, y = offsetY - justABitToTheTop)
+                    .scale(scale)
+            )
+        }
     }
 }
 
@@ -333,6 +358,7 @@ fun CameraScreenPreviewWithProcessedImage() {
 private fun ScreenPreview(captureState: CaptureState) {
     val context = LocalContext.current
     MyScanTheme {
+        val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
         CameraScreenScaffold(
             cameraPreview = {
                 Box(
@@ -356,12 +382,13 @@ private fun ScreenPreview(captureState: CaptureState) {
                         }
                     },
                     onPageClick = {},
-                    listState = LazyListState()
+                    listState = LazyListState(),
                 )
             },
             cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState),
             onCapture = {},
             onFinalizePressed = {},
+            thumbnailCoords = thumbnailCoords,
         )
     }
 }
