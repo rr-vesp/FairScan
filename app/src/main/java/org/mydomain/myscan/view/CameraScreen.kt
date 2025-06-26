@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -216,15 +217,15 @@ private fun CapturedImage(cameraUiState: CameraUiState, thumbnailCoords: Mutable
             label = "scale"
         ) { if (it) 0.3f else 1f }
 
-        val justABitToTheTop = 100.dp
         Box (modifier = Modifier
+            .fillMaxHeight(0.8f)
             .onGloballyPositioned { coordinates ->
                 val bounds = coordinates.boundsInWindow()
                 val centerX = bounds.left + bounds.width / 2
                 val centerY = bounds.top + bounds.height / 2
                 with(density) {
                     targetOffsetX = thumbnailCoords.value.x - centerX
-                    targetOffsetY = thumbnailCoords.value.y - centerY + justABitToTheTop.toPx()
+                    targetOffsetY = thumbnailCoords.value.y - centerY
                 }
             }
         ) {
@@ -236,7 +237,7 @@ private fun CapturedImage(cameraUiState: CameraUiState, thumbnailCoords: Mutable
                     .padding(24.dp)
                     .graphicsLayer {
                         translationX = offsetX
-                        translationY = offsetY - justABitToTheTop.toPx()
+                        translationY = offsetY
                         scaleX = scale
                         scaleY = scale
                     }
