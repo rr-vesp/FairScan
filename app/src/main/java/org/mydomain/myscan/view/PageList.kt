@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 
 const val PAGE_LIST_ELEMENT_SIZE_DP = 120
@@ -52,6 +53,7 @@ fun CommonPageList(
     currentPageIndex: Int? = null,
     onLastItemPosition: ((Offset) -> Unit)? = null,
 ) {
+    val density = LocalDensity.current
     LazyRow (
         state = listState,
         contentPadding = PaddingValues(4.dp),
@@ -77,15 +79,8 @@ fun CommonPageList(
                     else
                         Modifier.width(maxImageSize)
                 val isLastItem = index == pageIds.lastIndex
-                if (isLastItem && onLastItemPosition != null) {
-                    val density = LocalDensity.current
-                    modifier = modifier.onGloballyPositioned()
-                        { coordinates ->
-                            with(density) {
-                                onLastItemPosition(coordinates.localToWindow(
-                                    Offset(x = PAGE_LIST_ELEMENT_SIZE_DP.dp.toPx(), y = 0f)))
-                            }
-                        }
+                if (isLastItem) {
+                    modifier = modifier.addPositionCallback(onLastItemPosition, density, 1.0f)
                 }
                 Image(
                     bitmap = bitmap,
@@ -99,11 +94,24 @@ fun CommonPageList(
         }
     }
     if (pageIds.isEmpty()) {
-        var modifier = Modifier.height(120.dp)
-        if (onLastItemPosition != null) {
-            modifier = modifier.onGloballyPositioned()
-                { coordinates -> onLastItemPosition(coordinates.localToWindow(Offset.Zero)) }
+        Box(
+            modifier = Modifier
+                .height(120.dp)
+                .addPositionCallback(onLastItemPosition, density, 0.5f)
+        ) {}
+    }
+}
+
+fun Modifier.addPositionCallback(callback: ((Offset) -> Unit)?, density: Density, xFactor: Float): Modifier {
+    if (callback == null) {
+        return this
+    }
+    return this.onGloballyPositioned { coordinates ->
+        with(density) {
+            callback(coordinates.localToWindow(
+                Offset(
+                    x = PAGE_LIST_ELEMENT_SIZE_DP.dp.toPx() * xFactor,
+                    y = PAGE_LIST_ELEMENT_SIZE_DP.dp.toPx() / 2)))
         }
-        Box(modifier = modifier) {}
     }
 }
