@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInWindow
@@ -182,67 +183,68 @@ private fun CameraScreenScaffold(
                 )
             }
         }
-        CapturedImage(cameraUiState, thumbnailCoords)
+        cameraUiState.captureState.processedImage?.let {
+            image -> CapturedImage(image.asImageBitmap(), thumbnailCoords)
+        }
     }
 }
 
 @Composable
-private fun CapturedImage(cameraUiState: CameraUiState, thumbnailCoords: MutableState<Offset>) {
-    cameraUiState.captureState.processedImage?.let { image ->
-        Surface(
-            color = Color.Black.copy(alpha = 0.3f),
-            modifier = Modifier.fillMaxSize(),
-        ) {}
+private fun CapturedImage(image: ImageBitmap, thumbnailCoords: MutableState<Offset>) {
+    Surface(
+        color = Color.Black.copy(alpha = 0.3f),
+        modifier = Modifier.fillMaxSize(),
+    ) {}
 
-        var isAnimating by remember { mutableStateOf(false) }
-        LaunchedEffect(image) {
-            delay(CAPTURED_IMAGE_DISPLAY_DURATION - ANIMATION_DURATION)
-            isAnimating = true
-        }
-        val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
-        val density = LocalDensity.current
-        var targetOffsetX by remember { mutableFloatStateOf(0f) }
-        var targetOffsetY by remember { mutableFloatStateOf(0f) }
+    var isAnimating by remember { mutableStateOf(false) }
+    LaunchedEffect(image) {
+        delay(CAPTURED_IMAGE_DISPLAY_DURATION - ANIMATION_DURATION)
+        isAnimating = true
+    }
+    val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
+    val density = LocalDensity.current
+    var targetOffsetX by remember { mutableFloatStateOf(0f) }
+    var targetOffsetY by remember { mutableFloatStateOf(0f) }
 
-        val offsetX by transition.animateFloat(
-            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-            label = "offsetX"
-        ) { if (it) targetOffsetX else 0f }
-        val offsetY by transition.animateFloat(
-            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-            label = "offsetY"
-        ) { if (it) targetOffsetY else 0f }
-        val scale by transition.animateFloat(
-            transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-            label = "scale"
-        ) { if (it) 0.3f else 1f }
+    val offsetX by transition.animateFloat(
+        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+        label = "offsetX"
+    ) { if (it) targetOffsetX else 0f }
+    val offsetY by transition.animateFloat(
+        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+        label = "offsetY"
+    ) { if (it) targetOffsetY else 0f }
+    val scale by transition.animateFloat(
+        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
+        label = "scale"
+    ) { if (it) 0.3f else 1f }
 
-        Box (modifier = Modifier
-            .fillMaxHeight(0.8f)
-            .onGloballyPositioned { coordinates ->
-                val bounds = coordinates.boundsInWindow()
-                val centerX = bounds.left + bounds.width / 2
-                val centerY = bounds.top + bounds.height / 2
-                with(density) {
-                    targetOffsetX = thumbnailCoords.value.x - centerX
-                    targetOffsetY = thumbnailCoords.value.y - centerY
-                }
+    Box (contentAlignment = Alignment.BottomStart,
+        modifier = Modifier
+        .fillMaxHeight(0.8f)
+        .onGloballyPositioned { coordinates ->
+            val bounds = coordinates.boundsInWindow()
+            val centerX = bounds.left + bounds.width / 2
+            val centerY = bounds.top + bounds.height / 2
+            with(density) {
+                targetOffsetX = thumbnailCoords.value.x - centerX
+                targetOffsetY = thumbnailCoords.value.y - centerY
             }
-        ) {
-            Image(
-                bitmap = image.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp)
-                    .graphicsLayer {
-                        translationX = offsetX
-                        translationY = offsetY
-                        scaleX = scale
-                        scaleY = scale
-                    }
-            )
         }
+    ) {
+        Image(
+            bitmap = image,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .graphicsLayer {
+                    translationX = offsetX
+                    translationY = offsetY
+                    scaleX = scale
+                    scaleY = scale
+                }
+        )
     }
 }
 
