@@ -201,24 +201,16 @@ private fun CapturedImage(image: ImageBitmap, thumbnailCoords: MutableState<Offs
         delay(CAPTURED_IMAGE_DISPLAY_DURATION - ANIMATION_DURATION)
         isAnimating = true
     }
-    val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
-    val density = LocalDensity.current
     var targetOffsetX by remember { mutableFloatStateOf(0f) }
     var targetOffsetY by remember { mutableFloatStateOf(0f) }
 
-    val offsetX by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-        label = "offsetX"
-    ) { if (it) targetOffsetX else 0f }
-    val offsetY by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-        label = "offsetY"
-    ) { if (it) targetOffsetY else 0f }
-    val scale by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = ANIMATION_DURATION) },
-        label = "scale"
-    ) { if (it) 0.3f else 1f }
+    val transition = updateTransition(targetState = isAnimating, label = "captureAnimation")
+    val tween = tween<Float>(durationMillis = ANIMATION_DURATION)
+    val offsetX by transition.animateFloat({ tween }, "offsetX") { if (it) targetOffsetX else 0f }
+    val offsetY by transition.animateFloat({ tween }, "offsetY") { if (it) targetOffsetY else 0f }
+    val scale by transition.animateFloat({ tween }, "scale") { if (it) 0.3f else 1f }
 
+    val density = LocalDensity.current
     Box (contentAlignment = Alignment.BottomStart,
         modifier = Modifier
         .fillMaxHeight(0.8f)
@@ -353,7 +345,7 @@ fun CameraScreenPreview() {
     ScreenPreview(CaptureState())
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CameraScreenPreviewWithProcessedImage() {
     ScreenPreview(CaptureState(processedImage = debugImage("gallica.bnf.fr-bpt6k5530456s-1.jpg")))
