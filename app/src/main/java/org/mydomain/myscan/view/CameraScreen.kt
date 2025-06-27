@@ -277,6 +277,16 @@ private fun CameraPreviewWithOverlay(
 ) {
     val width = LocalConfiguration.current.screenWidthDp
     val height = width / 3 * 4
+
+    var showShutter by remember { mutableStateOf(false) }
+    LaunchedEffect(cameraUiState.captureState.frozenImage) {
+        if (cameraUiState.captureState.frozenImage != null) {
+            showShutter = true
+            delay(200)
+            showShutter = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .width(width.dp)
@@ -290,6 +300,13 @@ private fun CameraPreviewWithOverlay(
                 contentDescription = null,
             )
 
+        }
+        if (showShutter) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
+            )
         }
     }
 }
