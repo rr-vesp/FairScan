@@ -15,10 +15,21 @@
 package org.mydomain.myscan
 
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 data class Point(val x: Int, val y: Int)
 
-data class Line(val from: Point, val to: Point)
+data class Line(val from: Point, val to: Point) {
+    fun norm(): Double {
+        return norm(from, to)
+    }
+}
+
+fun norm(p1: Point, p2: Point): Double {
+    val dx = (p2.x - p1.x)
+    val dy = (p2.y - p1.y)
+    return sqrt(dx.toDouble() * dx + dy * dy)
+}
 
 data class Quad(
     val topLeft: Point,

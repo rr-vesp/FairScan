@@ -25,7 +25,6 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.sqrt
 
 fun detectDocumentQuad(mask: Bitmap, minQuadAreaRatio: Double = 0.02): Quad? {
     val mat = Mat()
@@ -143,8 +142,3 @@ fun Point.toCv(): org.opencv.core.Point {
     return org.opencv.core.Point(x.toDouble(), y.toDouble())
 }
 
-private fun norm(p1: Point, p2: Point): Double {
-    val dx = (p2.x - p1.x)
-    val dy = (p2.y - p1.y)
-    return sqrt(dx.toDouble() * dx + dy * dy)
-}
