@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -71,6 +72,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.mydomain.myscan.LiveAnalysisState
@@ -105,10 +107,20 @@ fun CameraScreen(
     }
 
     val captureState by viewModel.captureState.collectAsStateWithLifecycle()
-    if (captureState.isProcessed()) {
+    if (captureState is CaptureState.CapturePreview) {
         LaunchedEffect(captureState) {
             delay(CAPTURED_IMAGE_DISPLAY_DURATION)
             viewModel.addProcessedImage()
+        }
+    }
+
+    val showDetectionError = remember { mutableStateOf(false) }
+    LaunchedEffect(captureState) {
+        if (captureState is CaptureState.CaptureError) {
+            showDetectionError.value = true
+            delay(1000)
+            showDetectionError.value = false
+            viewModel.afterCaptureError()
         }
     }
 
@@ -138,14 +150,17 @@ fun CameraScreen(
         },
         cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
         onCapture = {
-            Log.i("MyScan", "Pressed <Capture>")
-            viewModel.onCapturePressed(previewView?.bitmap)
-            captureController.takePicture(
-                onImageCaptured = { imageProxy -> viewModel.onImageCaptured(imageProxy) }
-            )
+            previewView?.bitmap?.let {
+                Log.i("MyScan", "Pressed <Capture>")
+                viewModel.onCapturePressed(it)
+                captureController.takePicture(
+                    onImageCaptured = { imageProxy -> viewModel.onImageCaptured(imageProxy) }
+                )
+            }
         },
         onFinalizePressed = onFinalizePressed,
         thumbnailCoords = thumbnailCoords,
+        showDetectionError = showDetectionError.value
     )
 }
 
@@ -157,6 +172,7 @@ private fun CameraScreenScaffold(
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
     thumbnailCoords: MutableState<Offset>,
+    showDetectionError: Boolean,
 ) {
     Box {
         Scaffold(
@@ -173,7 +189,7 @@ private fun CameraScreenScaffold(
                     .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
-                CameraPreviewWithOverlay(cameraPreview, cameraUiState)
+                CameraPreviewWithOverlay(cameraPreview, cameraUiState, showDetectionError)
                 MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
                 CaptureButton(
                     onClick = onCapture,
@@ -183,8 +199,8 @@ private fun CameraScreenScaffold(
                 )
             }
         }
-        cameraUiState.captureState.processedImage?.let {
-            image -> CapturedImage(image.asImageBitmap(), thumbnailCoords)
+        if (cameraUiState.captureState is CaptureState.CapturePreview) {
+            CapturedImage(cameraUiState.captureState.processed.asImageBitmap(), thumbnailCoords)
         }
     }
 }
@@ -273,14 +289,16 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 @Composable
 private fun CameraPreviewWithOverlay(
     cameraPreview: @Composable () -> Unit,
-    cameraUiState: CameraUiState
+    cameraUiState: CameraUiState,
+    showDetectionError: Boolean
 ) {
+    val captureState = cameraUiState.captureState
     val width = LocalConfiguration.current.screenWidthDp
     val height = width / 3 * 4
 
     var showShutter by remember { mutableStateOf(false) }
-    LaunchedEffect(cameraUiState.captureState.frozenImage) {
-        if (cameraUiState.captureState.frozenImage != null) {
+    LaunchedEffect(captureState.frozenImage) {
+        if (captureState.frozenImage != null) {
             showShutter = true
             delay(200)
             showShutter = false
@@ -294,7 +312,7 @@ private fun CameraPreviewWithOverlay(
     ) {
         cameraPreview()
         AnalysisOverlay(cameraUiState.liveAnalysisState)
-        cameraUiState.captureState.frozenImage?.let {
+        captureState.frozenImage?.let {
             Image(
                 bitmap = it.asImageBitmap(),
                 contentDescription = null,
@@ -308,6 +326,21 @@ private fun CameraPreviewWithOverlay(
                     .background(Color.Black.copy(alpha = 0.6f))
             )
         }
+        if (showDetectionError) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .background(Color.Black.copy(alpha = 0.7f), shape = RoundedCornerShape(8.dp))
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "No document detected",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+        }
+
     }
 }
 
@@ -359,13 +392,15 @@ fun CameraScreenFooter(
 @Preview(showBackground = true)
 @Composable
 fun CameraScreenPreview() {
-    ScreenPreview(CaptureState())
+    ScreenPreview(CaptureState.Idle)
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CameraScreenPreviewWithProcessedImage() {
-    ScreenPreview(CaptureState(processedImage = debugImage("gallica.bnf.fr-bpt6k5530456s-1.jpg")))
+    ScreenPreview(CaptureState.CapturePreview(
+        debugImage("uncropped/img01.jpg"),
+        debugImage("gallica.bnf.fr-bpt6k5530456s-1.jpg")))
 }
 
 @Composable
@@ -403,6 +438,7 @@ private fun ScreenPreview(captureState: CaptureState) {
             onCapture = {},
             onFinalizePressed = {},
             thumbnailCoords = thumbnailCoords,
+            showDetectionError = false,
         )
     }
 }

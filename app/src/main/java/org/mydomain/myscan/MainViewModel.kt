@@ -56,7 +56,7 @@ class MainViewModel(
     private val _pageIds = MutableStateFlow<List<String>>(imageRepository.imageIds())
     val pageIds: StateFlow<List<String>> = _pageIds
 
-    private val _captureState = MutableStateFlow<CaptureState>(CaptureState())
+    private val _captureState = MutableStateFlow<CaptureState>(CaptureState.Idle)
     val captureState: StateFlow<CaptureState> = _captureState
 
     init {
@@ -78,28 +78,36 @@ class MainViewModel(
         }
     }
 
-    data class CaptureState(val frozenImage: Bitmap? = null, val processedImage: Bitmap? = null) {
-        fun isIdle(): Boolean { return frozenImage == null }
-        fun isProcessed(): Boolean { return processedImage != null }
-        fun withProcessed(processedImage: Bitmap? = null): CaptureState {
-            return if (processedImage == null) {
-                CaptureState()
-            } else {
-                CaptureState(frozenImage, processedImage)
-            }
+    sealed class CaptureState {
+        open val frozenImage: Bitmap? = null
+
+        object Idle : CaptureState()
+        data class Capturing(override val frozenImage: Bitmap) : CaptureState()
+        data class CaptureError(override val frozenImage: Bitmap) : CaptureState()
+        data class CapturePreview(
+            override val frozenImage: Bitmap,
+            val processed: Bitmap
+        ) : CaptureState()
+    }
+
+
+    fun onCapturePressed(frozenImage: Bitmap) {
+        _captureState.value = CaptureState.Capturing(frozenImage)
+    }
+
+    private fun onCaptureProcessed(captured: Bitmap?) {
+        val current = _captureState.value
+        _captureState.value = when {
+            current is CaptureState.Capturing && captured != null ->
+                CaptureState.CapturePreview(current.frozenImage, captured)
+            current is CaptureState.Capturing ->
+                CaptureState.CaptureError(current.frozenImage)
+            else -> CaptureState.Idle
         }
     }
 
-    fun onCapturePressed(frozenImage: Bitmap?) {
-        _captureState.value = CaptureState(frozenImage)
-    }
-
-    fun onCaptureProcessed(captured: Bitmap?) {
-        _captureState.value = _captureState.value.withProcessed(captured)
-    }
-
     fun liveAnalysis(imageProxy: ImageProxy) {
-        if (!_captureState.value.isIdle()) {
+        if (_captureState.value !is CaptureState.Idle) {
             imageProxy.close()
             return
         }
@@ -131,7 +139,7 @@ class MainViewModel(
 
     private suspend fun processCapturedImage(imageProxy: ImageProxy): Bitmap? = withContext(Dispatchers.IO) {
         var corrected: Bitmap? = null
-        var bitmap = imageProxy.toBitmap()
+        val bitmap = imageProxy.toBitmap()
         val segmentation = imageSegmentationService.runSegmentationAndReturn(bitmap, 0)
         if (segmentation != null) {
             val mask = segmentation.segmentation.toBinaryMask()
@@ -145,16 +153,19 @@ class MainViewModel(
     }
 
     fun addProcessedImage(quality: Int = 75) {
-        val bitmap = _captureState.value.processedImage
-        _captureState.value = CaptureState()
-        if (bitmap == null) {
-            return
+        val current = _captureState.value
+        if (current is CaptureState.CapturePreview) {
+            val outputStream = ByteArrayOutputStream()
+            current.processed.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+            val jpegBytes = outputStream.toByteArray()
+            imageRepository.add(jpegBytes)
+            _pageIds.value = imageRepository.imageIds()
         }
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
-        val jpegBytes = outputStream.toByteArray()
-        imageRepository.add(jpegBytes)
-        _pageIds.value = imageRepository.imageIds()
+        _captureState.value = CaptureState.Idle
+    }
+
+    fun afterCaptureError() {
+        _captureState.value = CaptureState.Idle
     }
 
     fun deletePage(id: String) {
