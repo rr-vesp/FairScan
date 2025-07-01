@@ -27,7 +27,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
-fun detectDocumentQuad(mask: Bitmap): Quad? {
+fun detectDocumentQuad(mask: Bitmap, minQuadAreaRatio: Double = 0.02): Quad? {
     val mat = Mat()
     Utils.bitmapToMat(mask, mat)
 
@@ -60,6 +60,10 @@ fun detectDocumentQuad(mask: Bitmap): Quad? {
                 biggest = approx
             }
         }
+    }
+
+    if (maxArea < mask.width * mask.height * minQuadAreaRatio) {
+        return null
     }
 
     val vertices = biggest?.toList()?.map { Point(it.x.toInt(), it.y.toInt()) }
