@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -149,17 +150,15 @@ fun bindCameraUseCases(
 }
 
 @Composable
-fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState) {
+fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState, debugMode: Boolean) {
     val binaryMask = liveAnalysisState.binaryMask
     if (binaryMask == null) {
         return
     }
-    val maskOverlay = replaceColor(binaryMask, Color.Black, Color.Transparent)
     Canvas(modifier = Modifier.fillMaxSize()) {
-        drawImage(
-            maskOverlay.scale(size.width.toInt(), size.height.toInt()).asImageBitmap(),
-            colorFilter = ColorFilter.tint(Color(0x8000FF00), BlendMode.SrcIn)
-        )
+        if (debugMode) {
+            drawMask(this, binaryMask)
+        }
         if (liveAnalysisState.documentQuad != null) {
             val scaledQuad = liveAnalysisState.documentQuad.scaledTo(
                 fromWidth = binaryMask.width,
@@ -172,6 +171,15 @@ fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState) {
             }
         }
     }
+}
+
+private fun drawMask(drawScope: DrawScope, binaryMask: Bitmap) {
+    val maskOverlay = replaceColor(binaryMask, Color.Black, Color.Transparent)
+    val size = drawScope.size
+    drawScope.drawImage(
+        maskOverlay.scale(size.width.toInt(), size.height.toInt()).asImageBitmap(),
+        colorFilter = ColorFilter.tint(Color(0x8000FF00), BlendMode.SrcIn)
+    )
 }
 
 fun replaceColor(bitmap: Bitmap, toReplace: Color, replacement: Color): Bitmap {

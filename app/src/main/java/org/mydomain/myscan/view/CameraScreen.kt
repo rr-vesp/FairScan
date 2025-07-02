@@ -86,6 +86,7 @@ data class CameraUiState(
     val liveAnalysisState: LiveAnalysisState,
     val captureState: CaptureState,
     val showDetectionError: Boolean,
+    val isDebugMode: Boolean
 )
 
 const val CAPTURED_IMAGE_DISPLAY_DURATION = 1500L
@@ -101,6 +102,7 @@ fun CameraScreen(
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
     val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
     val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
+    var isDebugMode by remember { mutableStateOf(false) }
 
     val captureController = remember { CameraCaptureController() }
     DisposableEffect(Unit) {
@@ -149,7 +151,12 @@ fun CameraScreen(
                     { offset -> thumbnailCoords.value = offset }
             )
         },
-        cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState, showDetectionError),
+        cameraUiState = CameraUiState(
+            pageIds.size,
+            liveAnalysisState,
+            captureState,
+            showDetectionError,
+            isDebugMode),
         onCapture = {
             previewView?.bitmap?.let {
                 Log.i("MyScan", "Pressed <Capture>")
@@ -160,6 +167,7 @@ fun CameraScreen(
             }
         },
         onFinalizePressed = onFinalizePressed,
+        onDebugModeSwitched = { isDebugMode = !isDebugMode },
         thumbnailCoords = thumbnailCoords,
     )
 }
@@ -171,6 +179,7 @@ private fun CameraScreenScaffold(
     cameraUiState: CameraUiState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
+    onDebugModeSwitched: () -> Unit,
     thumbnailCoords: MutableState<Offset>,
 ) {
     Box {
@@ -180,6 +189,7 @@ private fun CameraScreenScaffold(
                     pageList = pageList,
                     pageCount = cameraUiState.pageCount,
                     onFinalizePressed = onFinalizePressed,
+                    onDebugModeSwitched = onDebugModeSwitched,
                 )
             }
         ) { innerPadding ->
@@ -189,7 +199,9 @@ private fun CameraScreenScaffold(
                     .fillMaxSize()
             ) {
                 CameraPreviewWithOverlay(cameraPreview, cameraUiState)
-                MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
+                if (cameraUiState.isDebugMode) {
+                    MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
+                }
                 CaptureButton(
                     onClick = onCapture,
                     modifier = Modifier
@@ -228,16 +240,16 @@ private fun CapturedImage(image: ImageBitmap, thumbnailCoords: MutableState<Offs
     val density = LocalDensity.current
     Box (contentAlignment = Alignment.BottomStart,
         modifier = Modifier
-        .fillMaxHeight(0.8f)
-        .onGloballyPositioned { coordinates ->
-            val bounds = coordinates.boundsInWindow()
-            val centerX = bounds.left + bounds.width / 2
-            val centerY = bounds.top + bounds.height / 2
-            with(density) {
-                targetOffsetX = thumbnailCoords.value.x - centerX
-                targetOffsetY = thumbnailCoords.value.y - centerY
+            .fillMaxHeight(0.8f)
+            .onGloballyPositioned { coordinates ->
+                val bounds = coordinates.boundsInWindow()
+                val centerX = bounds.left + bounds.width / 2
+                val centerY = bounds.top + bounds.height / 2
+                with(density) {
+                    targetOffsetX = thumbnailCoords.value.x - centerX
+                    targetOffsetY = thumbnailCoords.value.y - centerY
+                }
             }
-        }
     ) {
         Image(
             bitmap = image,
@@ -309,7 +321,7 @@ private fun CameraPreviewWithOverlay(
             .height(height.dp)
     ) {
         cameraPreview()
-        AnalysisOverlay(cameraUiState.liveAnalysisState)
+        AnalysisOverlay(cameraUiState.liveAnalysisState, cameraUiState.isDebugMode)
         captureState.frozenImage?.let {
             Image(
                 bitmap = it.asImageBitmap(),
@@ -358,7 +370,25 @@ fun CameraScreenFooter(
     pageList:  @Composable () -> Unit,
     pageCount: Int,
     onFinalizePressed: () -> Unit,
+    onDebugModeSwitched: () -> Unit,
 ) {
+    var tapCount by remember { mutableStateOf(0) }
+    var lastTapTime by remember { mutableStateOf(0L) }
+    val tapThreshold = 500L
+    val onPageCountClick = {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastTapTime < tapThreshold) {
+            tapCount++
+            if (tapCount >= 3) {
+                onDebugModeSwitched()
+                tapCount = 0
+            }
+        } else {
+            tapCount = 1
+        }
+        lastTapTime = currentTime
+    }
+
     Column (modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
         pageList()
         BottomAppBar(
@@ -373,7 +403,8 @@ fun CameraScreenFooter(
             ) {
                 Text(
                     text = "$pageCount pages",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable(onClick = onPageCountClick)
                 )
 
                 Button (
@@ -432,9 +463,10 @@ private fun ScreenPreview(captureState: CaptureState) {
                     listState = LazyListState(),
                 )
             },
-            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState, false),
+            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState, false, false),
             onCapture = {},
             onFinalizePressed = {},
+            onDebugModeSwitched = {},
             thumbnailCoords = thumbnailCoords,
         )
     }
