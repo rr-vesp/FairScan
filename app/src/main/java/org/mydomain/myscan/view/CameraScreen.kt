@@ -25,7 +25,6 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -198,7 +197,7 @@ private fun CameraScreenScaffold(
                     .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
-                CameraPreviewWithOverlay(cameraPreview, cameraUiState)
+                CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 if (cameraUiState.isDebugMode) {
                     MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
                 }
@@ -283,9 +282,8 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .border(
-                    width = 4.dp,
-                    color = color.copy(alpha = 0.5f),
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
                     shape = CircleShape
                 )
         )
@@ -301,6 +299,7 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 private fun CameraPreviewWithOverlay(
     cameraPreview: @Composable () -> Unit,
     cameraUiState: CameraUiState,
+    modifier: Modifier,
 ) {
     val captureState = cameraUiState.captureState
     val width = LocalConfiguration.current.screenWidthDp
@@ -316,7 +315,7 @@ private fun CameraPreviewWithOverlay(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(width.dp)
             .height(height.dp)
     ) {
@@ -389,10 +388,10 @@ fun CameraScreenFooter(
         lastTapTime = currentTime
     }
 
-    Column (modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)) {
+    Column (modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
         pageList()
         BottomAppBar(
-            tonalElevation = 4.dp,
+            containerColor = Color.Transparent
         ) {
             Row (
                 modifier = Modifier
