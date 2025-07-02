@@ -84,7 +84,8 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 data class CameraUiState(
     val pageCount: Int,
     val liveAnalysisState: LiveAnalysisState,
-    val captureState: CaptureState
+    val captureState: CaptureState,
+    val showDetectionError: Boolean,
 )
 
 const val CAPTURED_IMAGE_DISPLAY_DURATION = 1500L
@@ -114,12 +115,12 @@ fun CameraScreen(
         }
     }
 
-    val showDetectionError = remember { mutableStateOf(false) }
+    var showDetectionError by remember { mutableStateOf(false) }
     LaunchedEffect(captureState) {
         if (captureState is CaptureState.CaptureError) {
-            showDetectionError.value = true
+            showDetectionError = true
             delay(1000)
-            showDetectionError.value = false
+            showDetectionError = false
             viewModel.afterCaptureError()
         }
     }
@@ -148,7 +149,7 @@ fun CameraScreen(
                     { offset -> thumbnailCoords.value = offset }
             )
         },
-        cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState),
+        cameraUiState = CameraUiState(pageIds.size, liveAnalysisState, captureState, showDetectionError),
         onCapture = {
             previewView?.bitmap?.let {
                 Log.i("MyScan", "Pressed <Capture>")
@@ -160,7 +161,6 @@ fun CameraScreen(
         },
         onFinalizePressed = onFinalizePressed,
         thumbnailCoords = thumbnailCoords,
-        showDetectionError = showDetectionError.value
     )
 }
 
@@ -172,7 +172,6 @@ private fun CameraScreenScaffold(
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
     thumbnailCoords: MutableState<Offset>,
-    showDetectionError: Boolean,
 ) {
     Box {
         Scaffold(
@@ -189,7 +188,7 @@ private fun CameraScreenScaffold(
                     .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
-                CameraPreviewWithOverlay(cameraPreview, cameraUiState, showDetectionError)
+                CameraPreviewWithOverlay(cameraPreview, cameraUiState)
                 MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
                 CaptureButton(
                     onClick = onCapture,
@@ -290,7 +289,6 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
 private fun CameraPreviewWithOverlay(
     cameraPreview: @Composable () -> Unit,
     cameraUiState: CameraUiState,
-    showDetectionError: Boolean
 ) {
     val captureState = cameraUiState.captureState
     val width = LocalConfiguration.current.screenWidthDp
@@ -326,7 +324,7 @@ private fun CameraPreviewWithOverlay(
                     .background(Color.Black.copy(alpha = 0.6f))
             )
         }
-        if (showDetectionError) {
+        if (cameraUiState.showDetectionError) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -434,11 +432,10 @@ private fun ScreenPreview(captureState: CaptureState) {
                     listState = LazyListState(),
                 )
             },
-            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState),
+            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState, false),
             onCapture = {},
             onFinalizePressed = {},
             thumbnailCoords = thumbnailCoords,
-            showDetectionError = false,
         )
     }
 }
