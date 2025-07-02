@@ -167,7 +167,7 @@ fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState, debugMode: Boolean) {
                 toHeight = size.height.toInt()
             )
             scaledQuad.edges().forEach {
-                drawLine(Color.Green, it.from.toOffset(), it.to.toOffset(), 5.0f)
+                drawLine(Color.Green, it.from.toOffset(), it.to.toOffset(), 10.0f)
             }
         }
     }
