@@ -30,7 +30,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,8 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 const val PAGE_LIST_ELEMENT_SIZE_DP = 120
 
@@ -53,7 +57,6 @@ fun CommonPageList(
     currentPageIndex: Int? = null,
     onLastItemPosition: ((Offset) -> Unit)? = null,
 ) {
-    val density = LocalDensity.current
     LazyRow (
         state = listState,
         contentPadding = PaddingValues(4.dp),
@@ -67,28 +70,13 @@ fun CommonPageList(
             // TODO Use small images rather than big ones
             val image = imageLoader(id)
             if (image != null) {
-                val bitmap = image.asImageBitmap()
-
-                val isSelected = index == currentPageIndex
-                val borderColor =
-                    if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                val maxImageSize = PAGE_LIST_ELEMENT_SIZE_DP.dp
-                var modifier =
-                    if (bitmap.height > bitmap.width)
-                        Modifier.height(maxImageSize)
-                    else
-                        Modifier.width(maxImageSize)
-                val isLastItem = index == pageIds.lastIndex
-                if (isLastItem) {
-                    modifier = modifier.addPositionCallback(onLastItemPosition, density, 1.0f)
-                }
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = null,
-                    modifier = modifier
-                        .padding(4.dp)
-                        .border(2.dp, borderColor)
-                        .clickable { onPageClick(index) }
+                PageThumbnail(
+                    image,
+                    index,
+                    currentPageIndex,
+                    pageIds.lastIndex,
+                    onLastItemPosition,
+                    onPageClick
                 )
             }
         }
@@ -97,8 +85,60 @@ fun CommonPageList(
         Box(
             modifier = Modifier
                 .height(120.dp)
-                .addPositionCallback(onLastItemPosition, density, 0.5f)
+                .addPositionCallback(onLastItemPosition, LocalDensity.current, 0.5f)
         ) {}
+    }
+}
+
+@Composable
+private fun PageThumbnail(
+    image: Bitmap,
+    index: Int,
+    currentPageIndex: Int?,
+    lastIndex: Int,
+    onLastItemPosition: ((Offset) -> Unit)?,
+    onPageClick: (Int) -> Unit,
+) {
+    val bitmap = image.asImageBitmap()
+    val isSelected = index == currentPageIndex
+    val borderColor =
+        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val maxImageSize = PAGE_LIST_ELEMENT_SIZE_DP.dp
+    var modifier =
+        if (bitmap.height > bitmap.width)
+            Modifier.height(maxImageSize)
+        else
+            Modifier.width(maxImageSize)
+    if (index == lastIndex) {
+        val density = LocalDensity.current
+        modifier = modifier.addPositionCallback(onLastItemPosition, density, 1.0f)
+    }
+    Box (modifier = Modifier.height(PAGE_LIST_ELEMENT_SIZE_DP.dp)) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            modifier = modifier
+                .align(Alignment.Center)
+                .padding(4.dp)
+                .border(2.dp, borderColor)
+                .clickable { onPageClick(index) }
+        )
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp))
+                .padding(vertical = 0.dp, horizontal = 8.dp)
+        ) {
+            Text(
+                text = "${index + 1}",
+                color = Color.White,
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
