@@ -100,7 +100,7 @@ private fun PageThumbnail(
     val bitmap = image.asImageBitmap()
     val isSelected = index == currentPageIndex
     val borderColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+        if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent
     val maxImageSize = PAGE_LIST_ELEMENT_SIZE_DP.dp
     var modifier =
         if (bitmap.height > bitmap.width)

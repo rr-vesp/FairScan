@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -60,6 +61,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.engawapg.lib.zoomable.rememberZoomState
@@ -190,10 +192,13 @@ private fun DocumentPreview(
             Text("${currentPageIndex.intValue + 1} / ${pageIds.size}",
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(all = 8.dp)
-                    .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f))
-                    .padding(all = 4.dp)
+                    .align(Alignment.TopStart)
+                    .padding(all = 16.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
             )
         }
     }
@@ -234,12 +239,12 @@ fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) 
                 showDialog.value = false
                 onConfirm()
             }) {
-                Text("Yes")
+                Text("Yes", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = { showDialog.value = false }) {
-                Text("Cancel")
+                Text("Cancel", fontWeight = FontWeight.Bold)
             }
         },
         onDismissRequest = { showDialog.value = false },
