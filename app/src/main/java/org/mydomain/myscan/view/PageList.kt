@@ -60,7 +60,7 @@ fun CommonPageList(
     LazyRow (
         state = listState,
         contentPadding = PaddingValues(4.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

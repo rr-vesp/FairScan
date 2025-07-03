@@ -37,12 +37,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -91,8 +92,8 @@ fun DocumentScreen(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 title = { Text("Finalize document") },
                 navigationIcon = {
@@ -106,6 +107,7 @@ fun DocumentScreen(
             Column {
                 PageList(pageIds, imageLoader, currentPageIndex, toCameraScreen)
                 BottomAppBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     actions = {
                         Button(onClick = onSharePressed) {
                             Icon(Icons.Default.Share, contentDescription = "Share")
@@ -120,9 +122,12 @@ fun DocumentScreen(
                         }
                     },
                     floatingActionButton = {
-                        FloatingActionButton(onClick = { showDialog.value = true }) {
-                            Icon(Icons.Default.RestartAlt, contentDescription = "Close")
-                        }
+                        MyIconButton(
+                            icon = Icons.Default.RestartAlt,
+                            contentDescription = "Restart",
+                            onClick = { showDialog.value = true },
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
                 )
             }
@@ -147,7 +152,7 @@ private fun DocumentPreview(
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .padding(padding)
     ) {
         Box (
@@ -163,23 +168,25 @@ private fun DocumentPreview(
                 LaunchedEffect(imageId) {
                     zoomState.reset()
                 }
-                Image(
-                    bitmap = imageBitmap,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .align(Alignment.Center)
-                        .zoomable(zoomState)
-                )
+                Box(modifier = Modifier.fillMaxSize(0.92f).align(Alignment.Center)) {
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .align(Alignment.Center)
+                            .zoomable(zoomState)
+                    )
+                }
             }
-            SmallFloatingActionButton(
+            MyIconButton(
+                Icons.Outlined.Delete,
+                contentDescription = "Delete page",
                 onClick = { onDeleteImage(imageId) },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp)
-            ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = "Delete page")
-            }
+                    .padding(8.dp)
+            )
             Text("${currentPageIndex.intValue + 1} / ${pageIds.size}",
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
@@ -206,14 +213,14 @@ private fun PageList(
             onPageClick = { index -> currentPageIndex.value = index },
             currentPageIndex = currentPageIndex.value,
         )
-        SmallFloatingActionButton(
+        MyIconButton(
+            icon = Icons.Default.Add,
             onClick = toCameraScreen,
+            contentDescription = "Add page",
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(8.dp)
-        ) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add page")
-        }
+        )
     }
 }
 
@@ -238,6 +245,30 @@ fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) 
         onDismissRequest = { showDialog.value = false },
     )
 }
+
+@Composable
+fun MyIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FilledIconButton (
+        onClick = onClick,
+        colors = IconButtonDefaults.outlinedIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
+        modifier = modifier.size(40.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
 
 @Composable
 @Preview

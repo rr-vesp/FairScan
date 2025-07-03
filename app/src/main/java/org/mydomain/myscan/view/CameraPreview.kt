@@ -34,6 +34,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -155,6 +156,7 @@ fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState, debugMode: Boolean) {
     if (binaryMask == null) {
         return
     }
+    val quadColor = MaterialTheme.colorScheme.primary
     Canvas(modifier = Modifier.fillMaxSize()) {
         if (debugMode) {
             drawMask(this, binaryMask)
@@ -167,7 +169,7 @@ fun AnalysisOverlay(liveAnalysisState: LiveAnalysisState, debugMode: Boolean) {
                 toHeight = size.height.toInt()
             )
             scaledQuad.edges().forEach {
-                drawLine(Color.Green, it.from.toOffset(), it.to.toOffset(), 10.0f)
+                drawLine(quadColor, it.from.toOffset(), it.to.toOffset(), 10.0f)
             }
         }
     }

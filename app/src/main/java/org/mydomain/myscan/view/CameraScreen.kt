@@ -391,7 +391,7 @@ fun CameraScreenFooter(
     Column (modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
         pageList()
         BottomAppBar(
-            containerColor = Color.Transparent
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Row (
                 modifier = Modifier
