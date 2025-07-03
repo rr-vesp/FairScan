@@ -30,9 +30,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -66,6 +65,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.mydomain.myscan.PdfGenerationActions
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,13 +75,13 @@ fun DocumentScreen(
     initialPage: Int,
     imageLoader: (String) -> Bitmap?,
     toCameraScreen: () -> Unit,
-    onSavePressed: () -> Unit,
-    onSharePressed: () -> Unit,
+    pdfActions: PdfGenerationActions,
     onStartNew: () -> Unit,
     onDeleteImage: (String) -> Unit,
 ) {
     // TODO Check how often images are loaded
-    var showDialog = rememberSaveable { mutableStateOf(false) }
+    val showNewDocDialog = rememberSaveable { mutableStateOf(false) }
+    val showPdfDialog = rememberSaveable { mutableStateOf(false) }
     val currentPageIndex = rememberSaveable { mutableIntStateOf(initialPage) }
     if (currentPageIndex.intValue >= pageIds.size) {
         currentPageIndex.intValue = pageIds.size - 1
@@ -111,23 +111,17 @@ fun DocumentScreen(
                 BottomAppBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     actions = {
-                        Button(onClick = onSharePressed) {
-                            Icon(Icons.Default.Share, contentDescription = "Share")
+                        Button(onClick = { showPdfDialog.value = true }) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
                             Spacer(Modifier.width(8.dp))
-                            Text("Share")
-                        }
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Button(onClick = onSavePressed) {
-                            Icon(Icons.Default.Download, contentDescription = "Save")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Save")
+                            Text("Generate PDF")
                         }
                     },
                     floatingActionButton = {
                         MyIconButton(
                             icon = Icons.Default.RestartAlt,
                             contentDescription = "Restart",
-                            onClick = { showDialog.value = true },
+                            onClick = { showNewDocDialog.value = true },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
@@ -136,8 +130,14 @@ fun DocumentScreen(
         }
     ) { padding ->
         DocumentPreview(pageIds, imageLoader, currentPageIndex, onDeleteImage, padding)
-        if (showDialog.value) {
-            NewDocumentDialog(onConfirm = onStartNew, showDialog)
+        if (showNewDocDialog.value) {
+            NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog)
+        }
+        if (showPdfDialog.value) {
+            PdfGenerationDialogWrapper(
+                onDismiss = { showPdfDialog.value = false },
+                pdfActions = pdfActions,
+            )
         }
     }
 }
@@ -289,8 +289,7 @@ fun DocumentScreenPreview() {
                 }
             },
             toCameraScreen = {},
-            onSavePressed = {},
-            onSharePressed = {},
+            pdfActions = PdfGenerationActions({ null }, {}, {}, {}),
             onStartNew = {},
             onDeleteImage = { _ -> {} }
         )

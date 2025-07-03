@@ -17,7 +17,9 @@ package org.mydomain.myscan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.camera.core.ImageProxy
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -31,18 +33,25 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.io.OutputStream
 
 class MainViewModel(
     private val imageSegmentationService: ImageSegmentationService,
     private val imageRepository: ImageRepository,
+    private val pdfDir: File,
 ): ViewModel() {
 
     companion object {
         fun getFactory(context: Context) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-                return MainViewModel(ImageSegmentationService(context), ImageRepository(context.filesDir)) as T
+                return MainViewModel(
+                    ImageSegmentationService(context),
+                    ImageRepository(context.filesDir),
+                    File(context.cacheDir, "pdfs"),
+                ) as T
             }
         }
     }
@@ -191,4 +200,26 @@ class MainViewModel(
             .filterNotNull()
         writePdfFromJpegs(jpegs, outputStream)
     }
+
+    suspend fun generatePdf(): GeneratedPdf = withContext(Dispatchers.IO) {
+        val pageCount = imageRepository.imageIds().size
+        val file = File(pdfDir,"${System.currentTimeMillis()}.pdf")
+        createPdf(FileOutputStream(file))
+        val sizeBytes = file.length()
+        val uri = file.toUri()
+        return@withContext GeneratedPdf(uri, sizeBytes, pageCount)
+    }
 }
+
+data class GeneratedPdf(
+    val uri: Uri,
+    val sizeInBytes: Long,
+    val pageCount: Int,
+)
+
+data class PdfGenerationActions(
+    val generatePdf: suspend () -> GeneratedPdf?,
+    val onShare: (Uri) -> Unit,
+    val onSave: (Uri) -> Unit,
+    val onOpen: (Uri) -> Unit
+)
