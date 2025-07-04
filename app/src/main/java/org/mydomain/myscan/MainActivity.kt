@@ -15,8 +15,8 @@
 package org.mydomain.myscan
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -29,6 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.DocumentScreen
@@ -62,12 +67,13 @@ class MainActivity : ComponentActivity() {
                             initialPage = screen.initialPage,
                             imageLoader = { id -> viewModel.getBitmap(id) },
                             toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
-                            // TODO Save and share files with the filename chosen by the user
                             pdfActions = PdfGenerationActions(
-                                generatePdf = viewModel::generatePdf,
-                                onShare = { uri -> sharePdf(uri) },
-                                onSave = { uri -> savePdf(uri) },
-                                onOpen = { uri -> savePdf(uri) /* TODO Open */}
+                                startGeneration = viewModel::startPdfGeneration,
+                                cancelGeneration = viewModel::cancelPdfGeneration,
+                                setFilename = viewModel::setFilename,
+                                generatedPdfFlow = viewModel.generatedPdf,
+                                sharePdf = { sharePdf(viewModel.getFinalPdf()) },
+                                savePdf = { savePdf(viewModel.getFinalPdf()) },
                             ),
                             onStartNew = {
                                 viewModel.startNewDocument()
@@ -80,32 +86,63 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun sharePdf(fileUri: Uri) {
-        val fileUri = FileProvider.getUriForFile(
-            this,
-            "${applicationContext.packageName}.fileprovider",
-            fileUri.toFile()
-        )
+    private fun sharePdf(generatedPdf: GeneratedPdf?) {
+        if (generatedPdf == null)
+            return
+        val file = generatedPdf.uri.toFile()
+        val authority = "${applicationContext.packageName}.fileprovider"
+        val fileUri = FileProvider.getUriForFile(this, authority, file)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "application/pdf"
             putExtra(Intent.EXTRA_STREAM, fileUri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(shareIntent, "Share PDF"))
+
+        val chooser = Intent.createChooser(shareIntent, "Share PDF")
+        val resInfoList = packageManager.queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY)
+        for (resInfo in resInfoList) {
+            val packageName = resInfo.activityInfo.packageName
+            grantUriPermission(packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(chooser)
     }
 
-    private fun savePdf(fileUri: Uri) {
-        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        if (!downloadsDir.exists()) {
-            downloadsDir.mkdirs()
+    private fun savePdf(generatedPdf: GeneratedPdf?) {
+        if (generatedPdf == null)
+            return
+        val appScope = CoroutineScope(Dispatchers.IO)
+        val context = this
+        appScope.launch {
+            try {
+                val downloadsDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                val generatedFile = generatedPdf.uri.toFile()
+                val targetFile = File(downloadsDir, generatedFile.name)
+                // TODO Handle case where the target file already exists (choose a unique name)
+                generatedFile.copyTo(targetFile)
+
+                withContext(Dispatchers.Main) {
+                    // TODO Display a link to the file
+                    Toast.makeText(context, "Saved PDF in Downloads", Toast.LENGTH_SHORT).show()
+                }
+
+                suspendCancellableCoroutine { continuation ->
+                    MediaScannerConnection.scanFile(
+                        context,
+                        arrayOf(targetFile.absolutePath),
+                        arrayOf("application/pdf")
+                    ) { _, _ -> continuation.resume(Unit) {} }
+                }
+            } catch (e: Exception) {
+                Log.e("MyScan", "Failed to save PDF", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-        val generatedFile = fileUri.toFile()
-        val targetFile = File(downloadsDir, generatedFile.name)
-        generatedFile.copyTo(targetFile)
-        MediaScannerConnection.scanFile(
-            this, arrayOf(targetFile.absolutePath), arrayOf("application/pdf"), null
-        )
-        Toast.makeText(this, "Saved PDF in Downloads", Toast.LENGTH_SHORT).show()
     }
 
     private fun initLibraries() {

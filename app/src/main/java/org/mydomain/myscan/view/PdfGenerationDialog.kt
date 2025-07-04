@@ -30,10 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,9 +41,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.mydomain.myscan.GeneratedPdf
 import org.mydomain.myscan.PdfGenerationActions
 import org.mydomain.myscan.ui.theme.MyScanTheme
@@ -57,52 +54,37 @@ fun PdfGenerationDialogWrapper(
     pdfActions: PdfGenerationActions,
 ) {
     var filename by remember { mutableStateOf(defaultFilename()) }
-    var isGenerating by remember { mutableStateOf(true) }
-    var pdf by remember { mutableStateOf<GeneratedPdf?>(null) }
-
-    val coroutineScope = rememberCoroutineScope()
-    var job by remember { mutableStateOf<Job?>(null) }
-
+    val generatedPdf by pdfActions.generatedPdfFlow.collectAsState()
     LaunchedEffect(Unit) {
-        job = coroutineScope.launch {
-            try {
-                val result = pdfActions.generatePdf()
-                pdf = result
-                isGenerating = false
-            } catch (_: CancellationException) {
-                // Cancelled
-            } catch (_: Exception) {
-                // Error
-                isGenerating = false
-            }
-        }
+        pdfActions.setFilename(filename)
+        pdfActions.startGeneration()
     }
 
     PdfGenerationDialog(
         filename = filename,
-        onFilenameChange = { filename = it },
-        isGenerating = isGenerating,
-        pdf = pdf,
+        onFilenameChange = {
+            filename = it
+            pdfActions.setFilename(it)
+        },
+        pdf = generatedPdf,
         onDismiss = {
-            job?.cancel()
+            pdfActions.cancelGeneration()
             onDismiss()
         },
-        onShare = { pdf?.uri?.let(pdfActions.onShare) },
-        onSave = { pdf?.uri?.let(pdfActions.onSave) },
-        onOpen = { pdf?.uri?.let(pdfActions.onOpen) }
+        onShare = { pdfActions.sharePdf() },
+        onSave = { pdfActions.savePdf() },
     )
 }
 
+// TODO Handle error in PDF generation
 @Composable
 fun PdfGenerationDialog(
     filename: String,
     onFilenameChange: (String) -> Unit,
-    isGenerating: Boolean,
     pdf: GeneratedPdf?,
     onDismiss: () -> Unit,
     onShare: () -> Unit,
     onSave: () -> Unit,
-    onOpen: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -115,7 +97,7 @@ fun PdfGenerationDialog(
                     label = { Text("Filename") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (isGenerating) {
+                if (pdf == null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
@@ -124,19 +106,17 @@ fun PdfGenerationDialog(
                         Spacer(Modifier.width(8.dp))
                         Text("Generating PDF…")
                     }
-                } else if (pdf != null) {
+                } else {
                     val context = LocalContext.current
                     Text("${pdf.pageCount} pages – ${formatFileSize(pdf.sizeInBytes, context)}")
                 }
             }
         },
-        // TODO 4 buttons (counting dismissButton): that's too many
         confirmButton = {
-            if (!isGenerating && pdf != null) {
+            if (pdf != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = onShare) { Text("Share") }
                     TextButton(onClick = onSave) { Text("Save") }
-                    TextButton(onClick = onOpen) { Text("Open") }
                 }
             }
         },
@@ -162,13 +142,11 @@ fun PreviewPdfGenerationDialogDuringGeneration() {
     MyScanTheme {
         PdfGenerationDialog(
             filename = "scan_20250702_174042.pdf",
-            isGenerating = true,
             pdf = null,
             onFilenameChange = {},
             onDismiss = {},
             onShare = {},
             onSave = {},
-            onOpen = {}
         )
     }
 }
@@ -179,13 +157,11 @@ fun PreviewPdfGenerationDialogAfterGeneration() {
     MyScanTheme {
         PdfGenerationDialog(
             filename = "scan_20250702_174042.pdf",
-            isGenerating = false,
             pdf = GeneratedPdf("file://fake.pdf".toUri(), 42897L, 3),
             onFilenameChange = {},
             onDismiss = {},
             onShare = {},
             onSave = {},
-            onOpen = {}
         )
     }
 }

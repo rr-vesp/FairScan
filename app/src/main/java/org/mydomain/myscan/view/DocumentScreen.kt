@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.MutableStateFlow
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.mydomain.myscan.PdfGenerationActions
@@ -289,7 +290,10 @@ fun DocumentScreenPreview() {
                 }
             },
             toCameraScreen = {},
-            pdfActions = PdfGenerationActions({ null }, {}, {}, {}),
+            pdfActions = PdfGenerationActions(
+                {}, {}, {},
+                MutableStateFlow(null),
+                {}, {}),
             onStartNew = {},
             onDeleteImage = { _ -> {} }
         )
