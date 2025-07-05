@@ -126,8 +126,8 @@ class MainActivity : ComponentActivity() {
                     downloadsDir.mkdirs()
                 }
                 val generatedFile = generatedPdf.uri.toFile()
-                val targetFile = File(downloadsDir, generatedFile.name)
-                // TODO Handle case where the target file already exists (choose a unique name)
+                val desiredFile = File(downloadsDir, generatedFile.name)
+                val targetFile = getAvailableFilename(desiredFile)
                 generatedFile.copyTo(targetFile)
                 viewModel.markFileSaved(targetFile.toUri())
 
