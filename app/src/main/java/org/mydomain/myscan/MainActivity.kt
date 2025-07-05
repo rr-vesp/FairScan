@@ -14,9 +14,11 @@
  */
 package org.mydomain.myscan
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -28,6 +30,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.core.content.FileProvider
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +42,8 @@ import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.DocumentScreen
 import org.opencv.android.OpenCVLoader
 import java.io.File
+
+private const val PDF_MIME_TYPE = "application/pdf"
 
 class MainActivity : ComponentActivity() {
 
@@ -71,9 +76,10 @@ class MainActivity : ComponentActivity() {
                                 startGeneration = viewModel::startPdfGeneration,
                                 cancelGeneration = viewModel::cancelPdfGeneration,
                                 setFilename = viewModel::setFilename,
-                                generatedPdfFlow = viewModel.generatedPdf,
+                                uiStateFlow = viewModel.pdfUiState,
                                 sharePdf = { sharePdf(viewModel.getFinalPdf()) },
-                                savePdf = { savePdf(viewModel.getFinalPdf()) },
+                                savePdf = { savePdf(viewModel.getFinalPdf(), viewModel) },
+                                openPdf = { openPdf(viewModel.pdfUiState.value.savedFileUri) }
                             ),
                             onStartNew = {
                                 viewModel.startNewDocument()
@@ -93,7 +99,7 @@ class MainActivity : ComponentActivity() {
         val authority = "${applicationContext.packageName}.fileprovider"
         val fileUri = FileProvider.getUriForFile(this, authority, file)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
+            type = PDF_MIME_TYPE
             putExtra(Intent.EXTRA_STREAM, fileUri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
@@ -107,7 +113,7 @@ class MainActivity : ComponentActivity() {
         startActivity(chooser)
     }
 
-    private fun savePdf(generatedPdf: GeneratedPdf?) {
+    private fun savePdf(generatedPdf: GeneratedPdf?, viewModel: MainViewModel) {
         if (generatedPdf == null)
             return
         val appScope = CoroutineScope(Dispatchers.IO)
@@ -123,17 +129,13 @@ class MainActivity : ComponentActivity() {
                 val targetFile = File(downloadsDir, generatedFile.name)
                 // TODO Handle case where the target file already exists (choose a unique name)
                 generatedFile.copyTo(targetFile)
-
-                withContext(Dispatchers.Main) {
-                    // TODO Display a link to the file
-                    Toast.makeText(context, "Saved PDF in Downloads", Toast.LENGTH_SHORT).show()
-                }
+                viewModel.markFileSaved(targetFile.toUri())
 
                 suspendCancellableCoroutine { continuation ->
                     MediaScannerConnection.scanFile(
                         context,
                         arrayOf(targetFile.absolutePath),
-                        arrayOf("application/pdf")
+                        arrayOf(PDF_MIME_TYPE)
                     ) { _, _ -> continuation.resume(Unit) {} }
                 }
             } catch (e: Exception) {
@@ -142,6 +144,24 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    private fun openPdf(fileUri: Uri?) {
+        if (fileUri == null) return
+        val uri = FileProvider.getUriForFile(
+            this,
+            "${applicationContext.packageName}.fileprovider",
+            fileUri.toFile()
+        )
+        val openIntent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, PDF_MIME_TYPE)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        try {
+            startActivity(Intent.createChooser(openIntent, "Open PDF"))
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, "No app found to open PDF", Toast.LENGTH_SHORT).show()
         }
     }
 

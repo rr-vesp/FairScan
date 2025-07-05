@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.mydomain.myscan.PdfGenerationActions
+import org.mydomain.myscan.ui.PdfGenerationUiState
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -292,8 +293,8 @@ fun DocumentScreenPreview() {
             toCameraScreen = {},
             pdfActions = PdfGenerationActions(
                 {}, {}, {},
-                MutableStateFlow(null),
-                {}, {}),
+                MutableStateFlow(PdfGenerationUiState()),
+                {}, {}, {}),
             onStartNew = {},
             onDeleteImage = { _ -> {} }
         )

@@ -18,6 +18,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -32,8 +33,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.mydomain.myscan.ui.PdfGenerationUiState
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -208,7 +211,9 @@ class MainViewModel(
     }
 
     private val _generatedPdf = MutableStateFlow<GeneratedPdf?>(null)
-    val generatedPdf: StateFlow<GeneratedPdf?> = _generatedPdf
+
+    private val _pdfUiState = MutableStateFlow(PdfGenerationUiState())
+    val pdfUiState: StateFlow<PdfGenerationUiState> = _pdfUiState.asStateFlow()
 
     private var generationJob: Job? = null
     private var desiredFilename: String = ""
@@ -218,29 +223,56 @@ class MainViewModel(
     }
 
     fun startPdfGeneration() {
-        if (_generatedPdf.value != null) return
+        val currentState = _pdfUiState.value
+        if (currentState.isGenerating || currentState.generatedPdf != null) return
+
+        _pdfUiState.update { it.copy(isGenerating = true, errorMessage = null) }
+
         generationJob = viewModelScope.launch {
-            val result = generatePdf()
-            _generatedPdf.value = result
+            try {
+                val result = generatePdf()
+                _pdfUiState.update {
+                    it.copy(
+                        isGenerating = false,
+                        generatedPdf = result
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("MyScan", "PDF generation failed", e)
+                _pdfUiState.update {
+                    it.copy(
+                        isGenerating = false,
+                        errorMessage = "PDF generation failed"
+                    )
+                }
+            }
         }
     }
 
     fun cancelPdfGeneration() {
         generationJob?.cancel()
-        _generatedPdf.value = null
+        _pdfUiState.value = PdfGenerationUiState()
     }
 
     fun getFinalPdf(): GeneratedPdf? {
-        val temp = _generatedPdf.value ?: return null
-        val tempFile = temp.uri.toFile()
+        val tempPdf = _pdfUiState.value.generatedPdf ?: return null
+        val tempFile = tempPdf.uri.toFile()
         val newFile = File(tempFile.parentFile, desiredFilename)
         if (tempFile.absolutePath != newFile.absolutePath) {
             if (newFile.exists()) newFile.delete()
             val success = tempFile.renameTo(newFile)
             if (!success) return null
-            _generatedPdf.value = GeneratedPdf(uri = newFile.toUri(), temp.sizeInBytes, temp.pageCount)
+            _pdfUiState.update {
+                it.copy(generatedPdf = GeneratedPdf(
+                    uri = newFile.toUri(), tempPdf.sizeInBytes, tempPdf.pageCount)
+                )
+            }
         }
-        return _generatedPdf.value
+        return _pdfUiState.value.generatedPdf
+    }
+
+    fun markFileSaved(uri: Uri) {
+        _pdfUiState.update { it.copy(savedFileUri = uri) }
     }
 }
 
@@ -250,11 +282,13 @@ data class GeneratedPdf(
     val pageCount: Int,
 )
 
+// TODO Move somewhere else: ViewModel should not depend on that
 data class PdfGenerationActions(
     val startGeneration: () -> Unit,
     val cancelGeneration: () -> Unit,
     val setFilename: (String) -> Unit,
-    val generatedPdfFlow: StateFlow<GeneratedPdf?>,
+    val uiStateFlow: StateFlow<PdfGenerationUiState>,// TODO is it ok to have that here?
     val sharePdf: () -> Unit,
-    val savePdf: () -> Unit
+    val savePdf: () -> Unit,
+    val openPdf: () -> Unit,
 )

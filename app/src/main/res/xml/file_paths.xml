@@ -3,4 +3,7 @@
     <cache-path
         name="pdfs"
         path="pdfs/" />
+    <external-path
+        name="external_files"
+        path="." />
 </paths>
