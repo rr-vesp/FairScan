@@ -143,7 +143,12 @@ fun PdfGenerationBottomSheet(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             } else if (pdf != null) {
                 val context = LocalContext.current
-                Text("${pdf.pageCount} pages · ${formatFileSize(pdf.sizeInBytes, context)}")
+                val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
+                Text(
+                    text = "${pdf.pageCount} pages · $formattedFileSize",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             }
 
             Spacer(Modifier.height(24.dp))
