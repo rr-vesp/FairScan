@@ -16,6 +16,7 @@ package org.mydomain.myscan.view
 
 import android.content.Context
 import android.text.format.Formatter
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,19 +26,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,73 +108,105 @@ fun PdfGenerationBottomSheet(
     onSave: () -> Unit,
     onOpen: () -> Unit,
 ) {
-    Column(
+    Column() {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+        ) {
+            CloseButton(onDismiss)
+
+            Row {
+                Icon(
+                    Icons.Default.PictureAsPdf, contentDescription = "PDF",
+                    modifier = Modifier
+                        .size(34.dp)
+                        .padding(end = 8.dp)
+                )
+                Text("Generate PDF", style = MaterialTheme.typography.headlineSmall)
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = filename,
+                onValueChange = onFilenameChange,
+                label = { Text("Filename") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            val pdf = uiState.generatedPdf
+            if (uiState.isGenerating) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            } else if (pdf != null) {
+                val context = LocalContext.current
+                Text("${pdf.pageCount} pages · ${formatFileSize(pdf.sizeInBytes, context)}")
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            MainActions(pdf, onShare, onSave)
+        }
+
+        if (uiState.savedFileUri != null) {
+            SavePdfBar(onOpen)
+        }
+
+    }
+}
+
+@Composable
+private fun MainActions(
+    pdf: GeneratedPdf?,
+    onShare: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        MainActionButton(
+            onClick = onShare,
+            enabled = pdf != null,
+            icon = Icons.Default.Share,
+            iconDescription = "Share",
+            text = "Share",
+            modifier = Modifier.weight(1f)
+        )
+        MainActionButton(
+            onClick = onSave,
+            enabled = pdf != null,
+            icon = Icons.Default.Download,
+            iconDescription = "Save",
+            text = "Save",
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun SavePdfBar(onOpen: () -> Unit) {
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Absolute.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(vertical = 8.dp, horizontal = 16.dp),
     ) {
-        CloseButton(onDismiss)
-
-        Row {
-            Icon(Icons.Default.PictureAsPdf, contentDescription = "PDF",
-                modifier = Modifier
-                    .size(34.dp)
-                    .padding(end = 8.dp))
-            Text("Generate PDF", style = MaterialTheme.typography.headlineSmall)
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = filename,
-            onValueChange = onFilenameChange,
-            label = { Text("Filename") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+        Text(
+            text = "PDF saved to Downloads",
+            style = MaterialTheme.typography.bodyMedium
         )
-
-        Spacer(Modifier.height(8.dp))
-
-        val pdf = uiState.generatedPdf
-        if (uiState.isGenerating) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        } else if (pdf != null) {
-            val context = LocalContext.current
-            Text("${pdf.pageCount} pages · ${formatFileSize(pdf.sizeInBytes, context)}")
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedButton(
-                onClick = onShare,
-                enabled = pdf != null,
-                modifier = Modifier.weight(1f)
-            ) { Text("Share") }
-
-            OutlinedButton(
-                onClick = onSave,
-                enabled = pdf != null,
-                modifier = Modifier.weight(1f)
-            ) { Text("Save") }
-        }
-        if (uiState.savedFileUri != null) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "PDF saved to Downloads",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onOpen) {
-                Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Open")
-            }
-        }
-
+        MainActionButton(
+            onClick = onOpen,
+            text = "Open",
+            icon = Icons.AutoMirrored.Filled.OpenInNew,
+        )
     }
 }
 
