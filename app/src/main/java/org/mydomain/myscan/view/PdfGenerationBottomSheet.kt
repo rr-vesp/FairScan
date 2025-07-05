@@ -17,18 +17,23 @@ package org.mydomain.myscan.view
 import android.content.Context
 import android.text.format.Formatter
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -42,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,7 +63,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PdfGenerationDialogWrapper(
+fun PdfGenerationBottomSheetWrapper(
     onDismiss: () -> Unit,
     pdfActions: PdfGenerationActions,
     modifier: Modifier = Modifier,
@@ -105,9 +111,17 @@ fun PdfGenerationBottomSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp)
+            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
-        Text("Generate PDF", style = MaterialTheme.typography.headlineSmall)
+        CloseButton(onDismiss)
+
+        Row {
+            Icon(Icons.Default.PictureAsPdf, contentDescription = "PDF",
+                modifier = Modifier
+                    .size(34.dp)
+                    .padding(end = 8.dp))
+            Text("Generate PDF", style = MaterialTheme.typography.headlineSmall)
+        }
 
         Spacer(Modifier.height(16.dp))
 
@@ -135,11 +149,6 @@ fun PdfGenerationBottomSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            OutlinedButton(
-                onClick = onDismiss,
-                modifier = Modifier.weight(1f)
-            ) { Text("Close") }
-
             OutlinedButton(
                 onClick = onShare,
                 enabled = pdf != null,
@@ -169,6 +178,21 @@ fun PdfGenerationBottomSheet(
     }
 }
 
+@Composable
+private fun CloseButton(onDismiss: () -> Unit) {
+    Box(Modifier.fillMaxWidth()) {
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close"
+            )
+        }
+    }
+}
+
 fun defaultFilename(): String {
     val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
     return "scan_$timestamp.pdf"
@@ -182,29 +206,40 @@ fun formatFileSize(sizeInBytes: Long?, context: Context): String {
 @Preview(showBackground = true)
 @Composable
 fun PreviewPdfGenerationDialogDuringGeneration() {
-    MyScanTheme {
-        PdfGenerationBottomSheet(
-            filename = "scan_20250702_174042.pdf",
-            uiState = PdfGenerationUiState(isGenerating = true),
-            onFilenameChange = {},
-            onDismiss = {},
-            onShare = {},
-            onSave = {},
-            onOpen = {},
-        )
-    }
+    PreviewToCustomize(
+        uiState = PdfGenerationUiState(isGenerating = true)
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewPdfGenerationDialogAfterGeneration() {
+    PreviewToCustomize(
+        uiState = PdfGenerationUiState(
+            isGenerating = false,
+            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3)
+        )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPdfGenerationDialogAfterSave() {
+    PreviewToCustomize(
+        uiState = PdfGenerationUiState(
+            isGenerating = false,
+            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3),
+            savedFileUri = "file:///fake".toUri()
+        )
+    )
+}
+
+@Composable
+fun PreviewToCustomize(uiState: PdfGenerationUiState) {
     MyScanTheme {
         PdfGenerationBottomSheet(
             filename = "scan_20250702_174042.pdf",
-            uiState = PdfGenerationUiState(
-                isGenerating = false,
-                generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 42897L, 3)
-            ),
+            uiState = uiState,
             onFilenameChange = {},
             onDismiss = {},
             onShare = {},

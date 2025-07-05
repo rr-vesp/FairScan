@@ -136,7 +136,7 @@ fun DocumentScreen(
             NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog)
         }
         if (showPdfDialog.value) {
-            PdfGenerationDialogWrapper(
+            PdfGenerationBottomSheetWrapper(
                 onDismiss = { showPdfDialog.value = false },
                 pdfActions = pdfActions,
             )
