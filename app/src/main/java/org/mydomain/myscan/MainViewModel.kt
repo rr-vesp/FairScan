@@ -29,10 +29,12 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,8 +65,9 @@ class MainViewModel(
     private var _liveAnalysisState = MutableStateFlow(LiveAnalysisState())
     val liveAnalysisState: StateFlow<LiveAnalysisState> = _liveAnalysisState.asStateFlow()
 
-    private val _currentScreen = MutableStateFlow<Screen>(Screen.Camera)
-    val currentScreen: StateFlow<Screen> = _currentScreen.asStateFlow()
+    private val _screenStack = MutableStateFlow<List<Screen>>(listOf(Screen.Camera))
+    val currentScreen: StateFlow<Screen> = _screenStack.map { it.last() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, Screen.Camera)
 
     private val _pageIds = MutableStateFlow<List<String>>(imageRepository.imageIds())
     val pageIds: StateFlow<List<String>> = _pageIds
@@ -135,7 +138,11 @@ class MainViewModel(
     }
 
     fun navigateTo(screen: Screen) {
-        _currentScreen.value = screen
+        _screenStack.update { it + screen }
+    }
+
+    fun navigateBack() {
+        _screenStack.update { stack -> if (stack.size > 1) stack.dropLast(1) else stack }
     }
 
     fun onImageCaptured(imageProxy: ImageProxy?) {

@@ -19,6 +19,7 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
+import org.mydomain.myscan.Navigation
 import org.mydomain.myscan.PdfGenerationActions
 import org.mydomain.myscan.ui.PdfGenerationUiState
 import org.mydomain.myscan.ui.theme.MyScanTheme
@@ -75,7 +78,7 @@ fun DocumentScreen(
     pageIds: List<String>,
     initialPage: Int,
     imageLoader: (String) -> Bitmap?,
-    toCameraScreen: () -> Unit,
+    navigation: Navigation,
     pdfActions: PdfGenerationActions,
     onStartNew: () -> Unit,
     onDeleteImage: (String) -> Unit,
@@ -88,11 +91,11 @@ fun DocumentScreen(
         currentPageIndex.intValue = pageIds.size - 1
     }
     if (currentPageIndex.intValue < 0) {
-        toCameraScreen()
+        navigation.toCameraScreen()
         return
     }
     BackHandler {
-        toCameraScreen()
+        navigation.back()
     }
     Scaffold (
         topBar = {
@@ -103,15 +106,23 @@ fun DocumentScreen(
                 ),
                 title = { Text("Document") },
                 navigationIcon = {
-                    IconButton(onClick = toCameraScreen) {
+                    IconButton(onClick = navigation.toCameraScreen) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = navigation.toAboutScreen) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "About",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    }
+                }
             )
         },
         bottomBar = {
             Column {
-                PageList(pageIds, imageLoader, currentPageIndex, toCameraScreen)
+                PageList(pageIds, imageLoader, currentPageIndex, navigation.toCameraScreen)
                 BottomBar(showPdfDialog, showNewDocDialog)
             }
         }
@@ -280,7 +291,7 @@ fun DocumentScreenPreview() {
                     BitmapFactory.decodeStream(input)
                 }
             },
-            toCameraScreen = {},
+            navigation = Navigation({}, {}, {}, {}),
             pdfActions = PdfGenerationActions(
                 {}, {}, {},
                 MutableStateFlow(PdfGenerationUiState()),

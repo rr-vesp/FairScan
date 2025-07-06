@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.mydomain.myscan.ui.theme.MyScanTheme
+import org.mydomain.myscan.view.AboutScreen
 import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.DocumentScreen
 import org.opencv.android.OpenCVLoader
@@ -57,21 +58,27 @@ class MainActivity : ComponentActivity() {
             val liveAnalysisState by viewModel.liveAnalysisState.collectAsStateWithLifecycle()
             val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
             MyScanTheme {
+                val navigation = Navigation(
+                    toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
+                    toDocumentScreen = { viewModel.navigateTo(Screen.Document()) },
+                    toAboutScreen = { viewModel.navigateTo(Screen.About) },
+                    back = { viewModel.navigateBack() }
+                )
                 when (val screen = currentScreen) {
                     is Screen.Camera -> {
                         CameraScreen(
                             viewModel,
                             liveAnalysisState,
                             onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
-                            onFinalizePressed = { viewModel.navigateTo(Screen.FinalizeDocument()) },
+                            onFinalizePressed = { viewModel.navigateTo(Screen.Document()) },
                         )
                     }
-                    is Screen.FinalizeDocument -> {
+                    is Screen.Document -> {
                         DocumentScreen (
                             pageIds,
                             initialPage = screen.initialPage,
                             imageLoader = { id -> viewModel.getBitmap(id) },
-                            toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
+                            navigation = navigation,
                             pdfActions = PdfGenerationActions(
                                 startGeneration = viewModel::startPdfGeneration,
                                 cancelGeneration = viewModel::cancelPdfGeneration,
@@ -86,6 +93,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel.navigateTo(Screen.Camera) },
                             onDeleteImage =  { id -> viewModel.deletePage(id) }
                         )
+                    }
+                    is Screen.About -> {
+                        AboutScreen(onBack = navigation.back)
                     }
                 }
             }

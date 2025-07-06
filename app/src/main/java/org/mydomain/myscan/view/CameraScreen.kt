@@ -45,7 +45,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -146,7 +149,7 @@ fun CameraScreen(
             CommonPageList(
                 pageIds = pageIds,
                 imageLoader = { id -> viewModel.getBitmap(id) },
-                onPageClick = { index -> viewModel.navigateTo(Screen.FinalizeDocument(index)) },
+                onPageClick = { index -> viewModel.navigateTo(Screen.Document(index)) },
                 listState = listState,
                 onLastItemPosition =
                     { offset -> thumbnailCoords.value = offset }
@@ -170,6 +173,7 @@ fun CameraScreen(
         onFinalizePressed = onFinalizePressed,
         onDebugModeSwitched = { isDebugMode = !isDebugMode },
         thumbnailCoords = thumbnailCoords,
+        toAboutScreen = { viewModel.navigateTo(Screen.About) }
     )
 }
 
@@ -182,6 +186,7 @@ private fun CameraScreenScaffold(
     onFinalizePressed: () -> Unit,
     onDebugModeSwitched: () -> Unit,
     thumbnailCoords: MutableState<Offset>,
+    toAboutScreen: () -> Unit,
 ) {
     Box {
         Scaffold(
@@ -199,6 +204,19 @@ private fun CameraScreenScaffold(
                     .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(innerPadding)
+                ) {
+                    IconButton(
+                        onClick = toAboutScreen,
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "About",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    }
+                }
                 CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 if (cameraUiState.isDebugMode) {
                     MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
@@ -469,6 +487,7 @@ private fun ScreenPreview(captureState: CaptureState) {
             onFinalizePressed = {},
             onDebugModeSwitched = {},
             thumbnailCoords = thumbnailCoords,
+            toAboutScreen = {}
         )
     }
 }

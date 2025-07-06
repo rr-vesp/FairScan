@@ -16,5 +16,13 @@ package org.mydomain.myscan
 
 sealed class Screen {
     object Camera : Screen()
-    data class FinalizeDocument(val initialPage: Int = 0) : Screen()
+    data class Document(val initialPage: Int = 0) : Screen()
+    object About : Screen()
 }
+
+data class Navigation(
+    val toCameraScreen: () -> Unit,
+    val toDocumentScreen: () -> Unit,
+    val toAboutScreen: () -> Unit,
+    val back: () -> Unit,
+)
