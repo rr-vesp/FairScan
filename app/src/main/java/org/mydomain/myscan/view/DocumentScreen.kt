@@ -18,11 +18,14 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,7 +37,6 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -99,7 +101,7 @@ fun DocumentScreen(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                title = { Text("Finalize document") },
+                title = { Text("Document") },
                 navigationIcon = {
                     IconButton(onClick = toCameraScreen) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -110,24 +112,27 @@ fun DocumentScreen(
         bottomBar = {
             Column {
                 PageList(pageIds, imageLoader, currentPageIndex, toCameraScreen)
-                BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    actions = {
-                        Button(onClick = { showPdfDialog.value = true }) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Generate PDF")
-                        }
-                    },
-                    floatingActionButton = {
-                        MyIconButton(
-                            icon = Icons.Default.RestartAlt,
-                            contentDescription = "Restart",
-                            onClick = { showNewDocDialog.value = true },
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 32.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(onClick = { showPdfDialog.value = true }) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Generate PDF")
                     }
-                )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    MyIconButton(
+                        icon = Icons.Default.RestartAlt,
+                        contentDescription = "Restart",
+                        onClick = { showNewDocDialog.value = true },
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
         }
     ) { padding ->
