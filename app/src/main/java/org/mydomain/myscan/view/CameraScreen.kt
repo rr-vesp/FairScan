@@ -25,6 +25,7 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -282,14 +283,15 @@ fun CaptureButton(onClick: () -> Unit, modifier: Modifier) {
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
+                .border(
+                    width = 4.dp,
+                    color = color,
                     shape = CircleShape
                 )
         )
         Box(
             modifier = Modifier
-                .size(60.dp)
+                .size(58.dp)
                 .background(color = color, shape = CircleShape)
         )
     }
