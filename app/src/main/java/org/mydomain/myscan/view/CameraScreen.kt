@@ -45,10 +45,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -207,15 +204,10 @@ private fun CameraScreenScaffold(
                 Box(
                     modifier = Modifier.fillMaxSize().padding(innerPadding)
                 ) {
-                    IconButton(
+                    AboutScreenNavButton(
                         onClick = toAboutScreen,
                         modifier = Modifier.align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = "About",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                    }
+                    )
                 }
                 CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 if (cameraUiState.isDebugMode) {

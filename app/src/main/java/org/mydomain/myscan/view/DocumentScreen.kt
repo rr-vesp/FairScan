@@ -19,7 +19,6 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -111,12 +109,7 @@ fun DocumentScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = navigation.toAboutScreen) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = "About",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                    }
+                    AboutScreenNavButton(onClick = navigation.toAboutScreen)
                 }
             )
         },
