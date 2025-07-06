@@ -16,6 +16,7 @@ package org.mydomain.myscan.view
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -88,6 +89,9 @@ fun DocumentScreen(
     if (currentPageIndex.intValue < 0) {
         toCameraScreen()
         return
+    }
+    BackHandler {
+        toCameraScreen()
     }
     Scaffold (
         topBar = {
