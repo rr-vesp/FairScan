@@ -112,27 +112,7 @@ fun DocumentScreen(
         bottomBar = {
             Column {
                 PageList(pageIds, imageLoader, currentPageIndex, toCameraScreen)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 32.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(onClick = { showPdfDialog.value = true }) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Generate PDF")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    MyIconButton(
-                        icon = Icons.Default.RestartAlt,
-                        contentDescription = "Restart",
-                        onClick = { showNewDocDialog.value = true },
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
+                BottomBar(showPdfDialog, showNewDocDialog)
             }
         }
     ) { padding ->
@@ -237,6 +217,34 @@ private fun PageList(
 }
 
 @Composable
+private fun BottomBar(
+    showPdfDialog: MutableState<Boolean>,
+    showNewDocDialog: MutableState<Boolean>,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 32.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
+    ) {
+        Button(onClick = { showPdfDialog.value = true }) {
+            Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
+            Spacer(Modifier.width(8.dp))
+            Text("Generate PDF")
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        MyIconButton(
+            icon = Icons.Default.RestartAlt,
+            contentDescription = "Restart",
+            onClick = { showNewDocDialog.value = true },
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
 fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) {
     AlertDialog(
         title = { Text("New document") },
@@ -280,7 +288,6 @@ fun MyIconButton(
         )
     }
 }
-
 
 @Composable
 @Preview
