@@ -14,31 +14,51 @@
  */
 package org.mydomain.myscan.view
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.mydomain.myscan.R
+import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
+    val showLicenceDialog = rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,12 +71,15 @@ fun AboutScreen(onBack: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        AboutContent(Modifier.padding(paddingValues))
+        AboutContent(Modifier.padding(paddingValues), showLicenceDialog)
+    }
+    if (showLicenceDialog.value) {
+        LicenseBottomSheet(sheetState, onDismiss = { showLicenceDialog.value = false })
     }
 }
 
 @Composable
-fun AboutContent(modifier: Modifier = Modifier) {
+fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<Boolean>) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -90,7 +113,16 @@ fun AboutContent(modifier: Modifier = Modifier) {
             "License",
             style = MaterialTheme.typography.titleSmall
         )
-        Text("This application is published under the GPLv3 license.")
+        Text(
+            "This application is licensed under the GNU General Public License v3.0.",
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = "View the full license",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clickable() { showLicenceDialog.value = true },
+            color = MaterialTheme.colorScheme.primary
+        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -98,9 +130,66 @@ fun AboutContent(modifier: Modifier = Modifier) {
             "This application is based on the following open-source libraries",
             style = MaterialTheme.typography.titleSmall
         )
-        Text("• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox")
+        Text(
+            "• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
+            style = MaterialTheme.typography.bodyMedium)
 
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LicenseBottomSheet(
+    sheetState: SheetState,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val licenseText by remember {
+        mutableStateOf(
+            context.resources.openRawResource(R.raw.gpl3)
+                .bufferedReader()
+                .use { it.readText() }
+        )
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text(
+                "GNU General Public License v3.0",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "Close")
+            }
+        }
+
+        HorizontalDivider()
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = 500.dp) // TODO check if it's ok
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(
+                text = licenseText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -108,5 +197,7 @@ fun AboutContent(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 fun AboutScreenPreview() {
-    AboutScreen(onBack = {})
+    MyScanTheme {
+        AboutScreen(onBack = {})
+    }
 }
