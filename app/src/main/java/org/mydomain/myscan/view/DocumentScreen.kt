@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,12 +36,9 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -60,7 +56,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -168,7 +163,7 @@ private fun DocumentPreview(
                     )
                 }
             }
-            MyIconButton(
+            SecondaryActionButton(
                 Icons.Outlined.Delete,
                 contentDescription = "Delete page",
                 onClick = { onDeleteImage(imageId) },
@@ -205,7 +200,7 @@ private fun PageList(
             onPageClick = { index -> currentPageIndex.value = index },
             currentPageIndex = currentPageIndex.value,
         )
-        MyIconButton(
+        SecondaryActionButton(
             icon = Icons.Default.Add,
             onClick = toCameraScreen,
             contentDescription = "Add page",
@@ -229,13 +224,13 @@ private fun BottomBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End
     ) {
-        Button(onClick = { showPdfDialog.value = true }) {
-            Icon(Icons.Default.PictureAsPdf, contentDescription = "Generate PDF")
-            Spacer(Modifier.width(8.dp))
-            Text("Generate PDF")
-        }
+        MainActionButton(
+            onClick = { showPdfDialog.value = true },
+            icon = Icons.Default.PictureAsPdf,
+            text = "Generate PDF",
+        )
         Spacer(modifier = Modifier.width(8.dp))
-        MyIconButton(
+        SecondaryActionButton(
             icon = Icons.Default.RestartAlt,
             contentDescription = "Restart",
             onClick = { showNewDocDialog.value = true },
@@ -264,29 +259,6 @@ fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) 
         },
         onDismissRequest = { showDialog.value = false },
     )
-}
-
-@Composable
-fun MyIconButton(
-    icon: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    FilledIconButton (
-        onClick = onClick,
-        colors = IconButtonDefaults.outlinedIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        modifier = modifier.size(40.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.primary
-        )
-    }
 }
 
 @Composable

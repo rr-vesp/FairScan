@@ -43,8 +43,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -407,13 +408,12 @@ fun CameraScreenFooter(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable(onClick = onPageCountClick)
                 )
-
-                Button (
+                MainActionButton(
                     onClick = onFinalizePressed,
-                    enabled = pageCount > 0
-                ) {
-                    Text("Finish")
-                }
+                    enabled = pageCount > 0,
+                    text = "Finish",
+                    icon = Icons.Default.Done,
+                )
             }
         }
     }
