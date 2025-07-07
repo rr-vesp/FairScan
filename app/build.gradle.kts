@@ -19,6 +19,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val hasSigning = listOf(
+        "RELEASE_STORE_FILE",
+        "RELEASE_STORE_PASSWORD",
+        "RELEASE_KEY_ALIAS",
+        "RELEASE_KEY_PASSWORD"
+    ).all { project.hasProperty(it) }
+
+    signingConfigs {
+        if (hasSigning) {
+            create("release") {
+                storeFile = file(project.property("RELEASE_STORE_FILE") as String)
+                storePassword = project.property("RELEASE_STORE_PASSWORD") as String
+                keyAlias = project.property("RELEASE_KEY_ALIAS") as String
+                keyPassword = project.property("RELEASE_KEY_PASSWORD") as String
+            }
+        }
+    }
+
     buildTypes {
         release {
             ndk {
@@ -30,6 +48,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (hasSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
