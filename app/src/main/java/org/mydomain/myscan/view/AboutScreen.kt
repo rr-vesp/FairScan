@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.mydomain.myscan.BuildConfig
 import org.mydomain.myscan.R
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
@@ -105,7 +106,7 @@ fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<
             "Version",
             style = MaterialTheme.typography.titleSmall
         )
-        Text("1.0.0")
+        Text(BuildConfig.VERSION_NAME)
 
         Spacer(Modifier.height(16.dp))
 
