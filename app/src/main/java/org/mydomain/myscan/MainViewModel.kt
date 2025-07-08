@@ -207,6 +207,7 @@ class MainViewModel(
 
     private suspend fun generatePdf(): GeneratedPdf = withContext(Dispatchers.IO) {
         val imageIds = imageRepository.imageIds()
+        pdfDir.mkdirs()
         val file = File(pdfDir, "${System.currentTimeMillis()}.pdf")
         val jpegs = imageIds.asSequence()
             .map { id -> imageRepository.getContent(id) }
