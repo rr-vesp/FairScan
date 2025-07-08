@@ -41,6 +41,7 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 import org.mydomain.myscan.view.AboutScreen
 import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.DocumentScreen
+import org.mydomain.myscan.view.LibrariesScreen
 import org.opencv.android.OpenCVLoader
 import java.io.File
 
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
                     toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
                     toDocumentScreen = { viewModel.navigateTo(Screen.Document()) },
                     toAboutScreen = { viewModel.navigateTo(Screen.About) },
+                    toLibrariesScreen = { viewModel.navigateTo(Screen.Libraries) },
                     back = { viewModel.navigateBack() }
                 )
                 when (val screen = currentScreen) {
@@ -95,7 +97,10 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     is Screen.About -> {
-                        AboutScreen(onBack = navigation.back)
+                        AboutScreen(onBack = navigation.back, onViewLibraries = navigation.toLibrariesScreen)
+                    }
+                    is Screen.Libraries -> {
+                        LibrariesScreen(onBack = navigation.back)
                     }
                 }
             }

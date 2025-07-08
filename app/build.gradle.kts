@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.pdfbox)
     implementation(libs.icons.extended)
     implementation(libs.zoomable)
+    implementation(libs.aboutlibraries.compose.m3)
 
     testImplementation(libs.junit)
     testImplementation(libs.assertj)

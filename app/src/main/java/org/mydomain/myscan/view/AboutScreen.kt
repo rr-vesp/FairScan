@@ -57,8 +57,8 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(onBack: () -> Unit) {
-    val showLicenceDialog = rememberSaveable { mutableStateOf(false) }
+fun AboutScreen(onBack: () -> Unit, onViewLibraries: () -> Unit) {
+    val showLicenseDialog = rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Scaffold(
         topBar = {
@@ -72,15 +72,19 @@ fun AboutScreen(onBack: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        AboutContent(Modifier.padding(paddingValues), showLicenceDialog)
+        AboutContent(modifier = Modifier.padding(paddingValues), showLicenseDialog, onViewLibraries)
     }
-    if (showLicenceDialog.value) {
-        LicenseBottomSheet(sheetState, onDismiss = { showLicenceDialog.value = false })
+    if (showLicenseDialog.value) {
+        LicenseBottomSheet(sheetState, onDismiss = { showLicenseDialog.value = false })
     }
 }
 
 @Composable
-fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<Boolean>) {
+fun AboutContent(
+    modifier: Modifier = Modifier,
+    showLicenseDialog: MutableState<Boolean>,
+    onViewLibraries: () -> Unit,
+    ) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -104,7 +108,7 @@ fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<
 
         Text(
             "Version",
-            style = MaterialTheme.typography.titleSmall
+            style = MaterialTheme.typography.titleMedium
         )
         Text(BuildConfig.VERSION_NAME)
 
@@ -112,7 +116,7 @@ fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<
 
         Text(
             "License",
-            style = MaterialTheme.typography.titleSmall
+            style = MaterialTheme.typography.titleMedium
         )
         Text(
             "This application is licensed under the GNU General Public License v3.0.",
@@ -121,19 +125,26 @@ fun AboutContent(modifier: Modifier = Modifier, showLicenceDialog: MutableState<
         Text(
             text = "View the full license",
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clickable() { showLicenceDialog.value = true },
+            modifier = Modifier.clickable { showLicenseDialog.value = true },
             color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "This application is based on the following open-source libraries",
-            style = MaterialTheme.typography.titleSmall
+            "Libraries",
+            style = MaterialTheme.typography.titleMedium
         )
         Text(
-            "• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
+            "This application uses several open-source libraries, including:\n" +
+                    "• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
             style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "View full list",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.clickable(onClick = onViewLibraries),
+            color = MaterialTheme.colorScheme.primary
+        )
 
         Spacer(Modifier.height(32.dp))
     }
@@ -194,11 +205,10 @@ fun LicenseBottomSheet(
     }
 }
 
-
 @Preview
 @Composable
 fun AboutScreenPreview() {
     MyScanTheme {
-        AboutScreen(onBack = {})
+        AboutScreen(onBack = {}, onViewLibraries = {})
     }
 }

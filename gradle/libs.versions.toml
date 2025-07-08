@@ -46,6 +46,7 @@ litert-metadata = { group = "com.google.ai.edge.litert", name = "litert-metadata
 opencv = { group="org.opencv", name="opencv", version.ref = "opencv" }
 pdfbox = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
 zoomable = { group = "net.engawapg.lib", name = "zoomable", version.ref = "zoomable" }
+aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 
 assertj =  { group="org.assertj", name="assertj-core", version.ref = "assertj" }
 

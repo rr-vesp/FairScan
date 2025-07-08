@@ -284,7 +284,8 @@ fun DocumentScreenPreview() {
                     BitmapFactory.decodeStream(input)
                 }
             },
-            navigation = Navigation({}, {}, {}, {}),
+            navigation = Navigation(
+                {}, {}, {}, {}, {}),
             pdfActions = PdfGenerationActions(
                 {}, {}, {},
                 MutableStateFlow(PdfGenerationUiState()),

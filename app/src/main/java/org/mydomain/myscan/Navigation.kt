@@ -18,11 +18,13 @@ sealed class Screen {
     object Camera : Screen()
     data class Document(val initialPage: Int = 0) : Screen()
     object About : Screen()
+    object Libraries : Screen()
 }
 
 data class Navigation(
     val toCameraScreen: () -> Unit,
     val toDocumentScreen: () -> Unit,
     val toAboutScreen: () -> Unit,
+    val toLibrariesScreen: () -> Unit,
     val back: () -> Unit,
 )
