@@ -15,6 +15,7 @@ opencv = "4.11.0"
 assertj = "3.27.3"
 pdfbox = "2.0.27.0"
 zoomable = "2.8.1"
+aboutLibraries = "12.2.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -53,4 +54,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 license =  { id = "com.github.hierynomus.license", version.ref = "license" }
+aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutLibraries" }
 
