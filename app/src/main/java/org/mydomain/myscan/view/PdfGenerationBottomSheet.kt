@@ -97,7 +97,6 @@ fun PdfGenerationBottomSheetWrapper(
     }
 }
 
-// TODO Handle error in PDF generation
 @Composable
 fun PdfGenerationBottomSheet(
     filename: String,
@@ -159,7 +158,9 @@ fun PdfGenerationBottomSheet(
         if (uiState.savedFileUri != null) {
             SavePdfBar(onOpen)
         }
-
+        if (uiState.errorMessage != null) {
+            ErrorBar(uiState.errorMessage)
+        }
     }
 }
 
@@ -216,6 +217,19 @@ private fun SavePdfBar(onOpen: () -> Unit) {
 }
 
 @Composable
+private fun ErrorBar(errorMessage: String) {
+    Text(
+        text = "Error: $errorMessage",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(16.dp),
+    )
+}
+
+@Composable
 private fun CloseButton(onDismiss: () -> Unit) {
     Box(Modifier.fillMaxWidth()) {
         IconButton(
@@ -253,7 +267,6 @@ fun PreviewPdfGenerationDialogDuringGeneration() {
 fun PreviewPdfGenerationDialogAfterGeneration() {
     PreviewToCustomize(
         uiState = PdfGenerationUiState(
-            isGenerating = false,
             generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3)
         )
     )
@@ -264,9 +277,18 @@ fun PreviewPdfGenerationDialogAfterGeneration() {
 fun PreviewPdfGenerationDialogAfterSave() {
     PreviewToCustomize(
         uiState = PdfGenerationUiState(
-            isGenerating = false,
             generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3),
             savedFileUri = "file:///fake".toUri()
+        )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPdfGenerationDialogWithError() {
+    PreviewToCustomize(
+        uiState = PdfGenerationUiState(
+            errorMessage = "PDF generation failed"
         )
     )
 }
