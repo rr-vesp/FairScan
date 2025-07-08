@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -77,7 +78,7 @@ fun PdfGenerationBottomSheetWrapper(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        modifier = modifier
+        modifier = modifier.navigationBarsPadding()
     ) {
         PdfGenerationBottomSheet(
             filename = filename,
@@ -195,7 +196,6 @@ private fun MainActions(
 
 @Composable
 private fun SavePdfBar(onOpen: () -> Unit) {
-    Spacer(modifier = Modifier.height(16.dp))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
