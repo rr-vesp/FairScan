@@ -201,6 +201,7 @@ private fun CameraScreenScaffold(
                     .padding(bottom = innerPadding.calculateBottomPadding())
                     .fillMaxSize()
             ) {
+                CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 Box(
                     modifier = Modifier.fillMaxSize().padding(innerPadding)
                 ) {
@@ -209,7 +210,6 @@ private fun CameraScreenScaffold(
                         modifier = Modifier.align(Alignment.TopEnd)
                     )
                 }
-                CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 if (cameraUiState.isDebugMode) {
                     MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
                 }
