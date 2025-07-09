@@ -414,7 +414,7 @@ fun CameraScreenFooter(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$pageCount pages",
+                    text = pageCountText(pageCount),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickable(onClick = onPageCountClick)
                 )

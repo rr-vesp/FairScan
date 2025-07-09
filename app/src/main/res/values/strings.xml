@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MyScan</string>
+    <plurals name="page_count">
+        <item quantity="one">%d page</item>
+        <item quantity="other">%d pages</item>
+    </plurals>
 </resources>

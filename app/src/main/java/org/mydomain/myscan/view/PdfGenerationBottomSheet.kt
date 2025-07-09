@@ -145,7 +145,7 @@ fun PdfGenerationBottomSheet(
                 val context = LocalContext.current
                 val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
                 Text(
-                    text = "${pdf.pageCount} pages · $formattedFileSize",
+                    text = "${pageCountText(pdf.pageCount)} · $formattedFileSize",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -267,7 +267,7 @@ fun PreviewPdfGenerationDialogDuringGeneration() {
 fun PreviewPdfGenerationDialogAfterGeneration() {
     PreviewToCustomize(
         uiState = PdfGenerationUiState(
-            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3)
+            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 1)
         )
     )
 }
