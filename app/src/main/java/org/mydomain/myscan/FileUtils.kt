@@ -28,3 +28,10 @@ fun getAvailableFilename(desiredFile: File): File {
     }
     return file
 }
+
+fun cleanUpOldFiles(dir: File, thresholdInMillis: Int) {
+    val now = System.currentTimeMillis()
+    dir.listFiles { file -> now - file.lastModified() > thresholdInMillis }
+        ?.forEach { file -> file.delete() }
+}
+

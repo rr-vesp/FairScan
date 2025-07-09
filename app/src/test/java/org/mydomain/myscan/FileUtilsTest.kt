@@ -28,17 +28,38 @@ class FileUtilsTest {
         val f1 = File(dir, "f_1.pdf")
         val f2 = File(dir, "f_2.pdf")
 
-        assertThat(f.exists()).isFalse
-        assertThat(f1.exists()).isFalse
+        assertThat(f).doesNotExist()
+        assertThat(f1).doesNotExist()
         assertThat(getAvailableFilename(f)).isEqualTo(f)
 
         f.apply { writeText("dummy") }
-        assertThat(f.exists()).isTrue
+        assertThat(f).exists()
         assertThat(getAvailableFilename(f)).isEqualTo(f1)
 
         f1.apply { writeText("dummy") }
-        assertThat(f1.exists()).isTrue
+        assertThat(f1).exists()
         assertThat(getAvailableFilename(f)).isEqualTo(f2)
     }
 
+    @Test
+    fun cleanUpOldFiles() {
+        val dir = createTempDirectory().toFile()
+        val subDir = File(dir,"subDir")
+        cleanUpOldFiles(subDir, 10)
+        assertThat(subDir).doesNotExist()
+
+        subDir.mkdirs()
+        assertThat(subDir).exists()
+        val file1 = File(subDir, "file1")
+        file1.createNewFile()
+        val file2 = File(subDir, "file2")
+        file2.createNewFile()
+
+        val now = System.currentTimeMillis()
+        file1.setLastModified(now - 10_000)
+        file2.setLastModified(now - 11_000)
+        cleanUpOldFiles(subDir, 10_500)
+        assertThat(file1).exists()
+        assertThat(file2).doesNotExist()
+    }
 }

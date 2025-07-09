@@ -32,6 +32,7 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -52,6 +53,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initLibraries()
+        lifecycleScope.launch(Dispatchers.IO) {
+            cleanUpOldFiles(File(cacheDir, "pdfs"), 1000 * 3600)
+        }
         val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
         enableEdgeToEdge()
         setContent {
