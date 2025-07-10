@@ -58,6 +58,7 @@ import org.mydomain.myscan.GeneratedPdf
 import org.mydomain.myscan.PdfGenerationActions
 import org.mydomain.myscan.ui.PdfGenerationUiState
 import org.mydomain.myscan.ui.theme.MyScanTheme
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -267,7 +268,7 @@ fun PreviewPdfGenerationDialogDuringGeneration() {
 fun PreviewPdfGenerationDialogAfterGeneration() {
     PreviewToCustomize(
         uiState = PdfGenerationUiState(
-            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 1)
+            generatedPdf = GeneratedPdf(File("fake.pdf"), 442897L, 1)
         )
     )
 }
@@ -275,10 +276,11 @@ fun PreviewPdfGenerationDialogAfterGeneration() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewPdfGenerationDialogAfterSave() {
+    val file = File("fake.pdf")
     PreviewToCustomize(
         uiState = PdfGenerationUiState(
-            generatedPdf = GeneratedPdf("file://fake.pdf".toUri(), 442897L, 3),
-            savedFileUri = "file:///fake".toUri()
+            generatedPdf = GeneratedPdf(file, 442897L, 3),
+            savedFileUri = file.toUri()
         )
     )
 }

@@ -53,10 +53,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initLibraries()
-        lifecycleScope.launch(Dispatchers.IO) {
-            cleanUpOldFiles(File(cacheDir, "pdfs"), 1000 * 3600)
-        }
         val viewModel: MainViewModel by viewModels { MainViewModel.getFactory(this) }
+        lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.cleanUpOldPdfs(1000 * 3600)
+        }
         enableEdgeToEdge()
         setContent {
             val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
     private fun sharePdf(generatedPdf: GeneratedPdf?) {
         if (generatedPdf == null)
             return
-        val file = generatedPdf.uri.toFile()
+        val file = generatedPdf.file
         val authority = "${applicationContext.packageName}.fileprovider"
         val fileUri = FileProvider.getUriForFile(this, authority, file)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -139,16 +139,7 @@ class MainActivity : ComponentActivity() {
         val context = this
         appScope.launch {
             try {
-                val downloadsDir =
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                if (!downloadsDir.exists()) {
-                    downloadsDir.mkdirs()
-                }
-                val generatedFile = generatedPdf.uri.toFile()
-                val desiredFile = File(downloadsDir, generatedFile.name)
-                val targetFile = getAvailableFilename(desiredFile)
-                generatedFile.copyTo(targetFile)
-                viewModel.markFileSaved(targetFile.toUri())
+                val targetFile = viewModel.saveFile(generatedPdf.file)
 
                 suspendCancellableCoroutine { continuation ->
                     MediaScannerConnection.scanFile(

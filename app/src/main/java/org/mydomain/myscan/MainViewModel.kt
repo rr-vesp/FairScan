@@ -18,6 +18,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.core.net.toFile
@@ -41,12 +42,11 @@ import kotlinx.coroutines.withContext
 import org.mydomain.myscan.ui.PdfGenerationUiState
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
 
 class MainViewModel(
     private val imageSegmentationService: ImageSegmentationService,
     private val imageRepository: ImageRepository,
-    private val pdfDir: File,
+    private val pdfFileManager: PdfFileManager,
 ): ViewModel() {
 
     companion object {
@@ -56,7 +56,10 @@ class MainViewModel(
                 return MainViewModel(
                     ImageSegmentationService(context),
                     ImageRepository(context.filesDir),
-                    File(context.cacheDir, "pdfs"),
+                    PdfFileManager(
+                        File(context.cacheDir, "pdfs"),
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                        AndroidPdfWriter()),
                 ) as T
             }
         }
@@ -207,18 +210,11 @@ class MainViewModel(
 
     private suspend fun generatePdf(): GeneratedPdf = withContext(Dispatchers.IO) {
         val imageIds = imageRepository.imageIds()
-        pdfDir.mkdirs()
-        val file = File(pdfDir, "${System.currentTimeMillis()}.pdf")
         val jpegs = imageIds.asSequence()
             .map { id -> imageRepository.getContent(id) }
             .filterNotNull()
-        writePdfFromJpegs(jpegs, FileOutputStream(file))
-        val sizeBytes = file.length()
-        val uri = file.toUri()
-        return@withContext GeneratedPdf(uri, sizeBytes, imageIds.size)
+        return@withContext pdfFileManager.generatePdf(jpegs)
     }
-
-    private val _generatedPdf = MutableStateFlow<GeneratedPdf?>(null)
 
     private val _pdfUiState = MutableStateFlow(PdfGenerationUiState())
     val pdfUiState: StateFlow<PdfGenerationUiState> = _pdfUiState.asStateFlow()
@@ -264,7 +260,7 @@ class MainViewModel(
 
     fun getFinalPdf(): GeneratedPdf? {
         val tempPdf = _pdfUiState.value.generatedPdf ?: return null
-        val tempFile = tempPdf.uri.toFile()
+        val tempFile = tempPdf.file
         val newFile = File(tempFile.parentFile, desiredFilename)
         if (tempFile.absolutePath != newFile.absolutePath) {
             if (newFile.exists()) newFile.delete()
@@ -272,20 +268,30 @@ class MainViewModel(
             if (!success) return null
             _pdfUiState.update {
                 it.copy(generatedPdf = GeneratedPdf(
-                    uri = newFile.toUri(), tempPdf.sizeInBytes, tempPdf.pageCount)
+                    newFile, tempPdf.sizeInBytes, tempPdf.pageCount)
                 )
             }
         }
         return _pdfUiState.value.generatedPdf
     }
 
+    fun saveFile(pdfFile: File): File {
+        val copiedFile = pdfFileManager.copyToExternalDir(pdfFile)
+        markFileSaved(pdfFile.toUri())
+        return copiedFile
+    }
+
     fun markFileSaved(uri: Uri) {
         _pdfUiState.update { it.copy(savedFileUri = uri) }
+    }
+
+    fun cleanUpOldPdfs(thresholdInMillis: Int) {
+        pdfFileManager.cleanUpOldFiles(thresholdInMillis)
     }
 }
 
 data class GeneratedPdf(
-    val uri: Uri,
+    val file: File,
     val sizeInBytes: Long,
     val pageCount: Int,
 )
