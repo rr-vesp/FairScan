@@ -16,11 +16,7 @@ package org.mydomain.myscan.view
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -42,12 +38,7 @@ fun LibrariesScreen(onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.libraries_open_source)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.back))
-                    }
-                }
+                navigationIcon = { BackButton(onClick = onBack) }
             )
         }
     ) { padding ->
