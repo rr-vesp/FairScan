@@ -44,7 +44,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -421,8 +421,8 @@ fun CameraScreenFooter(
                 MainActionButton(
                     onClick = onFinalizePressed,
                     enabled = pageCount > 0,
-                    text = "Finish",
-                    icon = Icons.Default.Done,
+                    text = "Document",
+                    icon = Icons.AutoMirrored.Filled.Article,
                 )
             }
         }
