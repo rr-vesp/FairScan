@@ -124,7 +124,7 @@ fun PdfGenerationBottomSheet(
                         .size(34.dp)
                         .padding(end = 8.dp)
                 )
-                Text("Generate PDF", style = MaterialTheme.typography.headlineSmall)
+                Text("Export PDF", style = MaterialTheme.typography.headlineSmall)
             }
 
             Spacer(Modifier.height(16.dp))

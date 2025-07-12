@@ -236,7 +236,7 @@ private fun BottomBar(
             MainActionButton(
                 onClick = { showPdfDialog.value = true },
                 icon = Icons.Default.PictureAsPdf,
-                text = "Generate PDF",
+                text = "Export PDF",
             )
             Spacer(modifier = Modifier.width(8.dp))
             SecondaryActionButton(
