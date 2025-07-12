@@ -157,8 +157,8 @@ fun PdfGenerationBottomSheet(
             MainActions(pdf, onShare, onSave)
         }
 
-        if (uiState.savedFileUri != null) {
-            SavePdfBar(onOpen)
+        if (uiState.saveDirectoryName != null) {
+            SavePdfBar(onOpen, uiState.saveDirectoryName)
         }
         if (uiState.errorMessage != null) {
             ErrorBar(uiState.errorMessage)
@@ -196,7 +196,7 @@ private fun MainActions(
 }
 
 @Composable
-private fun SavePdfBar(onOpen: () -> Unit) {
+private fun SavePdfBar(onOpen: () -> Unit, saveDirectoryName: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
@@ -206,7 +206,7 @@ private fun SavePdfBar(onOpen: () -> Unit) {
             .padding(vertical = 8.dp, horizontal = 16.dp),
     ) {
         Text(
-            text = "PDF saved to Downloads",
+            text = "PDF saved to $saveDirectoryName",
             style = MaterialTheme.typography.bodyMedium
         )
         MainActionButton(

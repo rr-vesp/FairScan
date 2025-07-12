@@ -17,11 +17,9 @@ package org.mydomain.myscan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.camera.core.ImageProxy
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -277,12 +275,9 @@ class MainViewModel(
 
     fun saveFile(pdfFile: File): File {
         val copiedFile = pdfFileManager.copyToExternalDir(pdfFile)
-        markFileSaved(pdfFile.toUri())
+        val dirName = copiedFile.parentFile?.name
+        _pdfUiState.update { it.copy(savedFileUri = pdfFile.toUri(), saveDirectoryName = dirName) }
         return copiedFile
-    }
-
-    fun markFileSaved(uri: Uri) {
-        _pdfUiState.update { it.copy(savedFileUri = uri) }
     }
 
     fun cleanUpOldPdfs(thresholdInMillis: Int) {

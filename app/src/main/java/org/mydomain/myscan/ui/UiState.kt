@@ -22,5 +22,6 @@ data class PdfGenerationUiState(
     val generatedPdf: GeneratedPdf? = null,
     val desiredFilename: String = "",
     val savedFileUri: Uri? = null,
+    val saveDirectoryName: String? = null,
     val errorMessage: String? = null
 )
