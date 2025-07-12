@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.Point
+import org.mydomain.myscan.R
 import org.mydomain.myscan.scaledTo
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -74,7 +75,8 @@ fun CameraPreview(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (!isGranted) {
-            Toast.makeText(context, "Camera permission was denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context,
+                context.getString(R.string.camera_permission_denied), Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -51,11 +51,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import org.mydomain.myscan.GeneratedPdf
 import org.mydomain.myscan.PdfGenerationActions
+import org.mydomain.myscan.R
 import org.mydomain.myscan.ui.PdfGenerationUiState
 import org.mydomain.myscan.ui.theme.MyScanTheme
 import java.io.File
@@ -124,7 +126,7 @@ fun PdfGenerationBottomSheet(
                         .size(34.dp)
                         .padding(end = 8.dp)
                 )
-                Text("Export PDF", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.export_pdf), style = MaterialTheme.typography.headlineSmall)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -132,7 +134,7 @@ fun PdfGenerationBottomSheet(
             OutlinedTextField(
                 value = filename,
                 onValueChange = onFilenameChange,
-                label = { Text("Filename") },
+                label = { Text(stringResource(R.string.filename)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -180,16 +182,16 @@ private fun MainActions(
             onClick = onShare,
             enabled = pdf != null,
             icon = Icons.Default.Share,
-            iconDescription = "Share",
-            text = "Share",
+            iconDescription = stringResource(R.string.share),
+            text = stringResource(R.string.share),
             modifier = Modifier.weight(1f)
         )
         MainActionButton(
             onClick = onSave,
             enabled = pdf != null,
             icon = Icons.Default.Download,
-            iconDescription = "Save",
-            text = "Save",
+            iconDescription = stringResource(R.string.save),
+            text = stringResource(R.string.save),
             modifier = Modifier.weight(1f)
         )
     }
@@ -206,12 +208,12 @@ private fun SavePdfBar(onOpen: () -> Unit, saveDirectoryName: String) {
             .padding(vertical = 8.dp, horizontal = 16.dp),
     ) {
         Text(
-            text = "PDF saved to $saveDirectoryName",
+            text = stringResource(R.string.pdf_saved_to, saveDirectoryName),
             style = MaterialTheme.typography.bodyMedium
         )
         MainActionButton(
             onClick = onOpen,
-            text = "Open",
+            text = stringResource(R.string.open),
             icon = Icons.AutoMirrored.Filled.OpenInNew,
         )
     }
@@ -220,7 +222,7 @@ private fun SavePdfBar(onOpen: () -> Unit, saveDirectoryName: String) {
 @Composable
 private fun ErrorBar(errorMessage: String) {
     Text(
-        text = "Error: $errorMessage",
+        text = stringResource(R.string.error, errorMessage),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.error,
         modifier = Modifier
@@ -239,7 +241,7 @@ private fun CloseButton(onDismiss: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Close"
+                contentDescription = stringResource(R.string.close)
             )
         }
     }
@@ -251,7 +253,7 @@ fun defaultFilename(): String {
 }
 
 fun formatFileSize(sizeInBytes: Long?, context: Context): String {
-    return if (sizeInBytes == null) "Unknown size"
+    return if (sizeInBytes == null) context.getString(R.string.unknown_size)
     else Formatter.formatShortFileSize(context, sizeInBytes)
 }
 

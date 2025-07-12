@@ -49,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mydomain.myscan.BuildConfig
@@ -63,10 +64,11 @@ fun AboutScreen(onBack: () -> Unit, onViewLibraries: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("About") },
+                title = { Text(stringResource(R.string.about)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back))
                     }
                 },
             )
@@ -92,13 +94,13 @@ fun AboutContent(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            "MyScan",
+            stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(Modifier.height(8.dp))
 
         Text(
-            "A simple and respectful application to scan your documents.",
+            stringResource(R.string.app_tagline),
             style = MaterialTheme.typography.bodyMedium
         )
 
@@ -107,7 +109,7 @@ fun AboutContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "Version",
+            stringResource(R.string.version),
             style = MaterialTheme.typography.titleMedium
         )
         Text(BuildConfig.VERSION_NAME)
@@ -115,15 +117,15 @@ fun AboutContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "License",
+            stringResource(R.string.license),
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            "This application is licensed under the GNU General Public License v3.0.",
+            stringResource(R.string.licensed_under),
             style = MaterialTheme.typography.bodyMedium
         )
         Text(
-            text = "View the full license",
+            text = stringResource(R.string.view_the_full_license),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.clickable { showLicenseDialog.value = true },
             color = MaterialTheme.colorScheme.primary
@@ -132,15 +134,15 @@ fun AboutContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "Libraries",
+            stringResource(R.string.libraries),
             style = MaterialTheme.typography.titleMedium
         )
         Text(
-            "This application uses several open-source libraries, including:\n" +
-                    "• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
+            stringResource(R.string.libraries_intro) +
+                    "\n• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
             style = MaterialTheme.typography.bodyMedium)
         Text(
-            text = "View full list",
+            text = stringResource(R.string.view_full_list),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.clickable(onClick = onViewLibraries),
             color = MaterialTheme.colorScheme.primary

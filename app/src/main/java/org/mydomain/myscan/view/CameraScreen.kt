@@ -71,6 +71,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +80,7 @@ import kotlinx.coroutines.delay
 import org.mydomain.myscan.LiveAnalysisState
 import org.mydomain.myscan.MainViewModel
 import org.mydomain.myscan.MainViewModel.CaptureState
+import org.mydomain.myscan.R
 import org.mydomain.myscan.Screen
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
@@ -203,7 +205,9 @@ private fun CameraScreenScaffold(
             ) {
                 CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
                 ) {
                     AboutScreenNavButton(
                         onClick = toAboutScreen,
@@ -356,7 +360,7 @@ private fun CameraPreviewWithOverlay(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "No document detected",
+                    text = stringResource(R.string.error_no_document),
                     color = Color.White,
                     fontSize = 16.sp
                 )

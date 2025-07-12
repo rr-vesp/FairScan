@@ -20,7 +20,6 @@ import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -30,7 +29,6 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.core.content.FileProvider
 import androidx.core.net.toFile
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
@@ -44,7 +42,6 @@ import org.mydomain.myscan.view.CameraScreen
 import org.mydomain.myscan.view.DocumentScreen
 import org.mydomain.myscan.view.LibrariesScreen
 import org.opencv.android.OpenCVLoader
-import java.io.File
 
 private const val PDF_MIME_TYPE = "application/pdf"
 
@@ -123,7 +120,7 @@ class MainActivity : ComponentActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-        val chooser = Intent.createChooser(shareIntent, "Share PDF")
+        val chooser = Intent.createChooser(shareIntent, getString(R.string.share_pdf))
         val resInfoList = packageManager.queryIntentActivities(chooser, PackageManager.MATCH_DEFAULT_ONLY)
         for (resInfo in resInfoList) {
             val packageName = resInfo.activityInfo.packageName
@@ -151,7 +148,8 @@ class MainActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Log.e("MyScan", "Failed to save PDF", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Failed to save PDF", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context,
+                        getString(R.string.error_save), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -169,9 +167,9 @@ class MainActivity : ComponentActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         try {
-            startActivity(Intent.createChooser(openIntent, "Open PDF"))
+            startActivity(Intent.createChooser(openIntent, getString(R.string.open_pdf)))
         } catch (_: ActivityNotFoundException) {
-            Toast.makeText(this, "No app found to open PDF", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.error_no_pdf_app), Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,7 @@ import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.mydomain.myscan.Navigation
 import org.mydomain.myscan.PdfGenerationActions
+import org.mydomain.myscan.R
 import org.mydomain.myscan.ui.PdfGenerationUiState
 import org.mydomain.myscan.ui.theme.MyScanTheme
 
@@ -102,10 +104,11 @@ fun DocumentScreen(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-                title = { Text("Document") },
+                title = { Text(stringResource(R.string.document)) },
                 navigationIcon = {
                     IconButton(onClick = navigation.toCameraScreen) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -161,7 +164,9 @@ private fun DocumentPreview(
                 LaunchedEffect(imageId) {
                     zoomState.reset()
                 }
-                Box(modifier = Modifier.fillMaxSize(0.92f).align(Alignment.Center)) {
+                Box(modifier = Modifier
+                    .fillMaxSize(0.92f)
+                    .align(Alignment.Center)) {
                     Image(
                         bitmap = imageBitmap,
                         contentDescription = null,
@@ -174,7 +179,7 @@ private fun DocumentPreview(
             }
             SecondaryActionButton(
                 Icons.Outlined.Delete,
-                contentDescription = "Delete page",
+                contentDescription = stringResource(R.string.delete_page),
                 onClick = { onDeleteImage(imageId) },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -212,7 +217,7 @@ private fun PageList(
         SecondaryActionButton(
             icon = Icons.Default.Add,
             onClick = toCameraScreen,
-            contentDescription = "Add page",
+            contentDescription = stringResource(R.string.add_page),
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(8.dp)
@@ -236,12 +241,12 @@ private fun BottomBar(
             MainActionButton(
                 onClick = { showPdfDialog.value = true },
                 icon = Icons.Default.PictureAsPdf,
-                text = "Export PDF",
+                text = stringResource(R.string.export_pdf),
             )
             Spacer(modifier = Modifier.width(8.dp))
             SecondaryActionButton(
                 icon = Icons.Default.RestartAlt,
-                contentDescription = "Restart",
+                contentDescription = stringResource(R.string.restart),
                 onClick = { showNewDocDialog.value = true },
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -252,19 +257,19 @@ private fun BottomBar(
 @Composable
 fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>) {
     AlertDialog(
-        title = { Text("New document") },
-        text = { Text("The current document will be lost if you haven't saved it. Do you want to continue?") },
+        title = { Text(stringResource(R.string.new_document)) },
+        text = { Text(stringResource(R.string.new_document_warning)) },
         confirmButton = {
             TextButton (onClick = {
                 showDialog.value = false
                 onConfirm()
             }) {
-                Text("Yes", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.yes), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = { showDialog.value = false }) {
-                Text("Cancel", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.cancel), fontWeight = FontWeight.Bold)
             }
         },
         onDismissRequest = { showDialog.value = false },
