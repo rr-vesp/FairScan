@@ -14,6 +14,7 @@
  */
 package org.mydomain.myscan.view
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -32,13 +33,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -61,6 +65,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -89,6 +94,7 @@ data class CameraUiState(
     val liveAnalysisState: LiveAnalysisState,
     val captureState: CaptureState,
     val showDetectionError: Boolean,
+    val isLandscape: Boolean,
     val isDebugMode: Boolean
 )
 
@@ -136,6 +142,7 @@ fun CameraScreen(
             listState.animateScrollToItem(pageIds.lastIndex)
         }
     }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     CameraScreenScaffold(
         cameraPreview = {
             CameraPreview(
@@ -144,21 +151,20 @@ fun CameraScreen(
                 onPreviewViewReady = { view -> previewView = view }
             )
         },
-        pageList = {
-            CommonPageList(
+        pageListState =
+            CommonPageListState(
                 pageIds = pageIds,
                 imageLoader = { id -> viewModel.getBitmap(id) },
                 onPageClick = { index -> viewModel.navigateTo(Screen.Document(index)) },
                 listState = listState,
-                onLastItemPosition =
-                    { offset -> thumbnailCoords.value = offset }
-            )
-        },
+                onLastItemPosition = { offset -> thumbnailCoords.value = offset },
+            ),
         cameraUiState = CameraUiState(
             pageIds.size,
             liveAnalysisState,
             captureState,
             showDetectionError,
+            isLandscape = isLandscape,
             isDebugMode),
         onCapture = {
             previewView?.bitmap?.let {
@@ -179,7 +185,7 @@ fun CameraScreen(
 @Composable
 private fun CameraScreenScaffold(
     cameraPreview: @Composable () -> Unit,
-    pageList: @Composable () -> Unit,
+    pageListState: CommonPageListState,
     cameraUiState: CameraUiState,
     onCapture: () -> Unit,
     onFinalizePressed: () -> Unit,
@@ -187,47 +193,67 @@ private fun CameraScreenScaffold(
     thumbnailCoords: MutableState<Offset>,
     toAboutScreen: () -> Unit,
 ) {
+    val documentBar : @Composable () -> Unit = {
+        DocumentBar(
+            pageListState = pageListState,
+            pageCount = cameraUiState.pageCount,
+            onFinalizePressed = onFinalizePressed,
+            onDebugModeSwitched = onDebugModeSwitched,
+            isLandscape = cameraUiState.isLandscape
+        )
+    }
     Box {
-        Scaffold(
-            bottomBar = {
-                CameraScreenFooter(
-                    pageList = pageList,
-                    pageCount = cameraUiState.pageCount,
-                    onFinalizePressed = onFinalizePressed,
-                    onDebugModeSwitched = onDebugModeSwitched,
-                )
+        if (!cameraUiState.isLandscape) {
+            Scaffold(
+                bottomBar = documentBar
+            ) { padding ->
+                val modifier = Modifier.padding(bottom = padding.calculateBottomPadding()).fillMaxSize()
+                CameraPreviewBox(cameraPreview, cameraUiState, onCapture, modifier)
             }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .padding(bottom = innerPadding.calculateBottomPadding())
-                    .fillMaxSize()
-            ) {
-                CameraPreviewWithOverlay(cameraPreview, cameraUiState, Modifier.align(Alignment.BottomCenter))
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
+        } else {
+            Scaffold { innerPadding ->
+                Row(
+                    modifier = Modifier.padding(innerPadding).fillMaxSize()
                 ) {
-                    AboutScreenNavButton(
-                        onClick = toAboutScreen,
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    )
+                    CameraPreviewBox(cameraPreview, cameraUiState, onCapture, Modifier)
+                    documentBar()
                 }
-                if (cameraUiState.isDebugMode) {
-                    MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
-                }
-                CaptureButton(
-                    onClick = onCapture,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                )
             }
         }
+        AboutScreenNavButton(
+            onClick = toAboutScreen,
+            modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.safeDrawing)
+        )
         if (cameraUiState.captureState is CaptureState.CapturePreview) {
             CapturedImage(cameraUiState.captureState.processed.asImageBitmap(), thumbnailCoords)
         }
+    }
+}
+
+@Composable
+private fun CameraPreviewBox(
+    cameraPreview: @Composable (() -> Unit),
+    cameraUiState: CameraUiState,
+    onCapture: () -> Unit,
+    modifier: Modifier,
+) {
+    Box(
+        modifier = modifier
+    ) {
+        CameraPreviewWithOverlay(
+            cameraPreview,
+            cameraUiState,
+            Modifier.align(Alignment.BottomCenter)
+        )
+        if (cameraUiState.isDebugMode) {
+            MessageBox(cameraUiState.liveAnalysisState.inferenceTime)
+        }
+        CaptureButton(
+            onClick = onCapture,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
     }
 }
 
@@ -319,8 +345,12 @@ private fun CameraPreviewWithOverlay(
     modifier: Modifier,
 ) {
     val captureState = cameraUiState.captureState
-    val width = LocalConfiguration.current.screenWidthDp
-    val height = width / 3 * 4
+    var width = LocalConfiguration.current.screenWidthDp
+    var height = width * 4 / 3
+    if (cameraUiState.isLandscape) {
+        height = LocalConfiguration.current.screenHeightDp
+        width = height * 4 / 3
+    }
 
     var showShutter by remember { mutableStateOf(false) }
     LaunchedEffect(captureState.frozenImage) {
@@ -366,7 +396,6 @@ private fun CameraPreviewWithOverlay(
                 )
             }
         }
-
     }
 }
 
@@ -382,11 +411,12 @@ fun MessageBox(inferenceTime: Long) {
 }
 
 @Composable
-fun CameraScreenFooter(
-    pageList:  @Composable () -> Unit,
+fun DocumentBar(
+    pageListState:  CommonPageListState,
     pageCount: Int,
     onFinalizePressed: () -> Unit,
     onDebugModeSwitched: () -> Unit,
+    isLandscape: Boolean,
 ) {
     var tapCount by remember { mutableStateOf(0) }
     var lastTapTime by remember { mutableStateOf(0L) }
@@ -405,32 +435,53 @@ fun CameraScreenFooter(
         lastTapTime = currentTime
     }
 
-    Column (modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)) {
-        pageList()
+    Column (
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        CommonPageList(pageListState, Modifier.weight(1f))
         BottomAppBar(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            Row (
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 1.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = pageCountText(pageCount),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable(onClick = onPageCountClick)
-                )
-                MainActionButton(
-                    onClick = onFinalizePressed,
-                    enabled = pageCount > 0,
-                    text = "Document",
-                    icon = Icons.AutoMirrored.Filled.Article,
-                )
+            if (isLandscape) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Bar(pageCount, onPageCountClick, onFinalizePressed)
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 1.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Bar(pageCount, onPageCountClick, onFinalizePressed)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun Bar(
+    pageCount: Int,
+    onPageCountClick: () -> Unit,
+    onFinalizePressed: () -> Unit,
+) {
+    Text(
+        text = pageCountText(pageCount),
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.clickable(onClick = onPageCountClick)
+    )
+    MainActionButton(
+        onClick = onFinalizePressed,
+        enabled = pageCount > 0,
+        text = "Document",
+        icon = Icons.AutoMirrored.Filled.Article,
+    )
 }
 
 @Preview(showBackground = true)
@@ -447,8 +498,14 @@ fun CameraScreenPreviewWithProcessedImage() {
         debugImage("gallica.bnf.fr-bpt6k5530456s-1.jpg")))
 }
 
+@Preview(showBackground = true, widthDp = 640, heightDp = 320)
 @Composable
-private fun ScreenPreview(captureState: CaptureState) {
+fun CameraScreenPreviewInLandscapeMode() {
+    ScreenPreview(CaptureState.Idle, rotationDegrees = 90f)
+}
+
+@Composable
+private fun ScreenPreview(captureState: CaptureState, rotationDegrees: Float = 0f) {
     val context = LocalContext.current
     MyScanTheme {
         val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
@@ -462,12 +519,13 @@ private fun ScreenPreview(captureState: CaptureState) {
                 ) {
                     Image(
                         debugImage("uncropped/img01.jpg").asImageBitmap(),
+                        modifier=Modifier.rotate(rotationDegrees),
                         contentDescription = null
                     )
                 }
             },
-            pageList = {
-                CommonPageList(
+            pageListState =
+                CommonPageListState(
                     pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
                     imageLoader = { id ->
                         context.assets.open(id).use { input ->
@@ -476,9 +534,9 @@ private fun ScreenPreview(captureState: CaptureState) {
                     },
                     onPageClick = {},
                     listState = LazyListState(),
-                )
-            },
-            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState, false, false),
+                ),
+            cameraUiState = CameraUiState(pageCount = 4, LiveAnalysisState(), captureState,
+                false, rotationDegrees > 0, false),
             onCapture = {},
             onFinalizePressed = {},
             onDebugModeSwitched = {},

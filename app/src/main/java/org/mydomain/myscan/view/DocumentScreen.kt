@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -201,10 +202,13 @@ private fun PageList(
 ) {
     Box {
         CommonPageList(
-            pageIds,
-            imageLoader,
-            onPageClick = { index -> currentPageIndex.value = index },
-            currentPageIndex = currentPageIndex.value,
+            CommonPageListState(
+                pageIds,
+                imageLoader,
+                onPageClick = { index -> currentPageIndex.value = index },
+                currentPageIndex = currentPageIndex.value,
+                listState = rememberLazyListState()
+            )
         )
         SecondaryActionButton(
             icon = Icons.Default.Add,

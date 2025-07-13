@@ -14,6 +14,7 @@
  */
 package org.mydomain.myscan.view
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,10 +27,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -48,42 +50,55 @@ import androidx.compose.ui.unit.sp
 
 const val PAGE_LIST_ELEMENT_SIZE_DP = 120
 
+data class CommonPageListState(
+    val pageIds: List<String>,
+    val imageLoader: (String) -> Bitmap?,
+    val onPageClick: (Int) -> Unit,
+    val listState: LazyListState,
+    val currentPageIndex: Int? = null,
+    val onLastItemPosition: ((Offset) -> Unit)? = null,
+)
+
 @Composable
 fun CommonPageList(
-    pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?,
-    onPageClick: (Int) -> Unit,
-    listState: LazyListState = rememberLazyListState(),
-    currentPageIndex: Int? = null,
-    onLastItemPosition: ((Offset) -> Unit)? = null,
+    state: CommonPageListState,
+    modifier: Modifier = Modifier,
 ) {
-    LazyRow (
-        state = listState,
-        contentPadding = PaddingValues(4.dp),
-        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        itemsIndexed(pageIds) { index, id ->
-            // TODO Use small images rather than big ones
-            val image = imageLoader(id)
-            if (image != null) {
-                PageThumbnail(
-                    image,
-                    index,
-                    currentPageIndex,
-                    pageIds.lastIndex,
-                    onLastItemPosition,
-                    onPageClick
-                )
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    if (isLandscape) {
+        LazyColumn (
+            modifier = modifier
+        ) {
+            itemsIndexed(state.pageIds) { index, id ->
+                // TODO Use small images rather than big ones
+                val image = state.imageLoader(id)
+                if (image != null) {
+                    PageThumbnail(image, index, state)
+                }
+            }
+        }
+    } else {
+        LazyRow (
+            state = state.listState,
+            contentPadding = PaddingValues(4.dp),
+            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            itemsIndexed(state.pageIds) { index, id ->
+                // TODO Use small images rather than big ones
+                val image = state.imageLoader(id)
+                if (image != null) {
+                    PageThumbnail(image, index, state)
+                }
             }
         }
     }
-    if (pageIds.isEmpty()) {
+    if (state.pageIds.isEmpty()) {
         Box(
             modifier = Modifier
                 .height(120.dp)
-                .addPositionCallback(onLastItemPosition, LocalDensity.current, 0.5f)
+                .addPositionCallback(state.onLastItemPosition, LocalDensity.current, 0.5f)
         ) {}
     }
 }
@@ -92,13 +107,10 @@ fun CommonPageList(
 private fun PageThumbnail(
     image: Bitmap,
     index: Int,
-    currentPageIndex: Int?,
-    lastIndex: Int,
-    onLastItemPosition: ((Offset) -> Unit)?,
-    onPageClick: (Int) -> Unit,
+    state: CommonPageListState,
 ) {
     val bitmap = image.asImageBitmap()
-    val isSelected = index == currentPageIndex
+    val isSelected = index == state.currentPageIndex
     val borderColor =
         if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent
     val maxImageSize = PAGE_LIST_ELEMENT_SIZE_DP.dp
@@ -107,9 +119,9 @@ private fun PageThumbnail(
             Modifier.height(maxImageSize)
         else
             Modifier.width(maxImageSize)
-    if (index == lastIndex) {
+    if (index == state.pageIds.lastIndex) {
         val density = LocalDensity.current
-        modifier = modifier.addPositionCallback(onLastItemPosition, density, 1.0f)
+        modifier = modifier.addPositionCallback(state.onLastItemPosition, density, 1.0f)
     }
     Box (modifier = Modifier.height(PAGE_LIST_ELEMENT_SIZE_DP.dp)) {
         Image(
@@ -119,12 +131,11 @@ private fun PageThumbnail(
                 .align(Alignment.Center)
                 .padding(4.dp)
                 .border(2.dp, borderColor)
-                .clickable { onPageClick(index) }
+                .clickable { state.onPageClick(index) }
         )
         Box(
             modifier = Modifier
                 .padding(8.dp)
-                .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp))
                 .padding(vertical = 0.dp, horizontal = 8.dp)
@@ -134,7 +145,6 @@ private fun PageThumbnail(
                 color = Color.White,
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
