@@ -64,12 +64,16 @@ fun MyScaffold(
         if (onBack != null) {
             BackButton(
                 onBack,
-                modifier = Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.safeDrawing)
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
             )
         }
         AboutScreenNavButton(
             onClick = toAboutScreen,
-            modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.safeDrawing)
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
         )
     }
 }
@@ -81,21 +85,27 @@ fun DocumentBar(
     modifier: Modifier = Modifier,
     pageListButton: (@Composable () -> Unit)? = null,
 ) {
+    val isLandscape = isLandscape(LocalConfiguration.current)
     Column (
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        var modifier: Modifier = Modifier
-        if (isLandscape(LocalConfiguration.current)) {
-            modifier = modifier.weight(1f).fillMaxWidth()
-        }
-        Box (modifier) {
+        Box (
+            if (isLandscape)
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            else
+                Modifier
+        ) {
             CommonPageList(pageListState, modifier = Modifier.fillMaxWidth())
 
             if (pageListButton != null) {
-                Box (Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(horizontal = 8.dp, vertical = 16.dp)
+                val alignment = if (isLandscape) Alignment.BottomEnd else Alignment.CenterEnd
+                Box(
+                    Modifier
+                        .align(alignment)
+                        .padding(horizontal = 8.dp, vertical = 16.dp)
                 ) {
                     pageListButton()
                 }
@@ -105,7 +115,7 @@ fun DocumentBar(
         BottomAppBar(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            if (isLandscape(LocalConfiguration.current)) {
+            if (isLandscape) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
