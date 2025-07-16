@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -79,8 +80,14 @@ fun PdfGenerationBottomSheetWrapper(
         pdfActions.startGeneration()
     }
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    LaunchedEffect(Unit) {
+        sheetState.expand()
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         modifier = modifier.navigationBarsPadding()
     ) {
         PdfGenerationBottomSheet(
@@ -117,16 +124,20 @@ fun PdfGenerationBottomSheet(
                 .fillMaxWidth()
                 .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
         ) {
-            CloseButton(onDismiss)
-
-            Row {
-                Icon(
-                    Icons.Default.PictureAsPdf, contentDescription = "PDF",
-                    modifier = Modifier
-                        .size(34.dp)
-                        .padding(end = 8.dp)
-                )
-                Text(stringResource(R.string.export_pdf), style = MaterialTheme.typography.headlineSmall)
+            Row (verticalAlignment = Alignment.CenterVertically) {
+                Row {
+                    Icon(
+                        Icons.Default.PictureAsPdf, contentDescription = "PDF",
+                        modifier = Modifier
+                            .size(34.dp)
+                            .padding(end = 8.dp)
+                    )
+                    Text(
+                        stringResource(R.string.export_pdf),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+                CloseButton(onDismiss)
             }
 
             Spacer(Modifier.height(16.dp))
