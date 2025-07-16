@@ -112,17 +112,21 @@ fun DocumentBar(
             }
         }
 
-        BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ) {
-            if (isLandscape) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    buttonBar()
-                }
-            } else {
+        val color = MaterialTheme.colorScheme.surfaceContainerHigh
+        if (isLandscape) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(color)
+                    .padding(8.dp)
+            ) {
+                buttonBar()
+            }
+        } else {
+            BottomAppBar(
+                containerColor = color,
+            ) {
                 Row(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
