@@ -125,7 +125,7 @@ fun DocumentBar(
             } else {
                 Row(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 1.dp)
+                        .padding(horizontal = 8.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween

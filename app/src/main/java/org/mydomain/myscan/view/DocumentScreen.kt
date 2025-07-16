@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -193,27 +192,23 @@ private fun BottomBar(
     showPdfDialog: MutableState<Boolean>,
     showNewDocDialog: MutableState<Boolean>,
 ) {
-    BottomAppBar (
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-            MainActionButton(
-                onClick = { showPdfDialog.value = true },
-                icon = Icons.Default.PictureAsPdf,
-                text = stringResource(R.string.export_pdf),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            SecondaryActionButton(
-                icon = Icons.Default.RestartAlt,
-                contentDescription = stringResource(R.string.restart),
-                onClick = { showNewDocDialog.value = true },
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
+        MainActionButton(
+            onClick = { showPdfDialog.value = true },
+            icon = Icons.Default.PictureAsPdf,
+            text = stringResource(R.string.export_pdf),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        SecondaryActionButton(
+            icon = Icons.Default.RestartAlt,
+            contentDescription = stringResource(R.string.restart),
+            onClick = { showNewDocDialog.value = true },
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
     }
 }
 
