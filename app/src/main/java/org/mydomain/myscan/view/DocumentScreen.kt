@@ -87,9 +87,7 @@ fun DocumentScreen(
         navigation.toCameraScreen()
         return
     }
-    BackHandler {
-        navigation.back()
-    }
+    BackHandler { navigation.back() }
 
     MyScaffold(
         toAboutScreen = navigation.toAboutScreen,

@@ -14,6 +14,7 @@
  */
 package org.mydomain.myscan.view
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,6 +61,7 @@ import org.mydomain.myscan.ui.theme.MyScanTheme
 fun AboutScreen(onBack: () -> Unit, onViewLibraries: () -> Unit) {
     val showLicenseDialog = rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    BackHandler { onBack() }
     Scaffold(
         topBar = {
             TopAppBar(

@@ -14,6 +14,7 @@
  */
 package org.mydomain.myscan.view
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,7 @@ import org.mydomain.myscan.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibrariesScreen(onBack: () -> Unit) {
+    BackHandler { onBack() }
     Scaffold(
         topBar = {
             TopAppBar(
