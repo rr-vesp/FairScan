@@ -67,6 +67,7 @@ fun CommonPageList(
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     if (isLandscape) {
         LazyColumn (
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = modifier
         ) {
             itemsIndexed(state.pageIds) { index, id ->

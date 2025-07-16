@@ -22,7 +22,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,11 +39,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -95,28 +91,29 @@ fun DocumentScreen(
     BackHandler {
         navigation.back()
     }
-    Scaffold (
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-                title = { Text(stringResource(R.string.document)) },
-                navigationIcon = { BackButton(navigation.back) },
-                actions = {
-                    AboutScreenNavButton(onClick = navigation.toAboutScreen)
-                }
+
+    MyScaffold(
+        toAboutScreen = navigation.toAboutScreen,
+        pageListState = CommonPageListState(
+            pageIds,
+            imageLoader,
+            onPageClick = { index -> currentPageIndex.intValue = index },
+            currentPageIndex = currentPageIndex.intValue,
+            listState = rememberLazyListState(),
+        ),
+        onBack = navigation.back,
+        bottomBar = {
+            BottomBar(showPdfDialog, showNewDocDialog)
+        },
+        pageListButton = {
+            SecondaryActionButton(
+                icon = Icons.Default.Add,
+                onClick = navigation.toCameraScreen,
+                contentDescription = stringResource(R.string.add_page),
             )
         },
-        bottomBar = {
-            Column {
-                PageList(pageIds, imageLoader, currentPageIndex, navigation.toCameraScreen)
-                BottomBar(showPdfDialog, showNewDocDialog)
-            }
-        }
-    ) { padding ->
-        DocumentPreview(pageIds, imageLoader, currentPageIndex, onDeleteImage, padding)
+    ) { modifier ->
+        DocumentPreview(pageIds, imageLoader, currentPageIndex, onDeleteImage, modifier)
         if (showNewDocDialog.value) {
             NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog)
         }
@@ -135,14 +132,12 @@ private fun DocumentPreview(
     imageLoader: (String) -> Bitmap?,
     currentPageIndex: MutableIntState,
     onDeleteImage: (String) -> Unit,
-    padding: PaddingValues,
+    modifier: Modifier,
 ) {
     val imageId = pageIds[currentPageIndex.intValue]
     Column (
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .padding(padding)
     ) {
         Box (
             modifier = Modifier.fillMaxSize()
@@ -175,13 +170,13 @@ private fun DocumentPreview(
                 contentDescription = stringResource(R.string.delete_page),
                 onClick = { onDeleteImage(imageId) },
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(Alignment.BottomEnd)
                     .padding(8.dp)
             )
             Text("${currentPageIndex.intValue + 1} / ${pageIds.size}",
                 color = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier
-                    .align(Alignment.TopStart)
+                    .align(Alignment.BottomStart)
                     .padding(all = 16.dp)
                     .background(
                         color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f),
@@ -190,34 +185,6 @@ private fun DocumentPreview(
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun PageList(
-    pageIds: List<String>,
-    imageLoader: (String) -> Bitmap?,
-    currentPageIndex: MutableState<Int>,
-    toCameraScreen: () -> Unit
-) {
-    Box {
-        CommonPageList(
-            CommonPageListState(
-                pageIds,
-                imageLoader,
-                onPageClick = { index -> currentPageIndex.value = index },
-                currentPageIndex = currentPageIndex.value,
-                listState = rememberLazyListState()
-            )
-        )
-        SecondaryActionButton(
-            icon = Icons.Default.Add,
-            onClick = toCameraScreen,
-            contentDescription = stringResource(R.string.add_page),
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(8.dp)
-        )
     }
 }
 
@@ -296,3 +263,10 @@ fun DocumentScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true, widthDp = 640, heightDp = 320)
+@Composable
+fun DocumentScreenPreviewInLandscapeMode() {
+    DocumentScreenPreview()
+}
+

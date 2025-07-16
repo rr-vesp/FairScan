@@ -29,29 +29,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -193,37 +185,31 @@ private fun CameraScreenScaffold(
     thumbnailCoords: MutableState<Offset>,
     toAboutScreen: () -> Unit,
 ) {
-    val documentBar : @Composable () -> Unit = {
-        DocumentBar(
-            pageListState = pageListState,
-            pageCount = cameraUiState.pageCount,
-            onFinalizePressed = onFinalizePressed,
-            onDebugModeSwitched = onDebugModeSwitched,
-            isLandscape = cameraUiState.isLandscape
-        )
-    }
-    Box {
-        if (!cameraUiState.isLandscape) {
-            Scaffold(
-                bottomBar = documentBar
-            ) { padding ->
-                val modifier = Modifier.padding(bottom = padding.calculateBottomPadding()).fillMaxSize()
-                CameraPreviewBox(cameraPreview, cameraUiState, onCapture, modifier)
+    var tapCount by remember { mutableStateOf(0) }
+    var lastTapTime by remember { mutableStateOf(0L) }
+    val tapThreshold = 500L
+    val onPageCountClick = {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastTapTime < tapThreshold) {
+            tapCount++
+            if (tapCount >= 3) {
+                onDebugModeSwitched()
+                tapCount = 0
             }
         } else {
-            Scaffold { innerPadding ->
-                Row(
-                    modifier = Modifier.padding(innerPadding).fillMaxSize()
-                ) {
-                    CameraPreviewBox(cameraPreview, cameraUiState, onCapture, Modifier)
-                    documentBar()
-                }
-            }
+            tapCount = 1
         }
-        AboutScreenNavButton(
-            onClick = toAboutScreen,
-            modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.safeDrawing)
-        )
+        lastTapTime = currentTime
+    }
+
+    Box {
+        MyScaffold(
+            toAboutScreen = toAboutScreen,
+            pageListState = pageListState,
+            bottomBar = { Bar(cameraUiState.pageCount, onPageCountClick, onFinalizePressed) }
+        ) {
+            modifier -> CameraPreviewBox(cameraPreview, cameraUiState, onCapture, modifier)
+        }
         if (cameraUiState.captureState is CaptureState.CapturePreview) {
             CapturedImage(cameraUiState.captureState.processed.asImageBitmap(), thumbnailCoords)
         }
@@ -411,61 +397,6 @@ fun MessageBox(inferenceTime: Long) {
 }
 
 @Composable
-fun DocumentBar(
-    pageListState:  CommonPageListState,
-    pageCount: Int,
-    onFinalizePressed: () -> Unit,
-    onDebugModeSwitched: () -> Unit,
-    isLandscape: Boolean,
-) {
-    var tapCount by remember { mutableStateOf(0) }
-    var lastTapTime by remember { mutableStateOf(0L) }
-    val tapThreshold = 500L
-    val onPageCountClick = {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastTapTime < tapThreshold) {
-            tapCount++
-            if (tapCount >= 3) {
-                onDebugModeSwitched()
-                tapCount = 0
-            }
-        } else {
-            tapCount = 1
-        }
-        lastTapTime = currentTime
-    }
-
-    Column (
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
-    ) {
-        CommonPageList(pageListState, Modifier.weight(1f))
-        BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ) {
-            if (isLandscape) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Bar(pageCount, onPageCountClick, onFinalizePressed)
-                }
-            } else {
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 1.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Bar(pageCount, onPageCountClick, onFinalizePressed)
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun Bar(
     pageCount: Int,
     onPageCountClick: () -> Unit,
@@ -479,7 +410,7 @@ private fun Bar(
     MainActionButton(
         onClick = onFinalizePressed,
         enabled = pageCount > 0,
-        text = "Document",
+        text = stringResource(R.string.document),
         icon = Icons.AutoMirrored.Filled.Article,
     )
 }
