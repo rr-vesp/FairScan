@@ -1,7 +1,7 @@
-import java.net.URL
 import org.gradle.api.tasks.Copy
+import java.net.URL
 
-val modelVersion = "v0.4"
+val modelVersion = "v0.5"
 val modelFileName = "document-segmentation-model.tflite"
 val modelUrl = "https://github.com/pynicolas/document-segmentation-model/releases/download/$modelVersion/$modelFileName"
 
