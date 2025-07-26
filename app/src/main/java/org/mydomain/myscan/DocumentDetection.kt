@@ -98,11 +98,11 @@ fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): B
     val outputSize = Size(targetWidth.toDouble(), targetHeight.toDouble())
     Imgproc.warpPerspective(inputMat, outputMat, transform, outputSize)
 
-    val enhanced = enhanceCapturedImage(outputMat)
+    val resized = resize(outputMat, 1500.0)
+    val enhanced = enhanceCapturedImage(resized)
     val rotated = rotate(enhanced, rotationDegrees)
-    val resized = resize(rotated, 1500.0)
 
-    return toBitmap(resized)
+    return toBitmap(rotated)
 }
 
 fun resize(original: Mat, targetMax: Double): Mat {
