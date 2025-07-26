@@ -33,8 +33,10 @@ fun detectDocumentQuad(mask: Bitmap, minQuadAreaRatio: Double = 0.02): Quad? {
     val gray = Mat()
     Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
 
+    val refinedMask = refineMask(gray)
+
     val blurred = Mat()
-    Imgproc.GaussianBlur(gray, blurred, Size(5.0, 5.0), 0.0)
+    Imgproc.GaussianBlur(refinedMask, blurred, Size(5.0, 5.0), 0.0)
 
     val edges = Mat()
     Imgproc.Canny(blurred, edges, 75.0, 200.0)
@@ -67,6 +69,32 @@ fun detectDocumentQuad(mask: Bitmap, minQuadAreaRatio: Double = 0.02): Quad? {
 
     val vertices = biggest?.toList()?.map { Point(it.x.toInt(), it.y.toInt()) }
     return createQuad(vertices)
+}
+
+/**
+ * Applies morphological operations to improve a document mask.
+ */
+fun refineMask(original: Mat): Mat {
+    // Step 0: Ensure the mask is binary (just in case)
+    val binaryMask = Mat()
+    Imgproc.threshold(original, binaryMask, 0.0, 255.0, Imgproc.THRESH_BINARY)
+
+    // Step 1: Closing (fills small holes)
+    val kernelClose = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0))
+    val closed = Mat()
+    Imgproc.morphologyEx(binaryMask, closed, Imgproc.MORPH_CLOSE, kernelClose)
+
+    // Step 2: Gentle opening (removes isolated noise)
+    val kernelOpen = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0))
+    val opened = Mat()
+    Imgproc.morphologyEx(closed, opened, Imgproc.MORPH_OPEN, kernelOpen)
+
+    // Step 3: Light dilation (connects almost touching parts)
+    val kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0))
+    val dilated = Mat()
+    Imgproc.dilate(opened, dilated, kernelDilate, org.opencv.core.Point(-1.0, -1.0), 1)
+
+    return dilated
 }
 
 fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): Bitmap {
