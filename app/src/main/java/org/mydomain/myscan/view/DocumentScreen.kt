@@ -89,6 +89,11 @@ fun DocumentScreen(
     }
     BackHandler { navigation.back() }
 
+    val listState = rememberLazyListState()
+    LaunchedEffect(currentPageIndex.intValue) {
+        listState.animateScrollToItem(currentPageIndex.intValue)
+    }
+
     MyScaffold(
         toAboutScreen = navigation.toAboutScreen,
         pageListState = CommonPageListState(
@@ -96,7 +101,7 @@ fun DocumentScreen(
             imageLoader,
             onPageClick = { index -> currentPageIndex.intValue = index },
             currentPageIndex = currentPageIndex.intValue,
-            listState = rememberLazyListState(),
+            listState = listState,
         ),
         onBack = navigation.back,
         bottomBar = {
