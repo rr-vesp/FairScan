@@ -22,6 +22,7 @@ import org.opencv.core.MatOfDouble
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
+import kotlin.math.max
 
 fun enhanceCapturedImage(img: Mat): Mat {
     return if (isColoredDocument(img)) {
@@ -31,8 +32,8 @@ fun enhanceCapturedImage(img: Mat): Mat {
         result
     } else {
         Log.i("PostProcessing", "grayscale document")
-        val gray = correctLighting(img)
-        val contrastedGray = enhanceContrastGray(gray)
+        val gray = multiScaleRetinex(img)
+        val contrastedGray = enhanceContrastAuto(gray)
         val result = Mat()
         Imgproc.cvtColor(contrastedGray, result, Imgproc.COLOR_GRAY2BGR)
         result
@@ -54,35 +55,106 @@ fun isColoredDocument(img: Mat, threshold: Double = 4.0): Boolean {
     return result > threshold
 }
 
-// TODO the radius should depend on the image size
-fun correctLighting(img: Mat, radius: Int = 100): Mat {
+private fun multiScaleRetinex(img: Mat, kernelSizes: List<Double> = listOf(30.0, 500.0)): Mat {
+    // Convert to grayscale (1 channel)
     val gray = Mat()
-    Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY)
+    if (img.channels() == 4) {
+        Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGRA2GRAY)
+    } else if (img.channels() == 3) {
+        Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY)
+    } else {
+        img.copyTo(gray)
+    }
+
+    val imgFloat = Mat()
+    gray.convertTo(imgFloat, CvType.CV_32F)
+    Core.add(imgFloat, Scalar(1.0), imgFloat) // img + 1
+
+    val weight = 1.0 / kernelSizes.size
+    val retinex = Mat.zeros(gray.size(), CvType.CV_32F)
+
+    val logImg = Mat()
+    Core.log(imgFloat, logImg)
 
     val blur = Mat()
-    val kernelSize = 2 * radius + 1
-    Imgproc.GaussianBlur(gray, blur, Size(kernelSize.toDouble(), kernelSize.toDouble()), 0.0)
+    val logBlur = Mat()
+    val diff = Mat()
 
+    for (kernelSize in kernelSizes) {
+        Imgproc.boxFilter(imgFloat, blur, -1, Size(kernelSize, kernelSize))
+        Core.add(blur, Scalar(1.0), blur)
+        Core.log(blur, logBlur)
+
+        Core.subtract(logImg, logBlur, diff)
+        val diffGray = Mat()
+        if (diff.channels() > 1) {
+            Imgproc.cvtColor(diff, diffGray, Imgproc.COLOR_BGRA2GRAY)
+        } else {
+            diff.copyTo(diffGray)
+        }
+        Core.addWeighted(retinex, 1.0, diffGray, weight, 0.0, retinex)
+        diffGray.release()
+    }
+
+    // Normalize
+    val minMax = Core.minMaxLoc(retinex)
     val normalized = Mat()
-    Core.divide(gray, blur, normalized, 255.0)
-    return normalized
+    Core.subtract(retinex, Scalar(minMax.minVal), normalized)
+    val scale = if (minMax.maxVal > minMax.minVal) 255.0 / (minMax.maxVal - minMax.minVal) else 1.0
+    Core.multiply(normalized, Scalar(scale), normalized)
+
+    val result = Mat()
+    normalized.convertTo(result, CvType.CV_8U)
+
+    // Cleanup
+    gray.release()
+    imgFloat.release()
+    retinex.release()
+    logImg.release()
+    blur.release()
+    logBlur.release()
+    diff.release()
+    normalized.release()
+
+    return result
 }
 
-fun enhanceContrastGray(img: Mat): Mat {
-    val flat = img.reshape(0, 1)
-    val sorted = Mat()
-    Core.sort(flat, sorted, Core.SORT_ASCENDING)
+private fun enhanceContrastAuto(img: Mat): Mat {
+    val gray = if (img.channels() == 1) img else {
+        val tmp = Mat()
+        Imgproc.cvtColor(img, tmp, Imgproc.COLOR_BGR2GRAY)
+        tmp
+    }
 
-    val totalPixels = sorted.cols()
-    val pLow = sorted[0, (totalPixels * 0.01).toInt()][0]
-    val pHigh = sorted[0, (totalPixels * 0.95).toInt()][0]
+    // Flatten and sort pixel values
+    val flat = Mat()
+    gray.reshape(1, 1).convertTo(flat, CvType.CV_32F)
+    val sortedVals = Mat()
+    Core.sort(flat, sortedVals, Core.SORT_ASCENDING)
 
-    val result = Mat(img.size(), img.type())
-    img.convertTo(result, CvType.CV_32F)
-    Core.subtract(result, Scalar(pLow), result)
-    Core.multiply(result, Scalar(255.0 * 1.03 / (pHigh - pLow)), result)
-    Core.min(result, Scalar(255.0), result)
-    Core.max(result, Scalar(0.0), result)
-    result.convertTo(result, CvType.CV_8U)
-    return result
+    val totalPixels = sortedVals.cols()
+    val pLow = sortedVals.get(0, (totalPixels * 0.005).toInt())[0]
+    val pHigh = sortedVals.get(0, (totalPixels * 0.80).toInt())[0]
+
+    flat.release()
+    sortedVals.release()
+
+    val imgF = Mat()
+    img.convertTo(imgF, CvType.CV_32F)
+    val adjusted = Mat()
+    Core.subtract(imgF, Scalar(pLow), adjusted)
+    Core.multiply(adjusted, Scalar(255.0 / max((pHigh - pLow), 1.0)), adjusted)
+    Core.min(adjusted, Scalar(255.0), adjusted)
+    Core.max(adjusted, Scalar(0.0), adjusted)
+
+    val result = Mat()
+    adjusted.convertTo(result, CvType.CV_8U)
+    imgF.release()
+    adjusted.release()
+
+    val final = Mat()
+    Core.convertScaleAbs(result, final, 1.15, -25.0)
+    result.release()
+
+    return final
 }
