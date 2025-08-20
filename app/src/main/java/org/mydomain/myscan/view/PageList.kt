@@ -28,9 +28,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,8 +51,7 @@ import androidx.compose.ui.unit.sp
 const val PAGE_LIST_ELEMENT_SIZE_DP = 120
 
 data class CommonPageListState(
-    val pageIds: List<String>,
-    val imageLoader: (String) -> Bitmap?,
+    val document: DocumentUiModel,
     val onPageClick: (Int) -> Unit,
     val listState: LazyListState,
     val currentPageIndex: Int? = null,
@@ -65,37 +64,32 @@ fun CommonPageList(
     modifier: Modifier = Modifier,
 ) {
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val content: LazyListScope.() -> Unit = {
+        items(state.document.pageCount()) { index ->
+            // TODO Use small images rather than big ones
+            val image = state.document.load(index)
+            if (image != null) {
+                PageThumbnail(image, index, state)
+            }
+        }
+    }
     if (isLandscape) {
         LazyColumn (
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
-        ) {
-            itemsIndexed(state.pageIds) { index, id ->
-                // TODO Use small images rather than big ones
-                val image = state.imageLoader(id)
-                if (image != null) {
-                    PageThumbnail(image, index, state)
-                }
-            }
-        }
+            modifier = modifier,
+            content = content,
+        )
     } else {
         LazyRow (
             state = state.listState,
             contentPadding = PaddingValues(4.dp),
             modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            itemsIndexed(state.pageIds) { index, id ->
-                // TODO Use small images rather than big ones
-                val image = state.imageLoader(id)
-                if (image != null) {
-                    PageThumbnail(image, index, state)
-                }
-            }
-        }
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
     }
-    if (state.pageIds.isEmpty()) {
+    if (state.document.isEmpty()) {
         Box(
             modifier = Modifier
                 .height(120.dp)
@@ -120,7 +114,7 @@ private fun PageThumbnail(
             Modifier.height(maxImageSize)
         else
             Modifier.width(maxImageSize)
-    if (index == state.pageIds.lastIndex) {
+    if (index == state.document.lastIndex()) {
         val density = LocalDensity.current
         modifier = modifier.addPositionCallback(state.onLastItemPosition, density, 1.0f)
     }

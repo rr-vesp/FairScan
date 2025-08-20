@@ -101,7 +101,7 @@ fun CameraScreen(
     onFinalizePressed: () -> Unit,
 ) {
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
-    val pageIds by viewModel.pageIds.collectAsStateWithLifecycle()
+    val document by viewModel.documentUiModel.collectAsStateWithLifecycle()
     val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
     var isDebugMode by remember { mutableStateOf(false) }
 
@@ -129,9 +129,9 @@ fun CameraScreen(
     }
 
     val listState = rememberLazyListState()
-    LaunchedEffect(pageIds.size) {
-        if (pageIds.isNotEmpty()) {
-            listState.animateScrollToItem(pageIds.lastIndex)
+    LaunchedEffect(document.pageCount()) {
+        if (!document.isEmpty()) {
+            listState.animateScrollToItem(document.lastIndex())
         }
     }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -145,14 +145,13 @@ fun CameraScreen(
         },
         pageListState =
             CommonPageListState(
-                pageIds = pageIds,
-                imageLoader = { id -> viewModel.getBitmap(id) },
+                document = document,
                 onPageClick = { index -> viewModel.navigateTo(Screen.Document(index)) },
                 listState = listState,
                 onLastItemPosition = { offset -> thumbnailCoords.value = offset },
             ),
         cameraUiState = CameraUiState(
-            pageIds.size,
+            document.pageCount(),
             liveAnalysisState,
             captureState,
             showDetectionError,
@@ -457,12 +456,13 @@ private fun ScreenPreview(captureState: CaptureState, rotationDegrees: Float = 0
             },
             pageListState =
                 CommonPageListState(
-                    pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
-                    imageLoader = { id ->
-                        context.assets.open(id).use { input ->
-                            BitmapFactory.decodeStream(input)
-                        }
-                    },
+                    document = DocumentUiModel(
+                        pageIds = listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },
+                        imageLoader = { id ->
+                            context.assets.open(id).use { input ->
+                                BitmapFactory.decodeStream(input)
+                            }
+                        }),
                     onPageClick = {},
                     listState = LazyListState(),
                 ),
