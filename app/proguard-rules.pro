@@ -22,3 +22,6 @@
 
 -dontwarn com.gemalto.jp2.JP2Decoder
 -dontwarn com.gemalto.jp2.JP2Encoder
+
+-keep class org.mydomain.myscan.RecentDocument* { *; }
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite { *; }
