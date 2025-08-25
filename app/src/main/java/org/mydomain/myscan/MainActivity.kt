@@ -64,15 +64,15 @@ class MainActivity : ComponentActivity() {
             val cameraPermission = rememberCameraPermissionState()
             MyScanTheme {
                 val navigation = Navigation(
-                    toHomeScreen = { viewModel.navigateTo(Screen.Home) },
-                    toCameraScreen = { viewModel.navigateTo(Screen.Camera) },
-                    toDocumentScreen = { viewModel.navigateTo(Screen.Document()) },
-                    toAboutScreen = { viewModel.navigateTo(Screen.About) },
-                    toLibrariesScreen = { viewModel.navigateTo(Screen.Libraries) },
+                    toHomeScreen = { viewModel.navigateTo(Screen.Main.Home) },
+                    toCameraScreen = { viewModel.navigateTo(Screen.Main.Camera) },
+                    toDocumentScreen = { viewModel.navigateTo(Screen.Main.Document()) },
+                    toAboutScreen = { viewModel.navigateTo(Screen.Overlay.About) },
+                    toLibrariesScreen = { viewModel.navigateTo(Screen.Overlay.Libraries) },
                     back = { viewModel.navigateBack() }
                 )
                 when (val screen = currentScreen) {
-                    is Screen.Home -> {
+                    is Screen.Main.Home -> {
                         val recentDocs by viewModel.recentDocuments.collectAsStateWithLifecycle()
                         HomeScreen(
                             cameraPermission = cameraPermission,
@@ -83,17 +83,17 @@ class MainActivity : ComponentActivity() {
                             onOpenPdf = { file -> openPdf(file.toUri()) }
                         )
                     }
-                    is Screen.Camera -> {
+                    is Screen.Main.Camera -> {
                         CameraScreen(
                             viewModel,
                             navigation,
                             liveAnalysisState,
                             onImageAnalyzed = { image -> viewModel.liveAnalysis(image) },
-                            onFinalizePressed = { viewModel.navigateTo(Screen.Document()) },
+                            onFinalizePressed = navigation.toDocumentScreen,
                             cameraPermission = cameraPermission
                         )
                     }
-                    is Screen.Document -> {
+                    is Screen.Main.Document -> {
                         DocumentScreen (
                             document = document,
                             initialPage = screen.initialPage,
@@ -109,14 +109,14 @@ class MainActivity : ComponentActivity() {
                             ),
                             onStartNew = {
                                 viewModel.startNewDocument()
-                                viewModel.navigateTo(Screen.Home) },
+                                viewModel.navigateTo(Screen.Main.Home) },
                             onDeleteImage =  { id -> viewModel.deletePage(id) }
                         )
                     }
-                    is Screen.About -> {
+                    is Screen.Overlay.About -> {
                         AboutScreen(onBack = navigation.back, onViewLibraries = navigation.toLibrariesScreen)
                     }
-                    is Screen.Libraries -> {
+                    is Screen.Overlay.Libraries -> {
                         LibrariesScreen(onBack = navigation.back)
                     }
                 }

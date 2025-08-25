@@ -73,9 +73,9 @@ class MainViewModel(
     val liveAnalysisState: StateFlow<LiveAnalysisState> = _liveAnalysisState.asStateFlow()
     private var lastSuccessfulLiveAnalysisState: LiveAnalysisState? = null
 
-    private val _screenStack = MutableStateFlow<List<Screen>>(listOf(Screen.Home))
-    val currentScreen: StateFlow<Screen> = _screenStack.map { it.last() }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, _screenStack.value.last())
+    private val _navigationState = MutableStateFlow(NavigationState.initial())
+    val currentScreen: StateFlow<Screen> = _navigationState.map { it.current }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _navigationState.value.current)
 
     private val _pageIds = MutableStateFlow(imageRepository.imageIds())
     val documentUiModel: StateFlow<DocumentUiModel> =
@@ -159,12 +159,12 @@ class MainViewModel(
         }
     }
 
-    fun navigateTo(screen: Screen) {
-        _screenStack.update { it + screen }
+    fun navigateTo(destination: Screen) {
+        _navigationState.update { it.navigateTo(destination) }
     }
 
     fun navigateBack() {
-        _screenStack.update { stack -> if (stack.size > 1) stack.dropLast(1) else stack }
+        _navigationState.update { stack -> stack.navigateBack() }
     }
 
     fun onImageCaptured(imageProxy: ImageProxy?) {

@@ -154,7 +154,7 @@ fun CameraScreen(
         pageListState =
             CommonPageListState(
                 document = document,
-                onPageClick = { index -> viewModel.navigateTo(Screen.Document(index)) },
+                onPageClick = { index -> viewModel.navigateTo(Screen.Main.Document(index)) },
                 listState = listState,
                 onLastItemPosition = { offset -> thumbnailCoords.value = offset },
             ),

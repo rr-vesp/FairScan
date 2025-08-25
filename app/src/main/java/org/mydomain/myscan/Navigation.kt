@@ -15,11 +15,15 @@
 package org.mydomain.myscan
 
 sealed class Screen {
-    object Home : Screen()
-    object Camera : Screen()
-    data class Document(val initialPage: Int = 0) : Screen()
-    object About : Screen()
-    object Libraries : Screen()
+    sealed class Main : Screen() {
+        object Home : Main()
+        object Camera : Main()
+        data class Document(val initialPage: Int = 0) : Main()
+    }
+    sealed class Overlay : Screen() {
+        object About : Overlay()
+        object Libraries : Overlay()
+    }
 }
 
 data class Navigation(
@@ -30,3 +34,30 @@ data class Navigation(
     val toLibrariesScreen: () -> Unit,
     val back: () -> Unit,
 )
+
+@ConsistentCopyVisibility
+data class NavigationState private constructor(val stack: List<Screen>) {
+
+    companion object {
+        fun initial() = NavigationState(listOf(Screen.Main.Home))
+    }
+
+    val current: Screen get() = stack.last()
+
+    fun navigateTo(destination: Screen): NavigationState {
+        return if (destination is Screen.Overlay) {
+            copy(stack = stack + destination)
+        } else {
+            copy(stack = listOf(destination))
+        }
+    }
+
+    fun navigateBack(): NavigationState {
+        return when (current) {
+            is Screen.Main.Home -> this // Back handled by system
+            is Screen.Main.Camera -> copy(stack = listOf(Screen.Main.Home))
+            is Screen.Main.Document -> copy(stack = listOf(Screen.Main.Camera))
+            is Screen.Overlay -> copy(stack = stack.dropLast(1))
+        }
+    }
+}
