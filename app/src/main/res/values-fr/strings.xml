@@ -10,6 +10,7 @@
     <string name="close_document">Fermer le document</string>
     <string name="current_document">Document en cours</string>
     <string name="delete_page">Supprimer la page</string>
+    <string name="delete_page_warning">Voulez-vous supprimer cette page ?</string>
     <string name="document">Document</string>
     <string name="error">Erreur : %1$s</string>
     <string name="error_no_document">Aucun document détecté</string>

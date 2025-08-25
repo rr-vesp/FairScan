@@ -75,6 +75,7 @@ fun DocumentScreen(
 ) {
     // TODO Check how often images are loaded
     val showNewDocDialog = rememberSaveable { mutableStateOf(false) }
+    val showDeletePageDialog = rememberSaveable { mutableStateOf(false) }
     val showPdfDialog = rememberSaveable { mutableStateOf(false) }
     val currentPageIndex = rememberSaveable { mutableIntStateOf(initialPage) }
     if (currentPageIndex.intValue >= document.pageCount()) {
@@ -111,9 +112,16 @@ fun DocumentScreen(
             )
         },
     ) { modifier ->
-        DocumentPreview(document, currentPageIndex, onDeleteImage, modifier)
+        DocumentPreview(document, currentPageIndex, { showDeletePageDialog.value = true }, modifier)
         if (showNewDocDialog.value) {
             NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog, stringResource(R.string.close_document))
+        }
+        if (showDeletePageDialog.value) {
+            ConfirmationDialog(
+                title = stringResource(R.string.delete_page),
+                message = stringResource(R.string.delete_page_warning),
+                showDialog = showDeletePageDialog
+            ) { onDeleteImage(document.pageId(currentPageIndex.intValue)) }
         }
         if (showPdfDialog.value) {
             PdfGenerationBottomSheetWrapper(
@@ -212,11 +220,21 @@ private fun BottomBar(
 
 @Composable
 fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>, title: String) {
+    ConfirmationDialog(title, stringResource(R.string.new_document_warning), showDialog, onConfirm)
+}
+
+@Composable
+private fun ConfirmationDialog(
+    title: String,
+    message: String,
+    showDialog: MutableState<Boolean>,
+    onConfirm: () -> Unit,
+) {
     AlertDialog(
         title = { Text(title) },
-        text = { Text(stringResource(R.string.new_document_warning)) },
+        text = { Text(message) },
         confirmButton = {
-            TextButton (onClick = {
+            TextButton(onClick = {
                 showDialog.value = false
                 onConfirm()
             }) {
