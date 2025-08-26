@@ -211,7 +211,7 @@ private fun BottomBar(
         Spacer(modifier = Modifier.width(8.dp))
         SecondaryActionButton(
             icon = Icons.Default.Close,
-            contentDescription = stringResource(R.string.restart),
+            contentDescription = stringResource(R.string.close_document),
             onClick = { showNewDocDialog.value = true },
             modifier = Modifier.padding(vertical = 8.dp)
         )
