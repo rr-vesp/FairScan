@@ -1,0 +1,47 @@
+<resources>
+    <string name="about">Über</string>
+    <string name="add_page">Seite hinzufügen</string>
+    <string name="app_name" translatable="false">FairScan</string>
+    <string name="app_tagline">Eine einfache und respektvolle App zum Scannen Ihrer Dokumente.</string>
+    <string name="back">Zurück</string>
+    <string name="camera_permission_denied">Kamerazugriff wurde verweigert</string>
+    <string name="camera_permission_rationale">Die App benötigt Zugriff auf die Kamera, um Dokumente zu scannen. Aufgenommene Bilder werden nur auf diesem Gerät gespeichert und beim Schließen des aktuellen Dokuments gelöscht.</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="close">Schließen</string>
+    <string name="close_document">Dokument schließen</string>
+    <string name="current_document">Aktuelles Dokument</string>
+    <string name="delete_page">Seite löschen</string>
+    <string name="delete_page_warning">Möchten Sie diese Seite löschen?</string>
+    <string name="document">Dokument</string>
+    <string name="error">Fehler: %1$s</string>
+    <string name="error_no_document">Kein Dokument erkannt</string>
+    <string name="error_no_pdf_app">Keine App zum Öffnen von PDF gefunden</string>
+    <string name="error_save">PDF konnte nicht gespeichert werden</string>
+    <string name="export_pdf">PDF exportieren</string>
+    <string name="filename">Dateiname</string>
+    <string name="grant_permission">Berechtigung erteilen</string>
+    <string name="last_saved_documents">Zuletzt gespeicherte Dokumente</string>
+    <string name="libraries">Bibliotheken</string>
+    <string name="libraries_intro">Diese Anwendung verwendet mehrere Open-Source-Bibliotheken, darunter:</string>
+    <string name="libraries_open_source">Open-Source-Bibliotheken</string>
+    <string name="license">Lizenz</string>
+    <string name="licensed_under">Diese Anwendung ist unter der GNU General Public License v3.0 lizenziert.</string>
+    <string name="new_document">Neues Dokument</string>
+    <string name="new_document_warning">Das aktuelle Dokument geht verloren, wenn Sie es nicht gespeichert haben. Möchten Sie fortfahren?</string>
+    <string name="open">Öffnen</string>
+    <string name="open_pdf">PDF öffnen</string>
+    <string name="pdf_saved_to">PDF gespeichert unter %1$s</string>
+    <string name="save">Speichern</string>
+    <string name="share">Teilen</string>
+    <string name="share_pdf">PDF teilen</string>
+    <string name="start_a_new_scan">Neuen Scan starten</string>
+    <string name="unknown_size">Unbekannte Größe</string>
+    <string name="version">Version</string>
+    <string name="view_the_full_license">Vollständige Lizenz anzeigen</string>
+    <string name="view_full_list">Vollständige Liste anzeigen</string>
+    <string name="yes">Ja</string>
+    <plurals name="page_count">
+        <item quantity="one">%d Seite</item>
+        <item quantity="other">%d Seiten</item>
+    </plurals>
+</resources>
