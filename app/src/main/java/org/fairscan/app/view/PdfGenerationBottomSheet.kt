@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -44,13 +45,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,10 +76,10 @@ fun PdfGenerationBottomSheetWrapper(
     pdfActions: PdfGenerationActions,
     modifier: Modifier = Modifier,
 ) {
-    var filename by remember { mutableStateOf(defaultFilename()) }
+    val filename = remember { mutableStateOf(defaultFilename()) }
     val uiState by pdfActions.uiStateFlow.collectAsState()
     LaunchedEffect(Unit) {
-        pdfActions.setFilename(filename)
+        pdfActions.setFilename(filename.value)
         pdfActions.startGeneration()
     }
 
@@ -93,7 +96,7 @@ fun PdfGenerationBottomSheetWrapper(
         PdfGenerationBottomSheet(
             filename = filename,
             onFilenameChange = {
-                filename = it
+                filename.value = it
                 pdfActions.setFilename(it)
             },
             uiState = uiState,
@@ -110,7 +113,7 @@ fun PdfGenerationBottomSheetWrapper(
 
 @Composable
 fun PdfGenerationBottomSheet(
-    filename: String,
+    filename: MutableState<String>,
     onFilenameChange: (String) -> Unit,
     uiState: PdfGenerationUiState,
     onDismiss: () -> Unit,
@@ -142,12 +145,23 @@ fun PdfGenerationBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
+            val focusRequester = remember { FocusRequester() }
             OutlinedTextField(
-                value = filename,
+                value = filename.value,
                 onValueChange = onFilenameChange,
                 label = { Text(stringResource(R.string.filename)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                trailingIcon = {
+                    if (filename.value.isNotEmpty()) {
+                        IconButton(onClick = {
+                            filename.value = ""
+                            focusRequester.requestFocus()
+                        }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Effacer")
+                        }
+                    }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -312,7 +326,7 @@ fun PreviewPdfGenerationDialogWithError() {
 fun PreviewToCustomize(uiState: PdfGenerationUiState) {
     MyScanTheme {
         PdfGenerationBottomSheet(
-            filename = "Scan 2025-07-02 17.40.42.pdf",
+            filename = remember { mutableStateOf("Scan 2025-07-02 17.40.42.pdf") },
             uiState = uiState,
             onFilenameChange = {},
             onDismiss = {},
