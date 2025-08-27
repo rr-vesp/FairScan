@@ -88,6 +88,17 @@ fun PdfGenerationBottomSheetWrapper(
         sheetState.expand()
     }
 
+    val onFilenameChange = { newName:String ->
+        filename.value = newName
+        pdfActions.setFilename(newName)
+    }
+    val ensureCorrectFileName = {
+        val value = filename.value.trim().ifEmpty { defaultFilename() }
+        if (value != filename.value) {
+            onFilenameChange(value)
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -95,17 +106,20 @@ fun PdfGenerationBottomSheetWrapper(
     ) {
         PdfGenerationBottomSheet(
             filename = filename,
-            onFilenameChange = {
-                filename.value = it
-                pdfActions.setFilename(it)
-            },
+            onFilenameChange = onFilenameChange,
             uiState = uiState,
             onDismiss = {
                 pdfActions.cancelGeneration()
                 onDismiss()
             },
-            onShare = { pdfActions.sharePdf() },
-            onSave = { pdfActions.savePdf() },
+            onShare = {
+                ensureCorrectFileName()
+                pdfActions.sharePdf()
+            },
+            onSave = {
+                ensureCorrectFileName()
+                pdfActions.savePdf()
+            },
             onOpen = { pdfActions.openPdf() },
         )
     }
