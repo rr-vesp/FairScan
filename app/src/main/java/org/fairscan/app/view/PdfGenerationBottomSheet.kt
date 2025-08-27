@@ -259,8 +259,8 @@ private fun CloseButton(onDismiss: () -> Unit) {
 }
 
 fun defaultFilename(): String {
-    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-    return "scan_$timestamp"
+    val timestamp = SimpleDateFormat("yyyy-MM-dd HH.mm.ss", Locale.getDefault()).format(Date())
+    return "Scan $timestamp"
 }
 
 fun formatFileSize(sizeInBytes: Long?, context: Context): String {
@@ -312,7 +312,7 @@ fun PreviewPdfGenerationDialogWithError() {
 fun PreviewToCustomize(uiState: PdfGenerationUiState) {
     MyScanTheme {
         PdfGenerationBottomSheet(
-            filename = "scan_20250702_174042.pdf",
+            filename = "Scan 2025-07-02 17.40.42.pdf",
             uiState = uiState,
             onFilenameChange = {},
             onDismiss = {},
