@@ -260,7 +260,7 @@ private fun CloseButton(onDismiss: () -> Unit) {
 
 fun defaultFilename(): String {
     val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-    return "scan_$timestamp.pdf"
+    return "scan_$timestamp"
 }
 
 fun formatFileSize(sizeInBytes: Long?, context: Context): String {

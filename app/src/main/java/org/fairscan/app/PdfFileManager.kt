@@ -27,6 +27,15 @@ class PdfFileManager(
     private val externalDir: File,
     private val pdfWriter: PdfWriter
 ) {
+    companion object {
+        fun addExtensionIfMissing(fileName: String): String {
+            return if (fileName.lowercase().endsWith(".pdf"))
+                fileName
+            else
+                "$fileName.pdf"
+        }
+    }
+
     fun generatePdf(jpegs: Sequence<ByteArray>): GeneratedPdf {
         pdfDir.mkdirs()
         require(pdfDir.exists() && pdfDir.isDirectory) { "Invalid pdfDir: $pdfDir" }

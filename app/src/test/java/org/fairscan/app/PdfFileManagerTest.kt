@@ -84,4 +84,12 @@ class PdfFileManagerTest {
         assertThat(pdf.file.readBytes()).isEqualTo(byteArrayOf(0x01, 0x02, 0x11))
         assertThat(pdf.file.name).endsWith(".pdf")
     }
+
+    @Test
+    fun addExtensionIfMissing() {
+        assertThat(PdfFileManager.addExtensionIfMissing("f1.pdf")).isEqualTo("f1.pdf")
+        assertThat(PdfFileManager.addExtensionIfMissing("f2.PDF")).isEqualTo("f2.PDF")
+        assertThat(PdfFileManager.addExtensionIfMissing("f3")).isEqualTo("f3.pdf")
+        assertThat(PdfFileManager.addExtensionIfMissing("f4.txt")).isEqualTo("f4.txt.pdf")
+    }
 }

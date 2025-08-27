@@ -295,7 +295,8 @@ class MainViewModel(
     fun getFinalPdf(): GeneratedPdf? {
         val tempPdf = _pdfUiState.value.generatedPdf ?: return null
         val tempFile = tempPdf.file
-        val newFile = File(tempFile.parentFile, desiredFilename)
+        val fileName = PdfFileManager.addExtensionIfMissing(desiredFilename)
+        val newFile = File(tempFile.parentFile, fileName)
         if (tempFile.absolutePath != newFile.absolutePath) {
             if (newFile.exists()) newFile.delete()
             val success = tempFile.renameTo(newFile)
