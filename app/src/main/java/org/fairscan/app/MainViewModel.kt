@@ -58,7 +58,7 @@ class MainViewModel(
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
                 return MainViewModel(
                     ImageSegmentationService(context),
-                    ImageRepository(context.filesDir),
+                    ImageRepository(context.filesDir, OpenCvTransformations()),
                     PdfFileManager(
                         File(context.cacheDir, "pdfs"),
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
@@ -219,6 +219,13 @@ class MainViewModel(
             _pageIds.value = imageRepository.imageIds()
         }
         _captureState.value = CaptureState.Idle
+    }
+
+    fun rotateImage(id: String, clockwise: Boolean) {
+        viewModelScope.launch {
+            imageRepository.rotate(id, clockwise)
+            _pageIds.value = imageRepository.imageIds()
+        }
     }
 
     fun afterCaptureError() {

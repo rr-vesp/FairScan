@@ -35,7 +35,7 @@ class ImageRepositoryTest {
     }
 
     fun repo(): ImageRepository {
-        return ImageRepository(getFilesDir())
+        return ImageRepository(getFilesDir(), {f1,f2,_->f1.copyTo(f2)})
     }
 
     @Test
@@ -88,5 +88,33 @@ class ImageRepositoryTest {
         assertThat(repo1.imageIds()).isEmpty()
         val repo2 = repo()
         assertThat(repo2.imageIds()).isEmpty()
+    }
+
+    @Test
+    fun rotate() {
+        val repo = repo()
+        repo.add(byteArrayOf(101, 102, 103))
+        val id0 = repo.imageIds().last()
+        val baseId = id0.substring(0, id0.length - 4)
+
+        repo.rotate(id0, true)
+        val id1 = repo.imageIds().last()
+        assertThat(id1).isEqualTo("$baseId-90.jpg")
+
+        repo.rotate(id1, true)
+        val id2 = repo.imageIds().last()
+        assertThat(id2).isEqualTo("$baseId-180.jpg")
+
+        repo.rotate(id2, true)
+        val id3 = repo.imageIds().last()
+        assertThat(id3).isEqualTo("$baseId-270.jpg")
+
+        repo.rotate(id3, true)
+        val id4 = repo.imageIds().last()
+        assertThat(id4).isEqualTo("$baseId.jpg")
+
+        repo.rotate(id4, false)
+        val id5 = repo.imageIds().last()
+        assertThat(id5).isEqualTo("$baseId-270.jpg")
     }
 }

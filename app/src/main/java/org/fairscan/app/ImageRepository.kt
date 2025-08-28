@@ -18,7 +18,7 @@ import java.io.File
 
 const val SCAN_DIR_NAME = "scanned_pages"
 
-class ImageRepository(appFilesDir: File) {
+class ImageRepository(appFilesDir: File, val transformations: ImageTransformations) {
 
     private val scanDir: File = File(appFilesDir, SCAN_DIR_NAME).apply {
         if (!exists()) mkdirs()
@@ -37,6 +37,30 @@ class ImageRepository(appFilesDir: File) {
         val file = File(scanDir, fileName)
         file.writeBytes(bytes)
         fileNames.add(fileName)
+    }
+
+    val idRegex = Regex("([0-9]+)(-(90|180|270))?\\.jpg")
+
+    fun rotate(id: String, clockwise: Boolean) {
+        val originalFile = File(scanDir, id)
+        if (!originalFile.exists()) {
+            return
+        }
+        idRegex.matchEntire(id)?.let {
+            val baseId = it.groupValues[1]
+            val degrees = it.groupValues[3].ifEmpty { "0" }.toInt()
+            val targetDegrees = (degrees + (if (clockwise) 90 else 270)) % 360
+            val rotatedId = if (targetDegrees == 0) "$baseId.jpg" else "$baseId-$targetDegrees.jpg"
+            val rotatedFile = File(scanDir, rotatedId)
+            transformations.rotate(originalFile, rotatedFile, clockwise)
+            if (rotatedFile.exists()) {
+                val index = fileNames.indexOf(id)
+                if (index >= 0) {
+                    fileNames[index] = rotatedId
+                }
+                delete(id)
+            }
+        }
     }
 
     fun getContent(id: String): ByteArray? {

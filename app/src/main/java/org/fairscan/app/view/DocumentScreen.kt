@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.RotateLeft
+import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -72,6 +74,7 @@ fun DocumentScreen(
     pdfActions: PdfGenerationActions,
     onStartNew: () -> Unit,
     onDeleteImage: (String) -> Unit,
+    onRotateImage: (String, Boolean) -> Unit,
 ) {
     // TODO Check how often images are loaded
     val showNewDocDialog = rememberSaveable { mutableStateOf(false) }
@@ -112,7 +115,12 @@ fun DocumentScreen(
             )
         },
     ) { modifier ->
-        DocumentPreview(document, currentPageIndex, { showDeletePageDialog.value = true }, modifier)
+        DocumentPreview(
+            document,
+            currentPageIndex,
+            { showDeletePageDialog.value = true },
+            onRotateImage,
+            modifier)
         if (showNewDocDialog.value) {
             NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog, stringResource(R.string.close_document))
         }
@@ -137,6 +145,7 @@ private fun DocumentPreview(
     document: DocumentUiModel,
     currentPageIndex: MutableIntState,
     onDeleteImage: (String) -> Unit,
+    onRotateImage: (String, Boolean) -> Unit,
     modifier: Modifier,
 ) {
     val imageId = document.pageId(currentPageIndex.intValue)
@@ -170,6 +179,7 @@ private fun DocumentPreview(
                     )
                 }
             }
+            RotationButtons(imageId, onRotateImage, Modifier.align(Alignment.BottomCenter))
             SecondaryActionButton(
                 Icons.Outlined.Delete,
                 contentDescription = stringResource(R.string.delete_page),
@@ -190,6 +200,27 @@ private fun DocumentPreview(
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             )
         }
+    }
+}
+
+@Composable
+fun RotationButtons(
+    imageId: String,
+    onRotateImage: (String, Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.padding(4.dp)) {
+        SecondaryActionButton(
+            icon = Icons.AutoMirrored.Default.RotateLeft,
+            contentDescription = "Rotate left",
+            onClick = { onRotateImage(imageId, false) }
+        )
+        Spacer(Modifier.width(8.dp))
+        SecondaryActionButton(
+            icon = Icons.AutoMirrored.Default.RotateRight,
+            contentDescription = "Rotate right",
+            onClick = { onRotateImage(imageId, true) }
+        )
     }
 }
 
@@ -265,7 +296,8 @@ fun DocumentScreenPreview() {
                 MutableStateFlow(PdfGenerationUiState()),
                 {}, {}, {}),
             onStartNew = {},
-            onDeleteImage = { _ -> {} }
+            onDeleteImage = { _ -> },
+            onRotateImage = { _,_ -> },
         )
     }
 }

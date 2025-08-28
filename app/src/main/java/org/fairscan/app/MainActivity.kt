@@ -110,7 +110,8 @@ class MainActivity : ComponentActivity() {
                             onStartNew = {
                                 viewModel.startNewDocument()
                                 viewModel.navigateTo(Screen.Main.Home) },
-                            onDeleteImage =  { id -> viewModel.deletePage(id) }
+                            onDeleteImage =  { id -> viewModel.deletePage(id) },
+                            onRotateImage = { id, clockwise -> viewModel.rotateImage(id, clockwise) }
                         )
                     }
                     is Screen.Overlay.About -> {
