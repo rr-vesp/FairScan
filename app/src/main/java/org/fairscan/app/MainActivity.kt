@@ -41,6 +41,7 @@ import org.fairscan.app.ui.theme.MyScanTheme
 import org.fairscan.app.view.AboutScreen
 import org.fairscan.app.view.CameraScreen
 import org.fairscan.app.view.DocumentScreen
+import org.fairscan.app.view.ExportScreenWrapper
 import org.fairscan.app.view.HomeScreen
 import org.fairscan.app.view.LibrariesScreen
 import org.opencv.android.OpenCVLoader
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
                     toHomeScreen = { viewModel.navigateTo(Screen.Main.Home) },
                     toCameraScreen = { viewModel.navigateTo(Screen.Main.Camera) },
                     toDocumentScreen = { viewModel.navigateTo(Screen.Main.Document()) },
+                    toExportScreen = { viewModel.navigateTo(Screen.Main.Export) },
                     toAboutScreen = { viewModel.navigateTo(Screen.Overlay.About) },
                     toLibrariesScreen = { viewModel.navigateTo(Screen.Overlay.Libraries) },
                     back = { viewModel.navigateBack() }
@@ -98,20 +100,25 @@ class MainActivity : ComponentActivity() {
                             document = document,
                             initialPage = screen.initialPage,
                             navigation = navigation,
+                            onDeleteImage =  { id -> viewModel.deletePage(id) },
+                            onRotateImage = { id, clockwise -> viewModel.rotateImage(id, clockwise) }
+                        )
+                    }
+                    is Screen.Main.Export -> {
+                        ExportScreenWrapper(
+                            navigation = navigation,
                             pdfActions = PdfGenerationActions(
                                 startGeneration = viewModel::startPdfGeneration,
-                                cancelGeneration = viewModel::cancelPdfGeneration,
                                 setFilename = viewModel::setFilename,
                                 uiStateFlow = viewModel.pdfUiState,
-                                sharePdf = { sharePdf(viewModel.getFinalPdf()) },
+                                sharePdf = { sharePdf(viewModel.getFinalPdf(), viewModel) },
                                 savePdf = { savePdf(viewModel.getFinalPdf(), viewModel) },
                                 openPdf = { openPdf(viewModel.pdfUiState.value.savedFileUri) }
                             ),
-                            onStartNew = {
+                            onCloseScan = {
                                 viewModel.startNewDocument()
-                                viewModel.navigateTo(Screen.Main.Home) },
-                            onDeleteImage =  { id -> viewModel.deletePage(id) },
-                            onRotateImage = { id, clockwise -> viewModel.rotateImage(id, clockwise) }
+                                viewModel.navigateTo(Screen.Main.Home)
+                            },
                         )
                     }
                     is Screen.Overlay.About -> {
@@ -125,9 +132,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun sharePdf(generatedPdf: GeneratedPdf?) {
+    private fun sharePdf(generatedPdf: GeneratedPdf?, viewModel: MainViewModel) {
         if (generatedPdf == null)
             return
+        viewModel.setPdfAsShared()
         val file = generatedPdf.file
         val authority = "${applicationContext.packageName}.fileprovider"
         val fileUri = FileProvider.getUriForFile(this, authority, file)

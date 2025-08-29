@@ -17,6 +17,7 @@ package org.fairscan.app
 import org.assertj.core.api.Assertions.assertThat
 import org.fairscan.app.Screen.Main.Camera
 import org.fairscan.app.Screen.Main.Document
+import org.fairscan.app.Screen.Main.Export
 import org.fairscan.app.Screen.Main.Home
 import org.fairscan.app.Screen.Overlay.About
 import org.fairscan.app.Screen.Overlay.Libraries
@@ -36,10 +37,12 @@ class NavigationTest {
         val atHome = NavigationState.initial()
         val atCamera = atHome.navigateTo(Camera)
         val atDocument = atHome.navigateTo(Document())
+        val atExport = atHome.navigateTo(Export)
 
         assertThat(atHome.current).isEqualTo(Home)
         assertThat(atCamera.current).isEqualTo(Camera)
         assertThat(atDocument.current).isEqualTo(Document())
+        assertThat(atExport.current).isEqualTo(Export)
 
         assertThat(atCamera.navigateTo(Document())).isEqualTo(atDocument)
         assertThat(atDocument.navigateTo(Home)).isEqualTo(atHome)
@@ -48,6 +51,7 @@ class NavigationTest {
         assertThat(atHome.navigateBack()).isEqualTo(atHome)
         assertThat(atCamera.navigateBack()).isEqualTo(atHome)
         assertThat(atDocument.navigateBack()).isEqualTo(atCamera)
+        assertThat(atExport.navigateBack()).isEqualTo(atDocument)
     }
 
     @Test

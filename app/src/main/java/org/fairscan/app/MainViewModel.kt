@@ -268,11 +268,7 @@ class MainViewModel(
     }
 
     fun startPdfGeneration() {
-        val currentState = _pdfUiState.value
-        if (currentState.isGenerating || currentState.generatedPdf != null) return
-
-        _pdfUiState.update { it.copy(isGenerating = true, errorMessage = null) }
-
+        cancelPdfGeneration()
         generationJob = viewModelScope.launch {
             try {
                 val result = generatePdf()
@@ -297,6 +293,10 @@ class MainViewModel(
     fun cancelPdfGeneration() {
         generationJob?.cancel()
         _pdfUiState.value = PdfGenerationUiState()
+    }
+
+    fun setPdfAsShared() {
+        _pdfUiState.update { it.copy(hasSharedPdf = true) }
     }
 
     fun getFinalPdf(): GeneratedPdf? {
@@ -374,7 +374,6 @@ data class GeneratedPdf(
 // TODO Move somewhere else: ViewModel should not depend on that
 data class PdfGenerationActions(
     val startGeneration: () -> Unit,
-    val cancelGeneration: () -> Unit,
     val setFilename: (String) -> Unit,
     val uiStateFlow: StateFlow<PdfGenerationUiState>,// TODO is it ok to have that here?
     val sharePdf: () -> Unit,

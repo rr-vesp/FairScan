@@ -24,8 +24,11 @@ data class PdfGenerationUiState(
     val desiredFilename: String = "",
     val savedFileUri: Uri? = null,
     val saveDirectoryName: String? = null,
-    val errorMessage: String? = null
-)
+    val hasSharedPdf: Boolean = false,
+    val errorMessage: String? = null,
+) {
+    val hasSavedOrSharedPdf get() = savedFileUri != null || hasSharedPdf
+}
 
 data class RecentDocumentUiState(
     val file: File,

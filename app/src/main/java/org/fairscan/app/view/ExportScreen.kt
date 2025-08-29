@@ -16,33 +16,31 @@ package org.fairscan.app.view
 
 import android.content.Context
 import android.text.format.Formatter
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -50,16 +48,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import org.fairscan.app.GeneratedPdf
+import org.fairscan.app.Navigation
 import org.fairscan.app.PdfGenerationActions
 import org.fairscan.app.R
 import org.fairscan.app.ui.PdfGenerationUiState
@@ -69,23 +70,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PdfGenerationBottomSheetWrapper(
-    onDismiss: () -> Unit,
+fun ExportScreenWrapper(
+    navigation: Navigation,
     pdfActions: PdfGenerationActions,
-    modifier: Modifier = Modifier,
+    onCloseScan: () -> Unit,
 ) {
+    BackHandler { navigation.back() }
+
+    val showConfirmationDialog = rememberSaveable { mutableStateOf(false) }
     val filename = remember { mutableStateOf(defaultFilename()) }
     val uiState by pdfActions.uiStateFlow.collectAsState()
     LaunchedEffect(Unit) {
         pdfActions.setFilename(filename.value)
         pdfActions.startGeneration()
-    }
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    LaunchedEffect(Unit) {
-        sheetState.expand()
     }
 
     val onFilenameChange = { newName:String ->
@@ -99,110 +97,128 @@ fun PdfGenerationBottomSheetWrapper(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        modifier = modifier.navigationBarsPadding()
-    ) {
-        PdfGenerationBottomSheet(
-            filename = filename,
-            onFilenameChange = onFilenameChange,
-            uiState = uiState,
-            onDismiss = {
-                pdfActions.cancelGeneration()
-                onDismiss()
-            },
-            onShare = {
-                ensureCorrectFileName()
-                pdfActions.sharePdf()
-            },
-            onSave = {
-                ensureCorrectFileName()
-                pdfActions.savePdf()
-            },
-            onOpen = { pdfActions.openPdf() },
-        )
+    ExportScreen(
+        filename = filename,
+        onFilenameChange = onFilenameChange,
+        uiState = uiState,
+        navigation = navigation,
+        onShare = {
+            ensureCorrectFileName()
+            pdfActions.sharePdf()
+        },
+        onSave = {
+            ensureCorrectFileName()
+            pdfActions.savePdf()
+        },
+        onOpen = { pdfActions.openPdf() },
+        onCloseScan = {
+            if (uiState.hasSavedOrSharedPdf)
+                onCloseScan()
+            else
+                showConfirmationDialog.value = true
+        },
+    )
+
+    if (showConfirmationDialog.value) {
+        NewDocumentDialog(onCloseScan, showConfirmationDialog, stringResource(R.string.end_scan))
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PdfGenerationBottomSheet(
+fun ExportScreen(
     filename: MutableState<String>,
     onFilenameChange: (String) -> Unit,
     uiState: PdfGenerationUiState,
-    onDismiss: () -> Unit,
+    navigation: Navigation,
     onShare: () -> Unit,
     onSave: () -> Unit,
     onOpen: () -> Unit,
+    onCloseScan: () -> Unit,
 ) {
-    Column() {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.export_pdf)) },
+                navigationIcon = { BackButton(navigation.back) },
+                actions = {
+                    AboutScreenNavButton(onClick = navigation.toAboutScreen)
+                }
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row (verticalAlignment = Alignment.CenterVertically) {
-                Row {
-                    Icon(
-                        Icons.Default.PictureAsPdf, contentDescription = "PDF",
-                        modifier = Modifier
-                            .size(34.dp)
-                            .padding(end = 8.dp)
-                    )
-                    Text(
-                        stringResource(R.string.export_pdf),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                CloseButton(onDismiss)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
             val focusRequester = remember { FocusRequester() }
             OutlinedTextField(
                 value = filename.value,
                 onValueChange = onFilenameChange,
                 label = { Text(stringResource(R.string.filename)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
                 trailingIcon = {
                     if (filename.value.isNotEmpty()) {
                         IconButton(onClick = {
                             filename.value = ""
                             focusRequester.requestFocus()
                         }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Effacer")
+                            Icon(Icons.Default.Clear, stringResource(R.string.clear_text))
                         }
                     }
                 },
             )
 
-            Spacer(Modifier.height(8.dp))
-
             val pdf = uiState.generatedPdf
-            if (uiState.isGenerating) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            } else if (pdf != null) {
-                val context = LocalContext.current
-                val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
-                Text(
-                    text = "${pageCountText(pdf.pageCount)} · $formattedFileSize",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+
+            // PDF infos
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+
+                if (uiState.isGenerating) {
+                    Text(stringResource(R.string.creating_pdf), fontStyle = FontStyle.Italic)
+                } else if (pdf != null) {
+                    val context = LocalContext.current
+                    val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
+                    Text(text = pageCountText(pdf.pageCount))
+                    Text(
+                        text = stringResource(R.string.file_size, formattedFileSize),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
 
-            Spacer(Modifier.height(24.dp))
+            if (uiState.saveDirectoryName != null) {
+                SavePdfBar(onOpen, uiState.saveDirectoryName)
+            }
+            if (uiState.errorMessage != null) {
+                ErrorBar(uiState.errorMessage)
+            }
 
-            MainActions(pdf, onShare, onSave)
-        }
+            Spacer(Modifier.weight(1f)) // push buttons down
 
-        if (uiState.saveDirectoryName != null) {
-            SavePdfBar(onOpen, uiState.saveDirectoryName)
-        }
-        if (uiState.errorMessage != null) {
-            ErrorBar(uiState.errorMessage)
+            // Export actions
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MainActions(pdf, onShare, onSave)
+
+                OutlinedButton(
+                    onClick = onCloseScan,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Default.Done, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.end_scan))
+                }
+            }
         }
     }
 }
@@ -271,21 +287,6 @@ private fun ErrorBar(errorMessage: String) {
     )
 }
 
-@Composable
-private fun CloseButton(onDismiss: () -> Unit) {
-    Box(Modifier.fillMaxWidth()) {
-        IconButton(
-            onClick = onDismiss,
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.close)
-            )
-        }
-    }
-}
-
 fun defaultFilename(): String {
     val timestamp = SimpleDateFormat("yyyy-MM-dd HH.mm.ss", Locale.getDefault()).format(Date())
     return "Scan $timestamp"
@@ -296,57 +297,48 @@ fun formatFileSize(sizeInBytes: Long?, context: Context): String {
     else Formatter.formatShortFileSize(context, sizeInBytes)
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun PreviewPdfGenerationDialogDuringGeneration() {
-    PreviewToCustomize(
+fun PreviewExportScreenDuringGeneration() {
+    ExportPreviewToCustomize(
         uiState = PdfGenerationUiState(isGenerating = true)
     )
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun PreviewPdfGenerationDialogAfterGeneration() {
-    PreviewToCustomize(
-        uiState = PdfGenerationUiState(
-            generatedPdf = GeneratedPdf(File("fake.pdf"), 442897L, 1)
-        )
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewPdfGenerationDialogAfterSave() {
+fun PreviewExportScreenAfterSave() {
     val file = File("fake.pdf")
-    PreviewToCustomize(
+    ExportPreviewToCustomize(
         uiState = PdfGenerationUiState(
             generatedPdf = GeneratedPdf(file, 442897L, 3),
-            savedFileUri = file.toUri()
-        )
+            savedFileUri = file.toUri(),
+            saveDirectoryName = "Downloads",
+        ),
     )
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun PreviewPdfGenerationDialogWithError() {
-    PreviewToCustomize(
-        uiState = PdfGenerationUiState(
-            errorMessage = "PDF generation failed"
-        )
+fun ExportScreenPreviewWithError() {
+    ExportPreviewToCustomize(
+        PdfGenerationUiState(errorMessage = "PDF generation failed")
     )
 }
 
 @Composable
-fun PreviewToCustomize(uiState: PdfGenerationUiState) {
+fun ExportPreviewToCustomize(uiState: PdfGenerationUiState) {
     MyScanTheme {
-        PdfGenerationBottomSheet(
-            filename = remember { mutableStateOf("Scan 2025-07-02 17.40.42.pdf") },
+        ExportScreen(
+            filename = remember { mutableStateOf("Scan 2025-07-02 17.40.42") },
+            onFilenameChange = {_->},
+            navigation = dummyNavigation(),
             uiState = uiState,
-            onFilenameChange = {},
-            onDismiss = {},
             onShare = {},
             onSave = {},
             onOpen = {},
+            onCloseScan = {},
         )
     }
 }
+

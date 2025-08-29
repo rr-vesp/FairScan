@@ -19,7 +19,7 @@ import android.graphics.BitmapFactory
 import org.fairscan.app.Navigation
 
 fun dummyNavigation(): Navigation {
-    return Navigation({}, {}, {}, {}, {}, {})
+    return Navigation({}, {}, {}, {}, {}, {}, {})
 }
 
 fun fakeDocument(pageIds: List<String>, context: Context): DocumentUiModel {

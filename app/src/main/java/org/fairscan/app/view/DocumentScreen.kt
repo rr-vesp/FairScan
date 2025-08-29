@@ -32,18 +32,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.RotateLeft
 import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,16 +49,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableStateFlow
 import net.engawapg.lib.zoomable.rememberZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.fairscan.app.Navigation
-import org.fairscan.app.PdfGenerationActions
 import org.fairscan.app.R
-import org.fairscan.app.ui.PdfGenerationUiState
 import org.fairscan.app.ui.theme.MyScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,15 +63,11 @@ fun DocumentScreen(
     document: DocumentUiModel,
     initialPage: Int,
     navigation: Navigation,
-    pdfActions: PdfGenerationActions,
-    onStartNew: () -> Unit,
     onDeleteImage: (String) -> Unit,
     onRotateImage: (String, Boolean) -> Unit,
 ) {
     // TODO Check how often images are loaded
-    val showNewDocDialog = rememberSaveable { mutableStateOf(false) }
     val showDeletePageDialog = rememberSaveable { mutableStateOf(false) }
-    val showPdfDialog = rememberSaveable { mutableStateOf(false) }
     val currentPageIndex = rememberSaveable { mutableIntStateOf(initialPage) }
     if (currentPageIndex.intValue >= document.pageCount()) {
         currentPageIndex.intValue = document.pageCount() - 1
@@ -105,7 +93,7 @@ fun DocumentScreen(
         ),
         onBack = navigation.back,
         bottomBar = {
-            BottomBar(showPdfDialog, showNewDocDialog)
+            BottomBar(navigation)
         },
         pageListButton = {
             SecondaryActionButton(
@@ -121,21 +109,12 @@ fun DocumentScreen(
             { showDeletePageDialog.value = true },
             onRotateImage,
             modifier)
-        if (showNewDocDialog.value) {
-            NewDocumentDialog(onConfirm = onStartNew, showNewDocDialog, stringResource(R.string.close_document))
-        }
         if (showDeletePageDialog.value) {
             ConfirmationDialog(
                 title = stringResource(R.string.delete_page),
                 message = stringResource(R.string.delete_page_warning),
                 showDialog = showDeletePageDialog
             ) { onDeleteImage(document.pageId(currentPageIndex.intValue)) }
-        }
-        if (showPdfDialog.value) {
-            PdfGenerationBottomSheetWrapper(
-                onDismiss = { showPdfDialog.value = false },
-                pdfActions = pdfActions,
-            )
         }
     }
 }
@@ -226,8 +205,7 @@ fun RotationButtons(
 
 @Composable
 private fun BottomBar(
-    showPdfDialog: MutableState<Boolean>,
-    showNewDocDialog: MutableState<Boolean>,
+    navigation: Navigation,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -235,50 +213,11 @@ private fun BottomBar(
         horizontalArrangement = Arrangement.End
     ) {
         MainActionButton(
-            onClick = { showPdfDialog.value = true },
+            onClick = navigation.toExportScreen,
             icon = Icons.Default.PictureAsPdf,
             text = stringResource(R.string.export_pdf),
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        SecondaryActionButton(
-            icon = Icons.Default.Close,
-            contentDescription = stringResource(R.string.close_document),
-            onClick = { showNewDocDialog.value = true },
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
     }
-}
-
-@Composable
-fun NewDocumentDialog(onConfirm: () -> Unit, showDialog: MutableState<Boolean>, title: String) {
-    ConfirmationDialog(title, stringResource(R.string.new_document_warning), showDialog, onConfirm)
-}
-
-@Composable
-private fun ConfirmationDialog(
-    title: String,
-    message: String,
-    showDialog: MutableState<Boolean>,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(onClick = {
-                showDialog.value = false
-                onConfirm()
-            }) {
-                Text(stringResource(R.string.yes), fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { showDialog.value = false }) {
-                Text(stringResource(R.string.cancel), fontWeight = FontWeight.Bold)
-            }
-        },
-        onDismissRequest = { showDialog.value = false },
-    )
 }
 
 @Composable
@@ -291,11 +230,6 @@ fun DocumentScreenPreview() {
                 LocalContext.current),
             initialPage = 1,
             navigation = dummyNavigation(),
-            pdfActions = PdfGenerationActions(
-                {}, {}, {},
-                MutableStateFlow(PdfGenerationUiState()),
-                {}, {}, {}),
-            onStartNew = {},
             onDeleteImage = { _ -> },
             onRotateImage = { _,_ -> },
         )
