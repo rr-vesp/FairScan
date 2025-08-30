@@ -80,7 +80,8 @@ fun BackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     IconButton(onClick = onClick, modifier = modifier) {
         Icon(
             Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.back)
+            contentDescription = stringResource(R.string.back),
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 }
