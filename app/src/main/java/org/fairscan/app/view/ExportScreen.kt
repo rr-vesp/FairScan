@@ -17,6 +17,8 @@ package org.fairscan.app.view
 import android.content.Context
 import android.text.format.Formatter
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,11 +34,12 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -53,6 +56,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -204,51 +209,87 @@ fun ExportScreen(
 
             Spacer(Modifier.weight(1f)) // push buttons down
 
-            // Export actions
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MainActions(pdf, onShare, onSave)
-
-                OutlinedButton(
-                    onClick = onCloseScan,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(Icons.Default.Done, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.end_scan))
-                }
-            }
+            MainActions(uiState, onShare, onSave, onCloseScan)
         }
     }
 }
 
 @Composable
 private fun MainActions(
-    pdf: GeneratedPdf?,
+    uiState: PdfGenerationUiState,
     onShare: () -> Unit,
     onSave: () -> Unit,
+    onCloseScan: () -> Unit,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        MainActionButton(
-            onClick = onShare,
-            enabled = pdf != null,
-            icon = Icons.Default.Share,
-            iconDescription = stringResource(R.string.share),
-            text = stringResource(R.string.share),
-            modifier = Modifier.weight(1f)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ExportButton(
+                onClick = onShare,
+                enabled = uiState.generatedPdf != null,
+                isPrimary = !uiState.hasSavedOrSharedPdf,
+                icon = Icons.Default.Share,
+                text = stringResource(R.string.share),
+                modifier = Modifier.weight(1f)
+            )
+            ExportButton(
+                onClick = onSave,
+                enabled = uiState.generatedPdf != null,
+                isPrimary = !uiState.hasSavedOrSharedPdf,
+                icon = Icons.Default.Download,
+                text = stringResource(R.string.save),
+                modifier = Modifier.weight(1f)
+            )
+        }
+        ExportButton(
+            icon = Icons.Default.Done,
+            text = stringResource(R.string.end_scan),
+            onClick = onCloseScan,
+            modifier = Modifier.fillMaxWidth(),
+            isPrimary = uiState.hasSavedOrSharedPdf,
         )
-        MainActionButton(
-            onClick = onSave,
-            enabled = pdf != null,
-            icon = Icons.Default.Download,
-            iconDescription = stringResource(R.string.save),
-            text = stringResource(R.string.save),
-            modifier = Modifier.weight(1f)
-        )
+    }
+}
+
+@Composable
+fun ExportButton(
+    icon: ImageVector,
+    text: String,
+    isPrimary: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (isPrimary) MaterialTheme.colorScheme.primary
+        else Color.Transparent
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isPrimary) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.primary
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isPrimary) Color.Transparent
+        else MaterialTheme.colorScheme.primary
+    )
+
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        border = BorderStroke(1.dp, borderColor),
+        enabled = enabled,
+        modifier = modifier
+    ) {
+        Icon(icon, contentDescription = null)
+        Spacer(Modifier.width(8.dp))
+        Text(text)
     }
 }
 
@@ -302,6 +343,17 @@ fun formatFileSize(sizeInBytes: Long?, context: Context): String {
 fun PreviewExportScreenDuringGeneration() {
     ExportPreviewToCustomize(
         uiState = PdfGenerationUiState(isGenerating = true)
+    )
+}
+
+@Preview
+@Composable
+fun PreviewExportScreenAfterGeneration() {
+    val file = File("fake.pdf")
+    ExportPreviewToCustomize(
+        uiState = PdfGenerationUiState(
+            generatedPdf = GeneratedPdf(file, 442897L, 3),
+        ),
     )
 }
 
