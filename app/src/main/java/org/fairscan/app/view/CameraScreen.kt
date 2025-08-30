@@ -30,7 +30,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,7 +45,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +55,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -192,8 +195,8 @@ private fun CameraScreenScaffold(
     thumbnailCoords: MutableState<Offset>,
     navigation: Navigation,
 ) {
-    var tapCount by remember { mutableStateOf(0) }
-    var lastTapTime by remember { mutableStateOf(0L) }
+    var tapCount by remember { mutableLongStateOf(0) }
+    var lastTapTime by remember { mutableLongStateOf(0L) }
     val tapThreshold = 500L
     val onPageCountClick = {
         val currentTime = System.currentTimeMillis()
@@ -214,9 +217,14 @@ private fun CameraScreenScaffold(
             toAboutScreen = navigation.toAboutScreen,
             pageListState = pageListState,
             onBack = navigation.back,
-            bottomBar = { Bar(cameraUiState.pageCount, onPageCountClick, onFinalizePressed) }
+            bottomBar = { Bar(cameraUiState.pageCount, onFinalizePressed) }
         ) {
-            modifier -> CameraPreviewBox(cameraPreview, cameraUiState, onCapture, modifier)
+            modifier ->
+                CameraPreviewBox(
+                    cameraPreview,
+                    cameraUiState,
+                    onCapture,
+                    modifier.clickable(onClick = onPageCountClick))
         }
         if (cameraUiState.captureState is CaptureState.CapturePreview) {
             CapturedImage(cameraUiState.captureState.processed.asImageBitmap(), thumbnailCoords)
@@ -407,20 +415,20 @@ fun MessageBox(inferenceTime: Long) {
 @Composable
 private fun Bar(
     pageCount: Int,
-    onPageCountClick: () -> Unit,
     onFinalizePressed: () -> Unit,
 ) {
-    Text(
-        text = pageCountText(pageCount),
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.clickable(onClick = onPageCountClick)
-    )
-    MainActionButton(
-        onClick = onFinalizePressed,
-        enabled = pageCount > 0,
-        text = stringResource(R.string.document),
-        icon = Icons.AutoMirrored.Filled.Article,
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
+    ) {
+        MainActionButton(
+            onClick = onFinalizePressed,
+            enabled = pageCount > 0,
+            text = pageCountText(pageCount),
+            icon = Icons.Default.Done,
+        )
+    }
 }
 
 @Preview(showBackground = true)
