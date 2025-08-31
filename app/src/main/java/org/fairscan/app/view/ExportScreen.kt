@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,6 +59,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -152,66 +154,100 @@ fun ExportScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val focusRequester = remember { FocusRequester() }
-            OutlinedTextField(
-                value = filename.value,
-                onValueChange = onFilenameChange,
-                label = { Text(stringResource(R.string.filename)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                trailingIcon = {
-                    if (filename.value.isNotEmpty()) {
-                        IconButton(onClick = {
-                            filename.value = ""
-                            focusRequester.requestFocus()
-                        }) {
-                            Icon(Icons.Default.Clear, stringResource(R.string.clear_text))
-                        }
-                    }
-                },
-            )
-
-            val pdf = uiState.generatedPdf
-
-            // PDF infos
+        val containerModifier = Modifier
+            .padding(innerPadding)
+            .padding(16.dp)
+        if (!isLandscape(LocalConfiguration.current)) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = containerModifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                if (uiState.isGenerating) {
-                    Text(stringResource(R.string.creating_pdf), fontStyle = FontStyle.Italic)
-                } else if (pdf != null) {
-                    val context = LocalContext.current
-                    val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
-                    Text(text = pageCountText(pdf.pageCount))
-                    Text(
-                        text = stringResource(R.string.file_size, formattedFileSize),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                TextFieldAndPdfInfos(filename, onFilenameChange, uiState, onOpen)
+                Spacer(Modifier.weight(1f)) // push buttons down
+                MainActions(uiState, onShare, onSave, onCloseScan)
+            }
+        } else {
+            Row(
+                modifier = containerModifier.fillMaxHeight(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    TextFieldAndPdfInfos(filename, onFilenameChange, uiState, onOpen)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    MainActions(uiState, onShare, onSave, onCloseScan)
                 }
             }
 
-            if (uiState.saveDirectoryName != null) {
-                SavePdfBar(onOpen, uiState.saveDirectoryName)
-            }
-            if (uiState.errorMessage != null) {
-                ErrorBar(uiState.errorMessage)
-            }
-
-            Spacer(Modifier.weight(1f)) // push buttons down
-
-            MainActions(uiState, onShare, onSave, onCloseScan)
         }
     }
+}
+
+@Composable
+private fun TextFieldAndPdfInfos(
+    filename: MutableState<String>,
+    onFilenameChange: (String) -> Unit,
+    uiState: PdfGenerationUiState,
+    onOpen: () -> Unit,
+) {
+    FilenameTextField(filename, onFilenameChange)
+
+    val pdf = uiState.generatedPdf
+
+    // PDF infos
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+
+        if (uiState.isGenerating) {
+            Text(stringResource(R.string.creating_pdf), fontStyle = FontStyle.Italic)
+        } else if (pdf != null) {
+            val context = LocalContext.current
+            val formattedFileSize = formatFileSize(pdf.sizeInBytes, context)
+            Text(text = pageCountText(pdf.pageCount))
+            Text(
+                text = stringResource(R.string.file_size, formattedFileSize),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+
+    if (uiState.saveDirectoryName != null) {
+        SavePdfBar(onOpen, uiState.saveDirectoryName)
+    }
+    if (uiState.errorMessage != null) {
+        ErrorBar(uiState.errorMessage)
+    }
+}
+
+@Composable
+private fun FilenameTextField(
+    filename: MutableState<String>,
+    onFilenameChange: (String) -> Unit,
+) {
+    val focusRequester = remember { FocusRequester() }
+    OutlinedTextField(
+        value = filename.value,
+        onValueChange = onFilenameChange,
+        label = { Text(stringResource(R.string.filename)) },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
+        trailingIcon = {
+            if (filename.value.isNotEmpty()) {
+                IconButton(onClick = {
+                    filename.value = ""
+                    focusRequester.requestFocus()
+                }) {
+                    Icon(Icons.Default.Clear, stringResource(R.string.clear_text))
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -378,6 +414,19 @@ fun ExportScreenPreviewWithError() {
     )
 }
 
+@Preview(showBackground = true, widthDp = 720, heightDp = 360)
+@Composable
+fun PreviewExportScreenAfterSaveHorizontal() {
+    val file = File("fake.pdf")
+    ExportPreviewToCustomize(
+        uiState = PdfGenerationUiState(
+            generatedPdf = GeneratedPdf(file, 442897L, 3),
+            savedFileUri = file.toUri(),
+            saveDirectoryName = "Downloads",
+        ),
+    )
+}
+
 @Composable
 fun ExportPreviewToCustomize(uiState: PdfGenerationUiState) {
     MyScanTheme {
@@ -393,4 +442,3 @@ fun ExportPreviewToCustomize(uiState: PdfGenerationUiState) {
         )
     }
 }
-
