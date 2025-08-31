@@ -14,6 +14,7 @@
     <string name="current_document">Current document</string>
     <string name="delete_page">Delete page</string>
     <string name="delete_page_warning">Do you want to delete this page?</string>
+    <string name="discard_scan">Discard scan</string>
     <string name="document">Document</string>
     <string name="end_scan">End scan</string>
     <string name="error">Error: %1$s</string>
@@ -35,10 +36,12 @@
     <string name="open">Open</string>
     <string name="open_pdf">Open PDF</string>
     <string name="pdf_saved_to">PDF saved to %1$s</string>
+    <string name="resume">Resume</string>
     <string name="save">Save</string>
+    <string name="scan_button">New Scan</string>
+    <string name="scan_in_progress">Scan in progress</string>
     <string name="share">Share</string>
     <string name="share_pdf">Share PDF</string>
-    <string name="start_a_new_scan">Start a new scan</string>
     <string name="unknown_size">Unknown size</string>
     <string name="version">Version</string>
     <string name="view_the_full_license">View the full license</string>

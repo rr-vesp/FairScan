@@ -22,6 +22,10 @@ fun dummyNavigation(): Navigation {
     return Navigation({}, {}, {}, {}, {}, {}, {})
 }
 
+fun fakeDocument(): DocumentUiModel {
+    return DocumentUiModel(listOf()) { _ -> null }
+}
+
 fun fakeDocument(pageIds: List<String>, context: Context): DocumentUiModel {
     return DocumentUiModel(pageIds) { id ->
         context.assets.open(id).use { input ->

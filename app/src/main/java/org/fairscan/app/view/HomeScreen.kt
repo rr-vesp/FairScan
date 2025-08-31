@@ -23,29 +23,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,11 +70,10 @@ fun HomeScreen(
     cameraPermission: CameraPermissionState,
     currentDocument: DocumentUiModel,
     navigation: Navigation,
-    onStartNewScan: () -> Unit,
+    onClearScan: () -> Unit,
     recentDocuments: List<RecentDocumentUiState>,
     onOpenPdf: (File) -> Unit,
 ) {
-    val showCloseDocDialog = rememberSaveable { mutableStateOf(false) }
     Scaffold (
         topBar = {
             TopAppBar(
@@ -79,25 +83,6 @@ fun HomeScreen(
                 }
             )
         },
-        bottomBar = {
-            BottomAppBar {
-                Spacer(Modifier.weight(1f))
-                MainActionButton(
-                    onClick = {
-                        if (currentDocument.isEmpty()) {
-                            onStartNewScan()
-                        } else {
-                            showCloseDocDialog.value = true
-                        }
-                    },
-                    icon = Icons.Default.PhotoCamera,
-                    text = stringResource(R.string.start_a_new_scan),
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .height(48.dp),
-                    )
-            }
-        }
     ) { padding ->
         Column (
             modifier = Modifier
@@ -105,25 +90,30 @@ fun HomeScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.weight(1f))
+
             if (!cameraPermission.isGranted) {
                 CameraPermissionRationale(cameraPermission)
+            } else {
+                ScanButton(
+                    onClick = {
+                        onClearScan()
+                        navigation.toCameraScreen()
+                    },
+                    Modifier.align(Alignment.CenterHorizontally)
+                )
             }
+
+            Spacer(Modifier.weight(1f))
 
             if (!currentDocument.isEmpty()) {
-                SectionTitle(stringResource(R.string.current_document))
-                CurrentDocumentCard(currentDocument, navigation)
-            }
-
-            if (recentDocuments.isNotEmpty()) {
-                SectionTitle(stringResource(R.string.last_saved_documents))
+                OngoingScanBanner(
+                    currentDocument,
+                    onResumeScan = navigation.toDocumentScreen,
+                    onClearScan = onClearScan,
+                )
+            } else if (recentDocuments.isNotEmpty()) {
                 RecentDocumentList(recentDocuments, onOpenPdf)
-            }
-
-            if (showCloseDocDialog.value) {
-                NewDocumentDialog(
-                    onConfirm = onStartNewScan,
-                    showCloseDocDialog,
-                    stringResource(R.string.new_document))
             }
         }
     }
@@ -139,10 +129,12 @@ private fun CameraPermissionRationale(cameraPermission: CameraPermissionState) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 stringResource(R.string.camera_permission_rationale),
-                style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(8.dp))
-            Button(onClick = { cameraPermission.request() }) {
+            Button(
+                onClick = { cameraPermission.request() },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
                 Text(stringResource(R.string.grant_permission))
             }
         }
@@ -150,33 +142,82 @@ private fun CameraPermissionRationale(cameraPermission: CameraPermissionState) {
 }
 
 @Composable
-private fun CurrentDocumentCard(
+fun ScanButton(onClick: () -> Unit, modifier: Modifier) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.padding(32.dp),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.PhotoCamera,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(R.string.scan_button),
+            style = MaterialTheme.typography.titleLarge
+        )
+
+    }
+}
+
+@Composable
+fun OngoingScanBanner(
     currentDocument: DocumentUiModel,
-    navigation: Navigation,
+    onResumeScan: () -> Unit,
+    onClearScan: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+    Surface(
+        tonalElevation = 2.dp,
+        shadowElevation = 4.dp,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             currentDocument.load(0)?.let {
                 Image(
                     bitmap = it.asImageBitmap(),
                     contentDescription = null,
                     modifier = Modifier
-                        .height(100.dp)
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = stringResource(R.string.scan_in_progress),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = pageCountText(currentDocument.pageCount()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            }
+
+            IconButton(
+                onClick = onClearScan,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = stringResource(R.string.discard_scan),
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(pageCountText(currentDocument.pageCount()))
+            Button(onClick = onResumeScan) {
+                Text(stringResource(R.string.resume))
             }
-            MainActionButton(navigation.toDocumentScreen, stringResource(R.string.open))
         }
     }
 }
@@ -186,8 +227,13 @@ private fun RecentDocumentList(
     recentDocuments: List<RecentDocumentUiState>,
     onOpenPdf: (File) -> Unit
 ) {
+    HorizontalDivider()
+    Text(
+        stringResource(R.string.last_saved_documents),
+        modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 8.dp)
+    )
     Column {
-        val maxListSize = 5
+        val maxListSize = 3
         recentDocuments.subList(0, min(maxListSize, recentDocuments.size)).forEach { doc ->
             ListItem(
                 headlineContent = { Text(doc.file.name) },
@@ -202,18 +248,8 @@ private fun RecentDocumentList(
                 },
                 modifier = Modifier.clickable { onOpenPdf(doc.file) }
             )
-            HorizontalDivider()
         }
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 8.dp)
-    )
 }
 
 @Preview
@@ -222,9 +258,9 @@ fun HomeScreenPreviewOnFirstLaunch() {
     MyScanTheme {
         HomeScreen(
             cameraPermission = rememberCameraPermissionState(),
-            currentDocument = DocumentUiModel(listOf()) { _ -> null },
+            currentDocument = fakeDocument(),
             navigation = dummyNavigation(),
-            onStartNewScan = {},
+            onClearScan = {},
             recentDocuments = listOf(),
             onOpenPdf = {},
         )
@@ -241,7 +277,22 @@ fun HomeScreenPreviewWithCurrentDocument() {
                 listOf("gallica.bnf.fr-bpt6k5530456s-1.jpg"),
                 LocalContext.current),
             navigation = dummyNavigation(),
-            onStartNewScan = {},
+            onClearScan = {},
+            recentDocuments = listOf(),
+            onOpenPdf = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+fun HomeScreenPreviewWithLastSavedFiles() {
+    MyScanTheme {
+        HomeScreen(
+            cameraPermission = rememberCameraPermissionState(),
+            currentDocument = fakeDocument(),
+            navigation = dummyNavigation(),
+            onClearScan = {},
             recentDocuments = listOf(
                 RecentDocumentUiState(File("/path/my_file.pdf"), 1755971180000, 3),
                 RecentDocumentUiState(File("/path/scan2.pdf"), 1755000500000, 1)

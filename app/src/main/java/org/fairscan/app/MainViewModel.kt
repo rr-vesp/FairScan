@@ -355,7 +355,7 @@ class MainViewModel(
                 current.toBuilder()
                     .addDocuments(0, newDoc)
                     .also { builder ->
-                        while (builder.documentsCount > 10) {
+                        while (builder.documentsCount > 3) {
                             builder.removeDocuments(builder.documentsCount - 1)
                         }
                     }

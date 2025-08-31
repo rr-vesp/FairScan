@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
                             cameraPermission = cameraPermission,
                             currentDocument = document,
                             navigation = navigation,
-                            onStartNewScan = navigation.toCameraScreen,
+                            onClearScan = { viewModel.startNewDocument() },
                             recentDocuments = recentDocs,
                             onOpenPdf = { file -> openPdf(file.toUri()) }
                         )
