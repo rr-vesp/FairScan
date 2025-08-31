@@ -229,7 +229,7 @@ private fun RecentDocumentList(
 ) {
     HorizontalDivider()
     Text(
-        stringResource(R.string.last_saved_documents),
+        stringResource(R.string.last_saved_pdf_files),
         modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 8.dp)
     )
     Column {
