@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.ZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.fairscan.app.Navigation
 import org.fairscan.app.R
@@ -138,13 +139,12 @@ private fun DocumentPreview(
             val bitmap = document.load(currentPageIndex.intValue)
             if (bitmap != null) {
                 val imageBitmap = bitmap.asImageBitmap()
-                val zoomState = rememberZoomState(
-                    contentSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
-                )
-
-                LaunchedEffect(imageId) {
-                    zoomState.reset()
+                val zoomState = remember(imageId) {
+                    ZoomState(
+                        contentSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
+                    )
                 }
+
                 Box(modifier = Modifier
                     .fillMaxSize(0.92f)
                     .align(Alignment.Center)) {
