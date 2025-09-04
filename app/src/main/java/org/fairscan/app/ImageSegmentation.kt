@@ -59,9 +59,10 @@ class ImageSegmentationService(private val context: Context) {
                 numThreads = 2
             }
             Interpreter(litertBuffer, options)
-        } catch (e: Exception) {
+        } catch (e: Error) {
+            // That should not happen: let the app crash so that we know about it
             Log.e(TAG, "Failed to load LiteRT model: ${e.message}")
-            null
+            throw IllegalStateException("Failed to load LiteRT model", e)
         }
     }
 
