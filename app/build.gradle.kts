@@ -13,7 +13,11 @@ android {
 
     defaultConfig {
         applicationId = "org.fairscan.app"
-        minSdk = 24
+        // Based on tests against virtual devices, the app works with Android 8.0 (API level 26).
+        // It crashes because of LiteRT on earlier versions.
+        // LiteRT documentation only states that version 1.2.0 requires Android 12:
+        // https://ai.google.dev/edge/litert/android/index
+        minSdk = 26
         targetSdk = 35
         versionCode = 13
         versionName = "0.10.0"
