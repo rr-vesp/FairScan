@@ -7,14 +7,10 @@
     <string name="camera_permission_rationale">L’application a besoin d’accéder à l’appareil photo pour scanner des documents. Les images capturées sont enregistrées uniquement sur cet appareil et seront supprimées lorsque vous fermerez le document en cours.</string>
     <string name="cancel">Annuler</string>
     <string name="clear_text">Effacer le text</string>
-    <string name="close">Fermer</string>
-    <string name="close_document">Fermer le document</string>
     <string name="creating_pdf">Création du PDF…</string>
-    <string name="current_document">Document en cours</string>
     <string name="delete_page">Supprimer la page</string>
     <string name="delete_page_warning">Voulez-vous supprimer cette page ?</string>
     <string name="discard_scan">Supprimer le scan</string>
-    <string name="document">Document</string>
     <string name="end_scan">Terminer le scan</string>
     <string name="error">Erreur : %1$s</string>
     <string name="error_no_document">Aucun document détecté</string>
@@ -30,7 +26,6 @@
     <string name="libraries_open_source">Bibliothèques open source</string>
     <string name="license">Licence</string>
     <string name="licensed_under">Cette application est distribuée sous licence GNU General Public License v3.0.</string>
-    <string name="new_document">Nouveau document</string>
     <string name="new_document_warning">Le scan en cours sera perdu. Voulez-vous continuer ?</string>
     <string name="open">Ouvrir</string>
     <string name="open_pdf">Ouvrir le PDF</string>

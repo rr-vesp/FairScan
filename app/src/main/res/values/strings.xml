@@ -8,14 +8,10 @@
     <string name="camera_permission_rationale">The app requires camera access to scan documents. Captured images are stored only on this device and will be deleted when you close the current document.</string>
     <string name="cancel">Cancel</string>
     <string name="clear_text">Clear text</string>
-    <string name="close">Close</string>
-    <string name="close_document">Close document</string>
     <string name="creating_pdf">Creating PDF…</string>
-    <string name="current_document">Current document</string>
     <string name="delete_page">Delete page</string>
     <string name="delete_page_warning">Do you want to delete this page?</string>
     <string name="discard_scan">Discard scan</string>
-    <string name="document">Document</string>
     <string name="end_scan">End scan</string>
     <string name="error">Error: %1$s</string>
     <string name="error_no_document">No document detected</string>
@@ -31,7 +27,6 @@
     <string name="libraries_open_source">Open-source libraries</string>
     <string name="license">License</string>
     <string name="licensed_under">This application is licensed under the GNU General Public License v3.0.</string>
-    <string name="new_document">New document</string>
     <string name="new_document_warning">The current scan will be lost. Do you want to continue?</string>
     <string name="open">Open</string>
     <string name="open_pdf">Open PDF</string>
