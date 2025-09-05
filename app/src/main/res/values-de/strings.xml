@@ -41,6 +41,7 @@
     <string name="scan_in_progress">Scan läuft</string>
     <string name="share">Teilen</string>
     <string name="share_pdf">PDF teilen</string>
+    <string name="storage_permission_denied">PDF-Datei kann nicht gespeichert werden: Berechtigung verweigert</string>
     <string name="unknown_size">Unbekannte Größe</string>
     <string name="version">Version</string>
     <string name="view_the_full_license">Vollständige Lizenz anzeigen</string>

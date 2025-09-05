@@ -41,6 +41,7 @@
     <string name="scan_in_progress">Scan en cours</string>
     <string name="share">Partager</string>
     <string name="share_pdf">Partager le PDF</string>
+    <string name="storage_permission_denied">Impossible d’enregistrer le fichier PDF : permission refusée</string>
     <string name="unknown_size">Taille inconnue</string>
     <string name="version">Version</string>
     <string name="view_the_full_license">Voir la licence complète</string>

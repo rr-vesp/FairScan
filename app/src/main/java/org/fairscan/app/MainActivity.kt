@@ -14,19 +14,28 @@
  */
 package org.fairscan.app
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.Q
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.FileProvider
 import androidx.core.net.toFile
 import androidx.core.net.toUri
@@ -59,10 +68,22 @@ class MainActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
         setContent {
+            val context = LocalContext.current
             val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
             val liveAnalysisState by viewModel.liveAnalysisState.collectAsStateWithLifecycle()
             val document by viewModel.documentUiModel.collectAsStateWithLifecycle()
             val cameraPermission = rememberCameraPermissionState()
+            val savePdf = { savePdf(viewModel.getFinalPdf(), viewModel) }
+            val storagePermissionLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (isGranted) {
+                    savePdf()
+                } else {
+                    val message = getString(R.string.storage_permission_denied)
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
             MyScanTheme {
                 val navigation = Navigation(
                     toHomeScreen = { viewModel.navigateTo(Screen.Main.Home) },
@@ -112,7 +133,7 @@ class MainActivity : ComponentActivity() {
                                 setFilename = viewModel::setFilename,
                                 uiStateFlow = viewModel.pdfUiState,
                                 sharePdf = { sharePdf(viewModel.getFinalPdf(), viewModel) },
-                                savePdf = { savePdf(viewModel.getFinalPdf(), viewModel) },
+                                savePdf = { checkPermissionThen(storagePermissionLauncher, savePdf) },
                                 openPdf = { openPdf(viewModel.pdfUiState.value.savedFileUri) }
                             ),
                             onCloseScan = {
@@ -152,6 +173,19 @@ class MainActivity : ComponentActivity() {
             grantUriPermission(packageName, fileUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(chooser)
+    }
+
+    private fun checkPermissionThen(
+        requestPermissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
+        action: () -> Unit
+    ) {
+        val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
+        if (SDK_INT < Q && checkSelfPermission(this, permission) != PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(permission)
+        } else {
+            action()
+        }
     }
 
     private fun savePdf(generatedPdf: GeneratedPdf?, viewModel: MainViewModel) {

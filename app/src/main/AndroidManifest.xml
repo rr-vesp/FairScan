@@ -7,7 +7,7 @@
         android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Required (on Android 9 and lower) to save files -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
 
     <application
         android:allowBackup="true"

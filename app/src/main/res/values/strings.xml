@@ -42,6 +42,7 @@
     <string name="scan_in_progress">Scan in progress</string>
     <string name="share">Share</string>
     <string name="share_pdf">Share PDF</string>
+    <string name="storage_permission_denied">Cannot save PDF file: permission was denied</string>
     <string name="unknown_size">Unknown size</string>
     <string name="version">Version</string>
     <string name="view_the_full_license">View the full license</string>
