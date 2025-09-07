@@ -33,13 +33,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -347,12 +346,6 @@ private fun CameraPreviewWithOverlay(
     modifier: Modifier,
 ) {
     val captureState = cameraUiState.captureState
-    var width = LocalConfiguration.current.screenWidthDp
-    var height = width * 4 / 3
-    if (cameraUiState.isLandscape) {
-        height = LocalConfiguration.current.screenHeightDp
-        width = height * 4 / 3
-    }
 
     var showShutter by remember { mutableStateOf(false) }
     LaunchedEffect(captureState.frozenImage) {
@@ -364,9 +357,11 @@ private fun CameraPreviewWithOverlay(
     }
 
     Box(
-        modifier = modifier
-            .width(width.dp)
-            .height(height.dp)
+        modifier = if (cameraUiState.isLandscape) {
+            modifier.fillMaxHeight().aspectRatio(4f / 3f)
+        } else {
+            modifier.fillMaxWidth().aspectRatio(3f / 4f)
+        }
     ) {
         cameraPreview()
         AnalysisOverlay(cameraUiState.liveAnalysisState, cameraUiState.isDebugMode)
