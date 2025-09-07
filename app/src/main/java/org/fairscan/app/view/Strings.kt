@@ -17,14 +17,13 @@ package org.fairscan.app.view
 import android.content.Context
 import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import org.fairscan.app.R
 import java.util.Date
 
 @Composable
 fun pageCountText(quantity: Int): String {
-    val context = LocalContext.current
-    return context.resources.getQuantityString(R.plurals.page_count, quantity, quantity)
+    return LocalResources.current.getQuantityString(R.plurals.page_count, quantity, quantity)
 }
 
 fun formatDate(timestamp: Long, context: Context): String {
