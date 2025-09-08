@@ -319,8 +319,7 @@ class MainViewModel(
 
     fun saveFile(pdfFile: File): File {
         val copiedFile = pdfFileManager.copyToExternalDir(pdfFile)
-        val dirName = copiedFile.parentFile?.name
-        _pdfUiState.update { it.copy(savedFileUri = pdfFile.toUri(), saveDirectoryName = dirName) }
+        _pdfUiState.update { it.copy(savedFileUri = pdfFile.toUri()) }
         return copiedFile
     }
 

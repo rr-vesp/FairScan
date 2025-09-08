@@ -20,7 +20,7 @@
     <string name="filename">Dateiname</string>
     <string name="file_size">Dateigröße: %1$s</string>
     <string name="grant_permission">Berechtigung erteilen</string>
-    <string name="last_saved_pdf_files">Zuletzt gespeicherte PDF-Dateien:</string>
+    <string name="last_saved_pdf_files">Zuletzt gespeicherte PDF-Dateien in Downloads:</string>
     <string name="libraries">Bibliotheken</string>
     <string name="libraries_intro">Diese Anwendung verwendet mehrere Open-Source-Bibliotheken, darunter:</string>
     <string name="libraries_open_source">Open-Source-Bibliotheken</string>
@@ -29,7 +29,7 @@
     <string name="new_document_warning">Das aktuelle Dokument geht verloren. Möchten Sie fortfahren?</string>
     <string name="open">Öffnen</string>
     <string name="open_pdf">PDF öffnen</string>
-    <string name="pdf_saved_to">PDF gespeichert unter %1$s</string>
+    <string name="pdf_saved_to">PDF gespeichert in Downloads</string>
     <string name="resume">Fortsetzen</string>
     <string name="save">Speichern</string>
     <string name="scan_button">Neuer Scan</string>

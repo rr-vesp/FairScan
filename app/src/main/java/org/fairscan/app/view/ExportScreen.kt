@@ -215,8 +215,8 @@ private fun TextFieldAndPdfInfos(
         }
     }
 
-    if (uiState.saveDirectoryName != null) {
-        SavePdfBar(onOpen, uiState.saveDirectoryName)
+    if (uiState.savedFileUri != null) {
+        SavedPdfBar(onOpen)
     }
     if (uiState.errorMessage != null) {
         ErrorBar(uiState.errorMessage)
@@ -330,7 +330,7 @@ fun ExportButton(
 }
 
 @Composable
-private fun SavePdfBar(onOpen: () -> Unit, saveDirectoryName: String) {
+private fun SavedPdfBar(onOpen: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Absolute.SpaceBetween,
@@ -340,9 +340,11 @@ private fun SavePdfBar(onOpen: () -> Unit, saveDirectoryName: String) {
             .padding(vertical = 8.dp, horizontal = 16.dp),
     ) {
         Text(
-            text = stringResource(R.string.pdf_saved_to, saveDirectoryName),
-            style = MaterialTheme.typography.bodyMedium
+            text = stringResource(R.string.pdf_saved_to),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
         )
+        Spacer(Modifier.width(8.dp))
         MainActionButton(
             onClick = onOpen,
             text = stringResource(R.string.open),
@@ -401,7 +403,6 @@ fun PreviewExportScreenAfterSave() {
         uiState = PdfGenerationUiState(
             generatedPdf = GeneratedPdf(file, 442897L, 3),
             savedFileUri = file.toUri(),
-            saveDirectoryName = "Downloads",
         ),
     )
 }
@@ -422,7 +423,6 @@ fun PreviewExportScreenAfterSaveHorizontal() {
         uiState = PdfGenerationUiState(
             generatedPdf = GeneratedPdf(file, 442897L, 3),
             savedFileUri = file.toUri(),
-            saveDirectoryName = "Downloads",
         ),
     )
 }
