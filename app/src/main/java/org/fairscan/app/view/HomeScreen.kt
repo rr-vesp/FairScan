@@ -36,7 +36,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -62,7 +61,6 @@ import org.fairscan.app.rememberCameraPermissionState
 import org.fairscan.app.ui.RecentDocumentUiState
 import org.fairscan.app.ui.theme.MyScanTheme
 import java.io.File
-import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -227,24 +225,36 @@ private fun RecentDocumentList(
     recentDocuments: List<RecentDocumentUiState>,
     onOpenPdf: (File) -> Unit
 ) {
-    HorizontalDivider()
+    Spacer(Modifier.height(8.dp))
     Text(
         stringResource(R.string.last_saved_pdf_files),
-        modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 8.dp)
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
     )
     Column {
-        val maxListSize = 3
-        recentDocuments.subList(0, min(maxListSize, recentDocuments.size)).forEach { doc ->
+        recentDocuments.forEach { doc ->
             ListItem(
-                headlineContent = { Text(doc.file.name) },
+                headlineContent = {
+                    Text(
+                        doc.file.name,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
                 supportingContent = {
                     Text(
                         text = pageCountText(doc.pageCount) + " • " +
-                                formatDate(doc.saveTimestamp, LocalContext.current)
+                                formatDate(doc.saveTimestamp, LocalContext.current),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 leadingContent = {
-                    Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                    Icon(
+                        Icons.Default.PictureAsPdf,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 modifier = Modifier.clickable { onOpenPdf(doc.file) }
             )
