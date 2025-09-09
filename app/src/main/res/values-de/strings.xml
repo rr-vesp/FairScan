@@ -20,7 +20,7 @@
     <string name="filename">Dateiname</string>
     <string name="file_size">Dateigröße: %1$s</string>
     <string name="grant_permission">Berechtigung erteilen</string>
-    <string name="last_saved_pdf_files">Zuletzt gespeicherte PDF-Dateien in Downloads:</string>
+    <string name="last_saved_pdf_files">Zuletzt gespeicherte PDFs in Downloads:</string>
     <string name="libraries">Bibliotheken</string>
     <string name="libraries_intro">Diese Anwendung verwendet mehrere Open-Source-Bibliotheken, darunter:</string>
     <string name="libraries_open_source">Open-Source-Bibliotheken</string>
