@@ -1,9 +1,6 @@
-# MyScan (temporary name)
+# FairScan
 
-**MyScan** is a free and open source Android app for scanning documents quickly and privately.
-
-> ⚠️ This project is under active development.  
-> The app’s final name and repository structure may change in the near future.
+**FairScan** is a free and open source Android app for scanning documents quickly and privately.
 
 ## Features
 
@@ -16,17 +13,16 @@
 ## Philosophy
 
 Most document scanner apps are cluttered, invasive, or frustrating to use.  
-MyScan aims to be a simple, efficient and respectful alternative.
+FairScan aims to be a simple, efficient and respectful alternative.
 
 ## Privacy Policy
 
 The app does not collect or share any personal data.
 
-- Camera access is used only for local document detection.
+- Camera access is used only to create a PDF for the user.
+- Captured images are stored only on the user's device.
 - No data is sent to any server.
 - No analytics, no ads, no tracking.
-
-See [privacy.md](./privacy.md)
 
 ## Build instructions
 
