@@ -1,9 +1,9 @@
 # FairScan
 
-FairScan is an Android app to scan documents. It aims to be simple and respectful.
+FairScan is an Android app to scan documents. It aims to be simple and respectful to users.
 
 "Simple" means that users should get a clean PDF in seconds and without thinking:
-- The user interface should be super clear, with no distraction.
+- The user interface should be super clear, with no distractions.
 - The scanning process should be obvious.
 - The app should automatically handle all image processing and PDF generation tasks.
 
@@ -32,7 +32,7 @@ FairScan should be compatible with all devices that:
 
 ## Privacy
 
-- All data stay on the device. As of today, FairScan doesn't use any access to internet.
+- All data stays on the device. As of today, FairScan does not access the internet.
 - Minimal permissions:
   - Camera
   - WRITE_EXTERNAL_STORAGE: only on Android 8 and 9 to save generated PDFs in the Download directory.
