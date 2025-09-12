@@ -1,33 +1,65 @@
 # FairScan
 
-**FairScan** is a free and open source Android app for scanning documents quickly and privately.
+FairScan is an Android app to scan documents. It aims to be simple and respectful.
+
+"Simple" means that users should get a clean PDF in seconds and without thinking:
+- The user interface should be super clear, with no distraction.
+- The scanning process should be obvious.
+- The app should automatically handle all image processing and PDF generation tasks.
+
+## Get FairScan
+- [Google Play](https://play.google.com/store/apps/details?id=org.fairscan.app)
+- [GitHub releases](https://github.com/pynicolas/FairScan/releases)
+
+See also the website: [fairscan.org](https://fairscan.org)
+
+## Screenshots
+| 1. Scan                      | 2. Preview                   | 3. Save & Share              |
+|------------------------------|------------------------------|------------------------------|
+| ![](screenshots/step-1.webp) | ![](screenshots/step-2.webp) | ![](screenshots/step-3.webp) |
 
 ## Features
 
-- Capture from the device camera
-- Automatic document detection using segmentation
-- Perspective correction
-- PDF export
-- 100% offline, no ads, no tracking, no account
+- Automatic document detection (using a custom image segmentation model)
+- Automatic perspective correction
+- Automatic image enhancement
 
-## Philosophy
+## Compatibility
 
-Most document scanner apps are cluttered, invasive, or frustrating to use.  
-FairScan aims to be a simple, efficient and respectful alternative.
+FairScan should be compatible with all devices that:
+- run Android 8.0 or a more recent version
+- have a camera
 
-## Privacy Policy
+## Privacy
 
-The app does not collect or share any personal data.
+- All data stay on the device. As of today, FairScan doesn't use any access to internet.
+- Minimal permissions:
+  - Camera
+  - WRITE_EXTERNAL_STORAGE: only on Android 8 and 9 to save generated PDFs in the Download directory.
+- Zero trackers.
 
-- Camera access is used only to create a PDF for the user.
-- Captured images are stored only on the user's device.
-- No data is sent to any server.
-- No analytics, no ads, no tracking.
+## Main dependencies
+
+- [Jetpack Compose](https://developer.android.com/compose) for the user interface
+- [CameraX](https://developer.android.com/media/camera/camerax) to capture images from the camera
+- [LiteRT](https://ai.google.dev/edge/litert) to run the segmentation model for automatic document detection
+- [OpenCV](https://opencv.org/) for:
+  - perspective correction
+  - image enhancement
+- [PDFBox-Android](https://github.com/TomRoush/PdfBox-Android) for PDF generation
+
+Kudos to the developers of those projects!
 
 ## Build instructions
 
+To build an APK:
 ```bash
-./gradlew assembleRelease
+./gradlew clean check assembleRelease
+```
+
+To build an Android App Bundle:
+```bash
+./gradlew clean check :app:bundleRelease
 ```
 
 ## License
