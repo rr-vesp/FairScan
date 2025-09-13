@@ -1,9 +1,9 @@
 import org.gradle.api.tasks.Copy
 import java.net.URL
 
-val modelVersion = "v0.6.1"
-val modelFileName = "document-segmentation-model.tflite"
-val modelUrl = "https://github.com/pynicolas/document-segmentation-model/releases/download/$modelVersion/$modelFileName"
+val modelVersion = "v1.0.0"
+val modelFileName = "fairscan-segmentation-model.tflite"
+val modelUrl = "https://github.com/pynicolas/fairscan-segmentation-model/releases/download/$modelVersion/$modelFileName"
 
 val downloadedModelPath = layout.buildDirectory.file("downloads/$modelFileName")
 val generatedAssetsDir = layout.buildDirectory.dir("generated/assets")
