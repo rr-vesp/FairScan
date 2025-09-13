@@ -6,10 +6,12 @@
     <string name="camera_permission_denied">L\'autorisation d\'accès à la caméra a été refusée</string>
     <string name="camera_permission_rationale">L’application a besoin d’accéder à l’appareil photo pour scanner des documents. Les images capturées sont enregistrées uniquement sur cet appareil et seront supprimées lorsque vous fermerez le document en cours.</string>
     <string name="cancel">Annuler</string>
+    <string name="contact">Contact</string>
     <string name="clear_text">Effacer le text</string>
     <string name="creating_pdf">Création du PDF…</string>
     <string name="delete_page">Supprimer la page</string>
     <string name="delete_page_warning">Voulez-vous supprimer cette page ?</string>
+    <string name="developer">Développeur</string>
     <string name="discard_scan">Supprimer le scan</string>
     <string name="end_scan">Terminer le scan</string>
     <string name="error">Erreur : %1$s</string>

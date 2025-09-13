@@ -14,8 +14,10 @@
  */
 package org.fairscan.app.view
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,10 +27,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,10 +53,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import org.fairscan.app.BuildConfig
 import org.fairscan.app.R
 import org.fairscan.app.ui.theme.MyScanTheme
@@ -83,68 +93,113 @@ fun AboutContent(
     showLicenseDialog: MutableState<Boolean>,
     onViewLibraries: () -> Unit,
     ) {
+
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(Modifier.height(8.dp))
-
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
         Text(
             stringResource(R.string.app_tagline),
-            style = MaterialTheme.typography.bodyMedium
+            textAlign = TextAlign.Center
         )
 
-        Spacer(Modifier.height(16.dp))
         HorizontalDivider()
-        Spacer(Modifier.height(16.dp))
 
-        Text(
-            stringResource(R.string.version),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(BuildConfig.VERSION_NAME)
+        Section(title = stringResource(R.string.version)) {
+            Text(BuildConfig.VERSION_NAME)
+        }
 
-        Spacer(Modifier.height(16.dp))
+        Section(title = stringResource(R.string.developer)) {
+            Text("Pierre-Yves Nicolas")
+        }
 
-        Text(
-            stringResource(R.string.license),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            stringResource(R.string.licensed_under),
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            text = stringResource(R.string.view_the_full_license),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clickable { showLicenseDialog.value = true },
-            color = MaterialTheme.colorScheme.primary
-        )
+        Section(title = stringResource(R.string.contact)) {
+            val emailAddress = "contact@fairscan.org"
+            ContactLink(
+                icon = Icons.Default.Email,
+                text = emailAddress,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = "mailto:$emailAddress".toUri()
+                    }
+                    context.startActivity(intent)
+                }
+            )
+            val websiteUrl = "https://fairscan.org"
+            ContactLink(
+                icon = Icons.Default.Language,
+                text = websiteUrl,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, websiteUrl.toUri())
+                    context.startActivity(intent)
+                }
+            )
+        }
 
-        Spacer(Modifier.height(16.dp))
+        Section(title = stringResource(R.string.license)) {
+            Text(
+                stringResource(R.string.licensed_under),
 
-        Text(
-            stringResource(R.string.libraries),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            stringResource(R.string.libraries_intro) +
-                    "\n• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
-            style = MaterialTheme.typography.bodyMedium)
-        Text(
-            text = stringResource(R.string.view_full_list),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.clickable(onClick = onViewLibraries),
-            color = MaterialTheme.colorScheme.primary
-        )
+            )
+            Text(
+                text = stringResource(R.string.view_the_full_license),
+                modifier = Modifier.clickable { showLicenseDialog.value = true },
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
 
+
+        Section(title = stringResource(R.string.libraries)) {
+            Text(
+                stringResource(R.string.libraries_intro) +
+                        "\n• CameraX\n• Jetpack Compose\n• LiteRT\n• OpenCV\n• PDFBox",
+            )
+            Text(
+                text = stringResource(R.string.view_full_list),
+                modifier = Modifier.clickable(onClick = onViewLibraries),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun Section(title: String, content: @Composable () -> Unit) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        content()
+    }
+}
+
+@Composable
+private fun ContactLink(icon: ImageVector, text: String, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 4.dp)
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline
+            )
+        )
     }
 }
 
