@@ -73,7 +73,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun MyScanTheme(
+fun FairScanTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {

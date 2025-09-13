@@ -46,7 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.fairscan.app.ui.theme.MyScanTheme
+import org.fairscan.app.ui.theme.FairScanTheme
 import org.fairscan.app.view.AboutScreen
 import org.fairscan.app.view.CameraScreen
 import org.fairscan.app.view.DocumentScreen
@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             }
-            MyScanTheme {
+            FairScanTheme {
                 val navigation = Navigation(
                     toHomeScreen = { viewModel.navigateTo(Screen.Main.Home) },
                     toCameraScreen = { viewModel.navigateTo(Screen.Main.Camera) },
@@ -206,7 +206,7 @@ class MainActivity : ComponentActivity() {
                     ) { _, _ -> continuation.resume(Unit) {} }
                 }
             } catch (e: Exception) {
-                Log.e("MyScan", "Failed to save PDF", e)
+                Log.e("FairScan", "Failed to save PDF", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context,
                         getString(R.string.error_save), Toast.LENGTH_SHORT).show()

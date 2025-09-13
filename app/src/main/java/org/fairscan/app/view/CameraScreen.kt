@@ -84,7 +84,7 @@ import org.fairscan.app.MainViewModel.CaptureState
 import org.fairscan.app.Navigation
 import org.fairscan.app.R
 import org.fairscan.app.Screen
-import org.fairscan.app.ui.theme.MyScanTheme
+import org.fairscan.app.ui.theme.FairScanTheme
 
 data class CameraUiState(
     val pageCount: Int,
@@ -169,7 +169,7 @@ fun CameraScreen(
             isDebugMode),
         onCapture = {
             previewView?.bitmap?.let {
-                Log.i("MyScan", "Pressed <Capture>")
+                Log.i("FairScan", "Pressed <Capture>")
                 viewModel.onCapturePressed(it)
                 captureController.takePicture(
                     onImageCaptured = { imageProxy -> viewModel.onImageCaptured(imageProxy) }
@@ -448,7 +448,7 @@ fun CameraScreenPreviewInLandscapeMode() {
 
 @Composable
 private fun ScreenPreview(captureState: CaptureState, rotationDegrees: Float = 0f) {
-    MyScanTheme {
+    FairScanTheme {
         val thumbnailCoords = remember { mutableStateOf(Offset.Zero) }
         CameraScreenScaffold(
             cameraPreview = {

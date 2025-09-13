@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MyScan"
+rootProject.name = "FairScan"
 include(":app")
  

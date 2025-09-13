@@ -56,7 +56,7 @@ import net.engawapg.lib.zoomable.ZoomState
 import net.engawapg.lib.zoomable.zoomable
 import org.fairscan.app.Navigation
 import org.fairscan.app.R
-import org.fairscan.app.ui.theme.MyScanTheme
+import org.fairscan.app.ui.theme.FairScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -223,7 +223,7 @@ private fun BottomBar(
 @Composable
 @Preview
 fun DocumentScreenPreview() {
-    MyScanTheme {
+    FairScanTheme {
         DocumentScreen(
             fakeDocument(
                 listOf(1, 2, 2, 2).map { "gallica.bnf.fr-bpt6k5530456s-$it.jpg" },

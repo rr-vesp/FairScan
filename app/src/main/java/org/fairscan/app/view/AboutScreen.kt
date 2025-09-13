@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import org.fairscan.app.BuildConfig
 import org.fairscan.app.R
-import org.fairscan.app.ui.theme.MyScanTheme
+import org.fairscan.app.ui.theme.FairScanTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -261,7 +261,7 @@ fun LicenseBottomSheet(
 @Preview
 @Composable
 fun AboutScreenPreview() {
-    MyScanTheme {
+    FairScanTheme {
         AboutScreen(onBack = {}, onViewLibraries = {})
     }
 }

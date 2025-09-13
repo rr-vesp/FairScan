@@ -59,7 +59,7 @@ import org.fairscan.app.Navigation
 import org.fairscan.app.R
 import org.fairscan.app.rememberCameraPermissionState
 import org.fairscan.app.ui.RecentDocumentUiState
-import org.fairscan.app.ui.theme.MyScanTheme
+import org.fairscan.app.ui.theme.FairScanTheme
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,7 +265,7 @@ private fun RecentDocumentList(
 @Preview
 @Composable
 fun HomeScreenPreviewOnFirstLaunch() {
-    MyScanTheme {
+    FairScanTheme {
         HomeScreen(
             cameraPermission = rememberCameraPermissionState(),
             currentDocument = fakeDocument(),
@@ -280,7 +280,7 @@ fun HomeScreenPreviewOnFirstLaunch() {
 @Preview
 @Composable
 fun HomeScreenPreviewWithCurrentDocument() {
-    MyScanTheme {
+    FairScanTheme {
         HomeScreen(
             cameraPermission = rememberCameraPermissionState(),
             currentDocument = fakeDocument(
@@ -297,7 +297,7 @@ fun HomeScreenPreviewWithCurrentDocument() {
 @Preview
 @Composable
 fun HomeScreenPreviewWithLastSavedFiles() {
-    MyScanTheme {
+    FairScanTheme {
         HomeScreen(
             cameraPermission = rememberCameraPermissionState(),
             currentDocument = fakeDocument(),

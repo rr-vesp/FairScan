@@ -279,7 +279,7 @@ class MainViewModel(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("MyScan", "PDF generation failed", e)
+                Log.e("FairScan", "PDF generation failed", e)
                 _pdfUiState.update {
                     it.copy(
                         isGenerating = false,
