@@ -111,7 +111,10 @@ dependencies {
     implementation(libs.litert.support)
     implementation(libs.litert.metadata)
     implementation(libs.opencv)
-    implementation(libs.pdfbox)
+    implementation(libs.pdfbox) {
+        // To reduce APK size
+        exclude("org.bouncycastle")
+    }
     implementation(libs.icons.extended)
     implementation(libs.zoomable)
     implementation(libs.aboutlibraries.compose.m3)

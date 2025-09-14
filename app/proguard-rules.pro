@@ -22,6 +22,7 @@
 
 -dontwarn com.gemalto.jp2.JP2Decoder
 -dontwarn com.gemalto.jp2.JP2Encoder
+-dontwarn org.bouncycastle.**
 
 -keep class org.fairscan.app.RecentDocument* { *; }
 -keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite { *; }
