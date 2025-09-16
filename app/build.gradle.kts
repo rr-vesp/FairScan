@@ -7,8 +7,8 @@ plugins {
 }
 
 val abiCodes = mapOf(
-    "armeabi-v7a" to 1,
-    "arm64-v8a" to 2
+    "arm64-v8a" to 0,
+    "armeabi-v7a" to -1,
 )
 
 android {
@@ -24,7 +24,7 @@ android {
         // https://ai.google.dev/edge/litert/android/index
         minSdk = 26
         targetSdk = 35
-        versionCode = 20 // increment by 10 so that ABI-specific APKs can use versionCode +1 and +2
+        versionCode = 22 // increment by 2 because of ABI-specific APKs
         versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
