@@ -20,7 +20,7 @@ See also the website: [fairscan.org](https://fairscan.org)
 
 ## Features
 
-- Automatic document detection (using a custom image segmentation model)
+- Automatic document detection (using a [custom image segmentation model](https://github.com/pynicolas/fairscan-segmentation-model))
 - Automatic perspective correction
 - Automatic image enhancement
 
@@ -50,7 +50,7 @@ FairScan should be compatible with all devices that:
 
 Kudos to the developers of those projects!
 
-## Build instructions
+## Build
 
 To build an APK:
 ```bash
@@ -61,6 +61,11 @@ To build an Android App Bundle:
 ```bash
 ./gradlew clean check :app:bundleRelease
 ```
+
+### Note on the segmentation model
+The builds automatically downloads the segmentation model from 
+[fairscan-segmentation-model](https://github.com/pynicolas/fairscan-segmentation-model).
+This is done in [`download-tflite.gradle.kts`](app/download-tflite.gradle.kts).
 
 ## License
 This project is licensed under the GNU GPLv3. See [LICENSE](LICENSE) for details.
