@@ -89,12 +89,7 @@ fun refineMask(original: Mat): Mat {
     val opened = Mat()
     Imgproc.morphologyEx(closed, opened, Imgproc.MORPH_OPEN, kernelOpen)
 
-    // Step 3: Light dilation (connects almost touching parts)
-    val kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, Size(5.0, 5.0))
-    val dilated = Mat()
-    Imgproc.dilate(opened, dilated, kernelDilate, org.opencv.core.Point(-1.0, -1.0), 1)
-
-    return dilated
+    return opened
 }
 
 fun extractDocument(originalBitmap: Bitmap, quad: Quad, rotationDegrees: Int): Bitmap {
