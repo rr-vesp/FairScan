@@ -97,7 +97,11 @@ fun isColoredDocument(
 }
 
 
-private fun multiScaleRetinex(img: Mat, kernelSizes: List<Double> = listOf(30.0, 500.0)): Mat {
+private fun multiScaleRetinex(img: Mat): Mat {
+    val imageSize = img.size()
+    val maxDim = max(imageSize.width, imageSize.height)
+    val kernelSizes: List<Double> = listOf(maxDim / 50, maxDim / 3)
+
     // Convert to grayscale (1 channel)
     val gray = Mat()
     if (img.channels() == 4) {
