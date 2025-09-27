@@ -14,7 +14,6 @@
  */
 package org.fairscan.app.view
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -76,10 +75,19 @@ fun CommonPageList(
     }
     val content: LazyListScope.() -> Unit = {
         itemsIndexed(state.document.pageIds, key = { _, item -> item}) { index, item ->
-            ReorderableItem(reorderableLazyListState, key = item) { _ ->
+            ReorderableItem(reorderableLazyListState, key = item) { isDragging ->
+                val borderColor =
+                    if (isDragging) MaterialTheme.colorScheme.primary else Color.Transparent
+                val modifier = Modifier
+                    .longPressDraggableHandle()
+                    .border(
+                        width = 2.dp,
+                        color = borderColor,
+                        shape = RoundedCornerShape(6.dp)
+                    )
                 val image = state.document.loadThumbnail(index)
                 if (image != null) {
-                    PageThumbnail(image, index, state, Modifier.draggableHandle())
+                    PageThumbnail(image, index, state, modifier)
                 }
             }
         }
@@ -114,7 +122,7 @@ private fun PageThumbnail(
     image: Bitmap,
     index: Int,
     state: CommonPageListState,
-    @SuppressLint("ModifierParameter") draggableModifier: Modifier,
+    modifier: Modifier,
 ) {
     val bitmap = image.asImageBitmap()
     val isSelected = index == state.currentPageIndex
@@ -130,7 +138,7 @@ private fun PageThumbnail(
         val density = LocalDensity.current
         imageModifier = imageModifier.addPositionCallback(state.onLastItemPosition, density, 1.0f)
     }
-    Box (modifier = Modifier.height(PAGE_LIST_ELEMENT_SIZE_DP.dp)) {
+    Box (modifier = modifier.height(PAGE_LIST_ELEMENT_SIZE_DP.dp)) {
         Image(
             bitmap = bitmap,
             contentDescription = null,
@@ -141,7 +149,7 @@ private fun PageThumbnail(
                 .clickable { state.onPageClick(index) }
         )
         Box(
-            modifier = draggableModifier
+            modifier = Modifier
                 .padding(8.dp)
                 .align(Alignment.BottomCenter)
                 .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(4.dp))
