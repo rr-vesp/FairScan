@@ -12,28 +12,17 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package org.fairscan.app.view
+package org.fairscan.app.data
 
-import android.graphics.Bitmap
-import kotlinx.collections.immutable.ImmutableList
+import kotlinx.serialization.Serializable
 
-data class DocumentUiModel(
-    val pageIds: ImmutableList<String>,
-    private val imageLoader: (String) -> Bitmap?
-) {
-    fun pageCount(): Int {
-        return pageIds.size
-    }
-    fun pageId(index: Int): String {
-        return pageIds[index]
-    }
-    fun isEmpty(): Boolean {
-        return pageIds.isEmpty()
-    }
-    fun lastIndex(): Int {
-        return pageIds.lastIndex
-    }
-    fun load(index: Int): Bitmap? {
-        return imageLoader(pageIds[index])
-    }
-}
+@Serializable
+data class DocumentMetadata(
+    val version: Int = 1,
+    val pages: List<Page>
+)
+
+@Serializable
+data class Page(
+    val file: String,
+)

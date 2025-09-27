@@ -14,6 +14,11 @@
  */
 package org.fairscan.app
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.serialization.json.Json
+import org.fairscan.app.data.DocumentMetadata
+import org.fairscan.app.data.Page
 import java.io.File
 
 const val SCAN_DIR_NAME = "scanned_pages"
@@ -24,19 +29,52 @@ class ImageRepository(appFilesDir: File, val transformations: ImageTransformatio
         if (!exists()) mkdirs()
     }
 
-    val fileNames = scanDir.listFiles()
-        ?.map { f -> f.name }?.toMutableList()
-        ?:mutableListOf()
+    private val metadataFile = File(scanDir, "document.json")
 
-    fun imageIds(): List<String> {
-        return fileNames.toList()
+    private var fileNames: MutableList<String> =
+        loadFileNames()
+
+    private fun loadFileNames(): MutableList<String> {
+        val filesOnDisk: Set<String> = scanDir.listFiles()
+            ?.filter { it.extension == "jpg" }
+            ?.map { it.name }
+            ?.toSet()
+            ?: emptySet()
+
+        val metadataFiles: List<String>? = loadMetadata()
+            ?.pages
+            ?.map { it.file }
+
+        return when {
+            metadataFiles != null -> metadataFiles
+                .filter { it in filesOnDisk }
+                .toMutableList()
+            else -> filesOnDisk
+                .sorted()
+                .toMutableList()
+        }
     }
+
+    private fun loadMetadata(): DocumentMetadata? =
+        if (metadataFile.exists()) {
+            runCatching {
+                Json.decodeFromString<DocumentMetadata>(metadataFile.readText())
+            }.getOrNull()
+        } else null
+
+    private fun saveMetadata() {
+        val metadata = DocumentMetadata(version = 1, pages = fileNames.map { id -> Page(id) })
+        metadataFile.writeText(Json.encodeToString(metadata))
+    }
+
+    fun imageIds(): ImmutableList<String> = fileNames.toImmutableList()
 
     fun add(bytes: ByteArray) {
         val fileName = "${System.currentTimeMillis()}.jpg"
         val file = File(scanDir, fileName)
         file.writeBytes(bytes)
         fileNames.add(fileName)
+        saveMetadata()
     }
 
     val idRegex = Regex("([0-9]+)(-(90|180|270))?\\.jpg")
@@ -57,6 +95,7 @@ class ImageRepository(appFilesDir: File, val transformations: ImageTransformatio
                 val index = fileNames.indexOf(id)
                 if (index >= 0) {
                     fileNames[index] = rotatedId
+                    saveMetadata()
                 }
                 delete(id)
             }
@@ -64,17 +103,25 @@ class ImageRepository(appFilesDir: File, val transformations: ImageTransformatio
     }
 
     fun getContent(id: String): ByteArray? {
-        if (fileNames.contains(id)) {
-            val file = File(scanDir, id)
+        val file = File(scanDir, id)
+        if (file.exists()) {
             return file.readBytes()
         }
         return null
+    }
+
+    fun movePage(id: String, newIndex: Int) {
+        if (!fileNames.remove(id)) return
+        val safeIndex = newIndex.coerceIn(0, fileNames.size)
+        fileNames.add(safeIndex, id)
+        saveMetadata()
     }
 
     fun delete(id: String) {
         val file = File(scanDir, id)
         file.delete()
         fileNames.remove(id)
+        saveMetadata()
     }
 
     fun clear() {
@@ -82,5 +129,6 @@ class ImageRepository(appFilesDir: File, val transformations: ImageTransformatio
         scanDir.listFiles()?.forEach {
             file -> file.delete()
         }
+        saveMetadata()
     }
 }

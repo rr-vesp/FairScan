@@ -61,14 +61,21 @@ class ImageRepositoryTest {
     }
 
     @Test
-    fun `should find existing files at initialization`() {
-        val bytes = byteArrayOf(101, 102, 103)
-        val repo1 = repo()
-        assertThat(repo1.imageIds()).isEmpty()
-        repo1.add(bytes)
-        val repo2 = repo()
-        assertThat(repo2.imageIds()).hasSize(1)
-        assertThat(repo2.getContent(repo2.imageIds()[0])).isEqualTo(bytes)
+    fun `should find existing files at initialization with no json`() {
+        val scanDir = File(getFilesDir(), SCAN_DIR_NAME)
+        scanDir.mkdirs()
+        File(scanDir, "1.jpg").writeBytes(byteArrayOf(101, 102, 103))
+        assertThat(repo().imageIds()).containsExactly("1.jpg")
+    }
+
+    @Test
+    fun `should filter pages in json at initialization`() {
+        val scanDir = File(getFilesDir(), SCAN_DIR_NAME)
+        scanDir.mkdirs()
+        val json = """{"pages":[{"file":"1.jpg"}, {"file":"2.jpg"}]}"""
+        File(scanDir, "document.json").writeText(json)
+        File(scanDir, "2.jpg").writeBytes(byteArrayOf(101, 102, 103))
+        assertThat(repo().imageIds()).containsExactly("2.jpg")
     }
 
     @Test
@@ -116,5 +123,19 @@ class ImageRepositoryTest {
         repo.rotate(id4, false)
         val id5 = repo.imageIds().last()
         assertThat(id5).isEqualTo("$baseId-270.jpg")
+    }
+
+    @Test
+    fun movePage() {
+        val repo = repo()
+        repo.add(byteArrayOf(101))
+        repo.add(byteArrayOf(110))
+        val id0 = repo.imageIds().first()
+        val id1 = repo.imageIds().last()
+        repo.movePage(id1, 0)
+        assertThat(repo.imageIds()).containsExactly(id1, id0)
+
+        val repo2 = repo()
+        assertThat(repo2.imageIds()).containsExactly(id1, id0)
     }
 }
