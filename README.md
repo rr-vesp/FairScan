@@ -8,10 +8,13 @@ FairScan is an Android app to scan documents. It aims to be simple and respectfu
 - The app should automatically handle all image processing and PDF generation tasks.
 
 ## Get FairScan
+- [F-Droid](https://f-droid.org/en/packages/org.fairscan.app/)
 - [Google Play](https://play.google.com/store/apps/details?id=org.fairscan.app)
 - [GitHub releases](https://github.com/pynicolas/FairScan/releases)
 
-See also the website: [fairscan.org](https://fairscan.org)
+See also:
+- [fairscan.org](https://fairscan.org)
+- [the blog](https://fairscan.org/blog/)
 
 ## Screenshots
 | 1. Scan                                           | 2. Preview                                        | 3. Save & Share                                   |
