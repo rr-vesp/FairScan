@@ -23,7 +23,7 @@
     <string name="filename">Имя файла</string>
     <string name="file_size">Размер файла: %1$s</string>
     <string name="grant_permission">Предоставить разрешение</string>
-    <string name="last_saved_pdf_files">Последние PDF сохранены в Downloads:</string>
+    <string name="last_saved_pdf_files">Последние PDF сохранены в Download:</string>
     <string name="libraries">Библиотеки</string>
     <string name="libraries_intro">Это приложение использует ряд библиотек с открытым исходным кодом, включая:</string>
     <string name="libraries_open_source">Библиотеки с открытым исходным кодом</string>
@@ -32,7 +32,7 @@
     <string name="new_document_warning">Результаты текущего сканирования будут потеряны. Желаете продолжить?</string>
     <string name="open">Открыть</string>
     <string name="open_pdf">Открыть PDF</string>
-    <string name="pdf_saved_to">PDF сохранен в Downloads</string>
+    <string name="pdf_saved_to">PDF сохранен в Download</string>
     <string name="resume">Продолжить</string>
     <string name="save">Сохранить</string>
     <string name="scan_button">Начать</string>
